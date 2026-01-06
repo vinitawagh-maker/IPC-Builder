@@ -39,6 +39,36 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
+        }
+        
+        .terminal-header .btn {
+            margin: 0;
+            font-size: 12px;
+            padding: 6px 12px;
+            white-space: nowrap;
+        }
+        
+        .terminal-header .btn-primary {
+            background: #000;
+            color: #ffd700;
+            border-color: #000;
+        }
+        
+        .terminal-header .btn-primary:hover {
+            background: #333;
+            border-color: #333;
+        }
+        
+        .terminal-header .btn:not(.btn-primary) {
+            background: transparent;
+            color: #000;
+            border-color: #000;
+        }
+        
+        .terminal-header .btn:not(.btn-primary):hover {
+            background: #000;
+            color: #ffd700;
         }
         
         .terminal-body {
@@ -229,14 +259,6 @@
             outline: 1px solid #ffd700;
         }
         
-        /* Navigation */
-        .nav-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid #333;
-        }
         
         /* Hidden */
         .hidden {
@@ -370,6 +392,36 @@
             }
             .disc-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .terminal-header {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 8px 12px;
+            }
+            
+            .terminal-header > span {
+                order: 2;
+                width: 100%;
+                text-align: center;
+                font-size: 13px;
+            }
+            
+            .terminal-header .btn {
+                font-size: 11px;
+                padding: 4px 8px;
+                min-width: 60px;
+            }
+            
+            .terminal-header > div {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .terminal-header #status-text {
+                font-size: 11px;
             }
         }
 
@@ -684,8 +736,13 @@
         <!-- Header -->
         <div class="terminal" style="margin-bottom: 20px;">
             <div class="terminal-header">
+                <button id="prev-btn" class="btn btn-sm hidden" onclick="prevStep()">← BACK</button>
                 <span>■ WBS TERMINAL v1.0</span>
-                <span id="status-text">READY</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="status-text">READY</span>
+                    <button id="next-btn" class="btn btn-sm btn-primary" onclick="nextStep()">NEXT →</button>
+                    <button id="generate-btn" class="btn btn-sm btn-primary hidden" onclick="generateWBS()">GENERATE WBS</button>
+                </div>
             </div>
         </div>
 
@@ -902,13 +959,6 @@
                     </div>
                 </div>
 
-                <!-- Navigation -->
-                <div class="nav-buttons">
-                    <button id="prev-btn" class="btn hidden" onclick="prevStep()">← BACK</button>
-                    <div></div>
-                    <button id="next-btn" class="btn btn-primary" onclick="nextStep()">NEXT →</button>
-                    <button id="generate-btn" class="btn btn-primary hidden" onclick="generateWBS()">GENERATE WBS</button>
-                </div>
             </div>
         </div>
 
