@@ -1375,6 +1375,153 @@
             border-color: #00ff00;
         }
 
+        /* Reports Modal */
+        .reports-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1003;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .reports-modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .reports-modal-content {
+            background: #0d0d0d;
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .reports-modal.open .reports-modal-content {
+            transform: scale(1);
+        }
+
+        .reports-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #ffd700;
+            color: #000;
+        }
+
+        .reports-modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .reports-close-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            color: #000;
+        }
+
+        .reports-close-btn:hover {
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        .reports-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .reports-section {
+            margin-bottom: 24px;
+        }
+
+        .reports-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .reports-section-title {
+            color: #ffd700;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .report-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .report-card:hover {
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1);
+        }
+
+        .report-card-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .report-card-info {
+            flex: 1;
+        }
+
+        .report-card-title {
+            color: #ffd700;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .report-card-desc {
+            color: #888;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .reports-quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 600px) {
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Projects Manager Modal */
         .projects-modal {
             position: fixed;
@@ -2883,6 +3030,7 @@
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <button class="rfp-header-btn" onclick="openProjectManager()">📁 PROJECTS</button>
                     <button class="rfp-header-btn" onclick="openRfpWizard()">📄 RFP WIZARD</button>
+                    <button id="reports-btn" class="rfp-header-btn hidden" onclick="openReportsPanel()">📊 REPORTS</button>
                     <span id="status-text">READY</span>
                     <button id="next-btn" class="btn btn-sm btn-primary" onclick="nextStep()">NEXT →</button>
                     <button id="generate-btn" class="btn btn-sm btn-primary hidden" onclick="generateWBS()">GENERATE WBS</button>
@@ -3239,11 +3387,7 @@
                         <button class="btn btn-sm" onclick="expandAllWBS()">EXPAND ALL</button>
                         <button class="btn btn-sm" onclick="collapseAllWBS()" style="margin-left: 8px;">COLLAPSE ALL</button>
                         <span style="margin: 0 12px; color: #666;">|</span>
-                        <button class="btn btn-sm" onclick="printReport()">PRINT</button>
-                        <button class="btn btn-sm" onclick="exportProjectSummary()" style="margin-left: 8px;">EXPORT SUMMARY</button>
-                        <button class="btn btn-sm" onclick="exportAllDataCSV()" style="margin-left: 8px;">EXPORT DATA</button>
-                        <button class="btn btn-sm" onclick="exportCSV()" style="margin-left: 8px;">EXPORT WBS</button>
-                        <button class="btn btn-sm" onclick="importData()" style="margin-left: 8px;">IMPORT</button>
+                        <button class="btn btn-sm" onclick="importData()">IMPORT</button>
                         <button class="btn btn-sm" onclick="editWBS()" style="margin-left: 8px;">EDIT</button>
                     </div>
                 </div>
@@ -3648,6 +3792,69 @@
         // ============================================
         
         const PROJECTS_STORAGE_KEY = 'wbs_saved_projects';
+
+        // ============================================
+        // REPORTS PANEL
+        // ============================================
+
+        /**
+         * Opens the reports panel modal
+         */
+        function openReportsPanel() {
+            // Show/hide RFP section based on whether RFP data exists
+            const rfpSection = document.getElementById('reports-rfp-section');
+            if (rfpSection) {
+                const hasRfpData = rfpState && rfpState.extractedData && 
+                    (rfpState.extractedData.disciplines?.length > 0 || rfpState.extractedData.scope);
+                rfpSection.classList.toggle('hidden', !hasRfpData);
+            }
+            
+            document.getElementById('reports-modal').classList.add('open');
+        }
+
+        /**
+         * Closes the reports panel modal
+         */
+        function closeReportsPanel() {
+            document.getElementById('reports-modal').classList.remove('open');
+        }
+
+        /**
+         * Shows/hides the reports button based on results visibility
+         */
+        function updateReportsButtonVisibility() {
+            const resultsVisible = !document.getElementById('results-section').classList.contains('hidden');
+            const reportsBtn = document.getElementById('reports-btn');
+            if (reportsBtn) {
+                reportsBtn.classList.toggle('hidden', !resultsVisible);
+            }
+        }
+
+        /**
+         * Generates a shareable URL with project data encoded
+         */
+        function shareProjectUrl() {
+            try {
+                // Create a minimal version of project data
+                const shareData = {
+                    phases: projectData.phases,
+                    disciplines: projectData.disciplines,
+                    packages: projectData.packages,
+                    budgets: projectData.budgets
+                };
+                
+                const encoded = btoa(JSON.stringify(shareData));
+                const url = window.location.origin + window.location.pathname + '?data=' + encoded;
+                
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Share link copied to clipboard!\n\nNote: Link contains basic project structure only.');
+                }).catch(() => {
+                    prompt('Copy this share link:', url);
+                });
+            } catch (error) {
+                alert('Unable to generate share link. Project data may be too large.');
+            }
+        }
 
         /**
          * Opens the project manager modal
@@ -5464,6 +5671,9 @@
             buildGanttChart();
             updateKPIs();
             updateStatus('WBS GENERATED');
+            
+            // Show the reports button
+            updateReportsButtonVisibility();
         }
 
         function updateKPIs() {
@@ -6146,6 +6356,9 @@
             document.getElementById('results-section').classList.add('hidden');
             currentStep = 1;
             showStep(1);
+            
+            // Hide the reports button
+            updateReportsButtonVisibility();
         }
 
         /**
@@ -6307,18 +6520,20 @@
         }
         .page { padding: 40px; max-width: 8.5in; }
         .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
+            background: linear-gradient(135deg, #1a1a00 0%, #0d0d0d 100%);
+            color: #ffd700;
             padding: 35px 40px;
             margin: -40px -40px 30px -40px;
+            border-bottom: 4px solid #ffd700;
         }
         .header h1 {
             font-size: 26pt;
             font-weight: 300;
             margin-bottom: 8px;
             letter-spacing: 1px;
+            color: #ffd700;
         }
-        .header .subtitle { font-size: 11pt; opacity: 0.7; margin-bottom: 20px; }
+        .header .subtitle { font-size: 11pt; opacity: 0.8; margin-bottom: 20px; color: #ccc; }
         .header-info {
             display: flex;
             gap: 50px;
@@ -6329,12 +6544,12 @@
         .header-info-value { font-size: 13pt; font-weight: 600; margin-top: 2px; }
         
         h2 {
-            color: #1a1a2e;
+            color: #333;
             font-size: 14pt;
             font-weight: 600;
             margin: 28px 0 14px 0;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid #ffd700;
         }
         h3 {
             color: #444;
@@ -6356,17 +6571,17 @@
             padding: 16px;
             text-align: center;
         }
-        .kpi-box .value { font-size: 20pt; font-weight: 700; color: #1a1a2e; }
+        .kpi-box .value { font-size: 20pt; font-weight: 700; color: #333; }
         .kpi-box .label { font-size: 8pt; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
         
         .scope-box {
-            background: #f0f7ff;
-            border: 1px solid #b8d4f0;
+            background: #fffef0;
+            border: 1px solid #e6d9a8;
             border-radius: 6px;
             padding: 18px;
             margin: 18px 0;
         }
-        .scope-box h3 { color: #1a5490; margin-top: 0; }
+        .scope-box h3 { color: #856404; margin-top: 0; }
         .scope-text { color: #444; }
         
         .assumptions-box {
@@ -6401,8 +6616,8 @@
             font-size: 10pt;
         }
         thead th {
-            background: #1a1a2e;
-            color: #fff;
+            background: #333;
+            color: #ffd700;
             padding: 10px 8px;
             text-align: left;
             font-weight: 500;
@@ -6415,9 +6630,10 @@
         }
         tbody tr:nth-child(even) { background: #f8f9fa; }
         tfoot th {
-            background: #e8ecef;
+            background: #f8f9fa;
             padding: 10px 8px;
             font-weight: 600;
+            border-top: 2px solid #ffd700;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
@@ -6449,7 +6665,8 @@
         }
         .discipline-card .budget-tag {
             font-size: 12pt;
-            color: #1a1a2e;
+            color: #333;
+            font-weight: 700;
         }
         .discipline-scope {
             background: #fff;
@@ -6986,16 +7203,18 @@
             line-height: 1.4;
         }
         .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
+            background: linear-gradient(135deg, #1a1a00 0%, #0d0d0d 100%);
+            color: #ffd700;
             padding: 30px 40px;
             margin-bottom: 30px;
+            border-bottom: 4px solid #ffd700;
         }
         .header h1 {
             margin: 0 0 10px 0;
             font-size: 28pt;
             font-weight: 300;
             letter-spacing: 1px;
+            color: #ffd700;
         }
         .header .subtitle {
             font-size: 12pt;
@@ -7014,12 +7233,12 @@
         .content { padding: 0 40px 40px 40px; }
         
         h2 {
-            color: #1a1a2e;
+            color: #333;
             font-size: 14pt;
             font-weight: 600;
             margin: 30px 0 15px 0;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid #ffd700;
         }
         h3 {
             color: #444;
@@ -7044,7 +7263,7 @@
         .kpi-card .value {
             font-size: 24pt;
             font-weight: 700;
-            color: #1a1a2e;
+            color: #333;
             margin-bottom: 5px;
         }
         .kpi-card .label {
@@ -7077,8 +7296,8 @@
             font-size: 10pt;
         }
         thead th {
-            background: #1a1a2e;
-            color: #fff;
+            background: #333;
+            color: #ffd700;
             padding: 12px 10px;
             text-align: left;
             font-weight: 500;
@@ -7093,10 +7312,10 @@
         tbody tr:nth-child(even) { background: #f8f9fa; }
         tbody tr:hover { background: #f0f4f8; }
         tfoot th {
-            background: #e8ecef;
+            background: #f8f9fa;
             padding: 12px 10px;
             font-weight: 600;
-            border-top: 2px solid #1a1a2e;
+            border-top: 2px solid #ffd700;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
@@ -7158,7 +7377,7 @@
         }
         
         /* Gantt chart print styles */
-        .gantt-header { display: flex; background: #1a1a2e; color: #fff; font-size: 9pt; border-radius: 4px 4px 0 0; }
+        .gantt-header { display: flex; background: #333; color: #ffd700; font-size: 9pt; border-radius: 4px 4px 0 0; }
         .gantt-header-label { width: 150px; padding: 8px 12px; font-weight: 500; }
         .gantt-header-months { display: flex; flex: 1; }
         .gantt-month { flex: 1; padding: 8px 4px; text-align: center; border-left: 1px solid rgba(255,255,255,0.2); font-size: 8pt; }
@@ -7188,13 +7407,13 @@
         }
         
         .scope-section {
-            background: #f0f7ff;
-            border: 1px solid #b8d4f0;
+            background: #fffef0;
+            border: 1px solid #e6d9a8;
             border-radius: 8px;
             padding: 20px;
             margin: 20px 0;
         }
-        .scope-section h3 { color: #1a5490; margin-top: 0; }
+        .scope-section h3 { color: #856404; margin-top: 0; }
         .scope-text { color: #444; line-height: 1.6; }
     </style>
 </head>
@@ -10754,34 +10973,36 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         }
         .page { padding: 40px; max-width: 8.5in; }
         .header {
-            background: linear-gradient(135deg, #0d4f3c 0%, #1a7a5c 100%);
-            color: #fff;
+            background: linear-gradient(135deg, #1a1a00 0%, #0d0d0d 100%);
+            color: #ffd700;
             padding: 35px 40px;
             margin: -40px -40px 30px -40px;
+            border-bottom: 4px solid #ffd700;
         }
         .header h1 {
             font-size: 26pt;
             font-weight: 300;
             margin-bottom: 8px;
             letter-spacing: 1px;
+            color: #ffd700;
         }
-        .header .subtitle { font-size: 11pt; opacity: 0.8; margin-bottom: 20px; }
+        .header .subtitle { font-size: 11pt; opacity: 0.8; margin-bottom: 20px; color: #ccc; }
         .header-info {
             display: flex;
             gap: 40px;
             font-size: 10pt;
         }
         .header-info-item { }
-        .header-info-label { opacity: 0.6; font-size: 9pt; text-transform: uppercase; }
-        .header-info-value { font-size: 13pt; font-weight: 600; margin-top: 2px; }
+        .header-info-label { opacity: 0.6; font-size: 9pt; text-transform: uppercase; color: #ccc; }
+        .header-info-value { font-size: 13pt; font-weight: 600; margin-top: 2px; color: #fff; }
         
         h2 {
-            color: #0d4f3c;
+            color: #333;
             font-size: 14pt;
             font-weight: 600;
             margin: 28px 0 14px 0;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid #ffd700;
         }
         h3 {
             color: #444;
@@ -10791,13 +11012,13 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         }
         
         .stats-box {
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-            border: 1px solid #a5d6a7;
+            background: linear-gradient(135deg, #fffef0 0%, #fff9e6 100%);
+            border: 1px solid #e6d9a8;
             border-radius: 6px;
             padding: 18px;
             margin: 18px 0;
         }
-        .stats-box h3 { color: #2e7d32; margin-top: 0; font-size: 11pt; }
+        .stats-box h3 { color: #856404; margin-top: 0; font-size: 11pt; }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -10813,7 +11034,7 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             font-size: 10pt;
         }
         .stat-label { color: #666; }
-        .stat-value { font-weight: 600; color: #2e7d32; }
+        .stat-value { font-weight: 600; color: #333; }
         
         .scope-box {
             background: #f5f5f5;
@@ -10837,7 +11058,7 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             margin: 12px 0;
             page-break-inside: avoid;
         }
-        .discipline-card h3 { margin: 0 0 10px 0; color: #0d4f3c; }
+        .discipline-card h3 { margin: 0 0 10px 0; color: #333; }
         .discipline-scope {
             color: #555;
             font-size: 10pt;
@@ -11274,6 +11495,83 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
             </button>
+        </div>
+    </div>
+
+    <!-- Reports Panel Modal -->
+    <div id="reports-modal" class="reports-modal" onclick="if(event.target===this)closeReportsPanel()">
+        <div class="reports-modal-content">
+            <div class="reports-modal-header">
+                <h3>📊 Reports & Exports</h3>
+                <button class="reports-close-btn" onclick="closeReportsPanel()">✕</button>
+            </div>
+            
+            <div class="reports-modal-body">
+                <!-- PDF Reports Section -->
+                <div class="reports-section">
+                    <div class="reports-section-title">📄 PDF Reports</div>
+                    <div class="reports-grid">
+                        <div class="report-card" onclick="closeReportsPanel(); printReport();">
+                            <div class="report-card-icon">📋</div>
+                            <div class="report-card-info">
+                                <div class="report-card-title">Full Project Report</div>
+                                <div class="report-card-desc">Complete WBS with budget breakdown, charts, Gantt schedule, and cost assumptions</div>
+                            </div>
+                        </div>
+                        <div class="report-card" onclick="closeReportsPanel(); exportProjectSummary();">
+                            <div class="report-card-icon">📝</div>
+                            <div class="report-card-info">
+                                <div class="report-card-title">Executive Summary</div>
+                                <div class="report-card-desc">High-level overview with KPIs, discipline scopes, and package details</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RFP Report Section (conditionally shown) -->
+                <div id="reports-rfp-section" class="reports-section hidden">
+                    <div class="reports-section-title">📄 RFP Analysis</div>
+                    <div class="reports-grid">
+                        <div class="report-card" onclick="closeReportsPanel(); openRfpWizard(); setTimeout(exportRfpData, 100);">
+                            <div class="report-card-icon">📑</div>
+                            <div class="report-card-info">
+                                <div class="report-card-title">RFP Analysis Report</div>
+                                <div class="report-card-desc">AI-extracted project scope, disciplines, and requirements from RFP</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Export Section -->
+                <div class="reports-section">
+                    <div class="reports-section-title">📊 Data Exports</div>
+                    <div class="reports-grid">
+                        <div class="report-card" onclick="closeReportsPanel(); exportCSV();">
+                            <div class="report-card-icon">📁</div>
+                            <div class="report-card-info">
+                                <div class="report-card-title">WBS Table (CSV)</div>
+                                <div class="report-card-desc">Complete WBS structure with budgets and dates</div>
+                            </div>
+                        </div>
+                        <div class="report-card" onclick="closeReportsPanel(); exportAllDataCSV();">
+                            <div class="report-card-icon">💾</div>
+                            <div class="report-card-info">
+                                <div class="report-card-title">Full Data Export (JSON)</div>
+                                <div class="report-card-desc">All project data for backup or import</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="reports-section">
+                    <div class="reports-section-title">⚡ Quick Actions</div>
+                    <div class="reports-quick-actions">
+                        <button class="btn btn-sm" onclick="shareProjectUrl()">🔗 Copy Share Link</button>
+                        <button class="btn btn-sm" onclick="importData(); closeReportsPanel();">📥 Import Data</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
