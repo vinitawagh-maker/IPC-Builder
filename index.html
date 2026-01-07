@@ -6009,7 +6009,7 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
          */
         function splitTextIntoChunks(text, maxChunkSize) {
             const chunks = [];
-            const overlapSize = 5000; // 5K char overlap to avoid cutting mid-sentence
+            const overlapSize = 2000; // 2K char overlap - optimized to reduce redundancy while maintaining context
             
             if (text.length <= maxChunkSize) {
                 return [text];
@@ -6047,93 +6047,16 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
          * Analyzes a single text chunk with OpenAI
          */
         async function analyzeChunk(apiKey, chunkText, chunkIndex, totalChunks) {
-            const systemPrompt = `You are an expert at analyzing engineering RFP (Request for Proposal) documents and extracting project structure information for Work Breakdown Structures (WBS).
+            const systemPrompt = `Extract WBS info from engineering RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
+{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low"},"notes":""}
 
-This is chunk ${chunkIndex + 1} of ${totalChunks} from a large document. Extract the following information from THIS PORTION of the document and return ONLY valid JSON (no markdown, no code blocks, just raw JSON):
-
-{
-  "phases": ["array of project phases"],
-  "disciplines": ["array of engineering disciplines"],
-  "disciplineScopes": {
-    "Discipline Name": "specific scope of work for this discipline",
-    "Another Discipline": "its specific scope..."
-  },
-  "packages": ["array of deliverable packages/milestones"],
-  "budgets": {},
-  "scope": "summary of overall project scope, work description, and key project details",
-  "schedule": "description of schedule/timeline information found",
-  "confidence": {
-    "phases": "high/medium/low",
-    "disciplines": "high/medium/low", 
-    "packages": "high/medium/low",
-    "budgets": "low",
-    "scope": "high/medium/low",
-    "schedule": "high/medium/low"
-  },
-  "notes": "any important notes about assumptions made or information that was unclear"
-}
-
-Guidelines:
-
-**PHASES** - Look for project stages, phases, or major milestones. Common examples:
-- Base Design, ESDC (Engineering Services During Construction), TSCD (Transportation Systems Construction Division)
-- Preliminary Engineering, Final Design, Construction Support, As-Builts, Closeout
-- Phase 1, Phase 2, Phase 3, etc.
-
-**DISCIPLINES** - Carefully identify ALL engineering disciplines mentioned in the document. Look for:
-- Section headers like "Scope of Work - Structures", "Civil Engineering Services", etc.
-- Lists of disciplines or departments
-- References to specific engineering services
-- Consultant team composition
-- Deliverable responsibilities by discipline
-
-CRITICAL: Match to these EXACT standard discipline names (use these exact spellings):
-- Structures (for bridges, retaining walls, structural elements, structural design)
-- Design PM (for project management, design management, coordination, PM services)
-- Civil (for roadway design, horizontal/vertical alignment, grading, geometric design)
-- Drainage (for storm drainage, culverts, inlets, pipes, stormwater management)
-- Electrical (for electrical systems, power distribution, electrical design)
-- Environmental (for environmental compliance, permitting, NEPA, wetlands, environmental studies)
-- Traffic (for traffic analysis, signals, signing, striping, pavement markings, traffic engineering)
-- ITS (for Intelligent Transportation Systems, cameras, DMS, detection, ITS design)
-- Mechanical (for mechanical systems, HVAC, mechanical design)
-- Geotechnical (for soils, foundation design, borings, geotechnical engineering)
-- Survey (for surveying, mapping, ROW, SUE, survey services)
-- Landscape (for landscaping, aesthetics, irrigation, landscape architecture)
-- Utilities (for utility coordination, relocations, utility design)
-- Lighting (for roadway lighting, illumination, lighting design)
-- Pavement (for pavement design, rehabilitation, pavement engineering)
-- Bridges (for bridge design - use ONLY if separate from Structures)
-- H&H (for Hydrology & Hydraulics, floodplain analysis, H&H studies)
-- Communications (for communication systems, fiber, communications design)
-- Architecture (for architectural design, aesthetics, architectural services)
-- Systems (for systems engineering, integration, systems design)
-
-**DISCIPLINE SCOPES** - For EACH discipline found, extract its specific scope of work. Look for:
-- What tasks/services that discipline will perform
-- What deliverables they are responsible for
-- Specific work elements assigned to that discipline
-- Any special requirements or constraints for that discipline
-
-Format as: { "Discipline Name": "detailed scope description for this discipline" }
-Example: { "Structures": "Design of 3-span bridge, retaining walls, structural analysis", "Civil": "Roadway alignment, grading plans, geometric design" }
-
-**PACKAGES** - Look for deliverable milestones, submission stages, or completion percentages. Common examples:
-- Preliminary, Interim, Final, RFC (Released for Construction), As-Built
-- 30%, 60%, 90%, 100%, Final
-- Concept, Schematic, Design Development, Construction Documents
-
-**BUDGETS** - Always set budgets to empty object {}. Budgets will be handled separately.
-
-**SCOPE** - Extract a comprehensive summary of the project scope, work description, and key project details. Include:
-- Project location, type, and purpose
-- Major work elements and components
-- Key project requirements and constraints
-- Important project characteristics or special considerations
-
-**SCHEDULE** - Extract any timeline information, durations, milestones, or deadline dates mentioned.
-
-Set confidence to "high" if explicitly stated in document, "medium" if inferred from context, "low" if guessed or unclear.`;
+**PHASES**: Project stages (e.g. Base Design, ESDC, TSCD, Preliminary, Final, As-Builts, Closeout, Phase 1/2/3)
+**DISCIPLINES**: Use EXACT names: Structures, Design PM, Civil, Drainage, Electrical, Environmental, Traffic, ITS, Mechanical, Geotechnical, Survey, Landscape, Utilities, Lighting, Pavement, Bridges, H&H, Communications, Architecture, Systems
+**DISCIPLINE SCOPES**: {"Discipline":"scope description"} - Extract specific tasks/deliverables per discipline
+**PACKAGES**: Milestones (e.g. Preliminary, Interim, Final, RFC, As-Built, 30%, 60%, 90%)
+**SCOPE**: Project location, type, major work elements, requirements
+**SCHEDULE**: Timeline info, durations, milestones, deadlines
+Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -6195,47 +6118,79 @@ Set confidence to "high" if explicitly stated in document, "medium" if inferred 
         }
 
         /**
-         * Merges multiple chunk results into a final consolidated result
+         * Locally merges simple array fields (phases, disciplines, packages) to reduce API cost
+         */
+        function localMergeSimpleFields(chunkResults) {
+            const merged = {
+                phases: [],
+                disciplines: [],
+                packages: [],
+                budgets: {}
+            };
+
+            // Merge phases - deduplicate and preserve order
+            const phasesSet = new Set();
+            chunkResults.forEach(result => {
+                if (result.phases && Array.isArray(result.phases)) {
+                    result.phases.forEach(phase => {
+                        if (phase && !phasesSet.has(phase)) {
+                            phasesSet.add(phase);
+                            merged.phases.push(phase);
+                        }
+                    });
+                }
+            });
+
+            // Merge disciplines - deduplicate and preserve order
+            const disciplinesSet = new Set();
+            chunkResults.forEach(result => {
+                if (result.disciplines && Array.isArray(result.disciplines)) {
+                    result.disciplines.forEach(disc => {
+                        if (disc && !disciplinesSet.has(disc)) {
+                            disciplinesSet.add(disc);
+                            merged.disciplines.push(disc);
+                        }
+                    });
+                }
+            });
+
+            // Merge packages - deduplicate and preserve order
+            const packagesSet = new Set();
+            chunkResults.forEach(result => {
+                if (result.packages && Array.isArray(result.packages)) {
+                    result.packages.forEach(pkg => {
+                        if (pkg && !packagesSet.has(pkg)) {
+                            packagesSet.add(pkg);
+                            merged.packages.push(pkg);
+                        }
+                    });
+                }
+            });
+
+            return merged;
+        }
+
+        /**
+         * Merges multiple chunk results into a final consolidated result (OPTIMIZED)
+         * Uses local merge for simple arrays and AI only for complex fields
          */
         async function mergeChunkResults(apiKey, chunkResults) {
-            const mergePrompt = `You are merging WBS extraction results from multiple portions of a large RFP document.
+            // Step 1: Local merge of simple fields (no API cost)
+            const localMerged = localMergeSimpleFields(chunkResults);
+            console.log('Local merge complete:', localMerged);
 
-You have received ${chunkResults.length} separate analyses. Merge them into a single consolidated result, combining:
-- All unique phases from all chunks
-- All unique disciplines from all chunks (deduplicate, use exact standard names)
-- All discipline-specific scopes (merge scope descriptions for each discipline, combine information from all chunks)
-- All unique packages from all chunks
-- All scope information (combine into comprehensive project scope summary)
-- All schedule information (combine into comprehensive description)
-- Confidence levels (use "high" if any chunk had "high", otherwise use "medium" or "low")
-- Notes (combine all notes)
+            // Step 2: Use AI to merge only complex fields (disciplineScopes, scope, schedule, confidence, notes)
+            const mergePrompt = `Merge ${chunkResults.length} WBS chunk analyses. Return raw JSON:
+{"disciplineScopes":{},"scope":"","schedule":"","confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low"},"notes":""}
 
-Return ONLY valid JSON (no markdown, no code blocks):
+Merge rules:
+- disciplineScopes: Combine scope descriptions per discipline from all chunks
+- scope: Comprehensive project summary combining all chunks
+- schedule: Combined timeline info from all chunks
+- confidence: Use highest confidence level found across chunks (high > medium > low)
+- notes: Combine all notes
 
-{
-  "phases": ["consolidated array of all unique phases"],
-  "disciplines": ["consolidated array of all unique disciplines"],
-  "disciplineScopes": {
-    "Discipline Name": "merged scope description combining all chunks",
-    "Another Discipline": "its merged scope..."
-  },
-  "packages": ["consolidated array of all unique packages"],
-  "budgets": {},
-  "scope": "comprehensive project scope summary combining all chunks",
-  "schedule": "comprehensive schedule description combining all chunks",
-  "confidence": {
-    "phases": "high/medium/low",
-    "disciplines": "high/medium/low",
-    "packages": "high/medium/low",
-    "budgets": "low",
-    "scope": "high/medium/low",
-    "schedule": "high/medium/low"
-  },
-  "notes": "combined notes from all chunks"
-}
-
-Chunk results to merge:
-${JSON.stringify(chunkResults, null, 2)}`;
+Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -6252,17 +6207,18 @@ ${JSON.stringify(chunkResults, null, 2)}`;
                     temperature: 0.2
                 })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error?.message || `API error: ${response.status}`);
             }
-            
+
             const data = await response.json();
             const content = data.choices[0]?.message?.content || '';
-            
-            console.log('Merge raw response:', content.substring(0, 500));
-            
+
+            console.log('AI merge raw response:', content.substring(0, 500));
+
+            let aiMerged;
             try {
                 // Try to extract JSON from markdown code blocks first
                 const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -6270,22 +6226,35 @@ ${JSON.stringify(chunkResults, null, 2)}`;
                     const jsonContent = codeBlockMatch[1].trim();
                     const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
-                        return JSON.parse(jsonMatch[0]);
+                        aiMerged = JSON.parse(jsonMatch[0]);
+                    }
+                } else {
+                    // Try to find JSON object directly
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        aiMerged = JSON.parse(jsonMatch[0]);
+                    } else {
+                        aiMerged = JSON.parse(content);
                     }
                 }
-                
-                // Try to find JSON object directly
-                const jsonMatch = content.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    return JSON.parse(jsonMatch[0]);
-                }
-                
-                return JSON.parse(content);
             } catch (e) {
                 console.error('Merge JSON parse error:', e.message);
                 console.error('Content was:', content);
                 throw new Error('Could not parse merged result as JSON');
             }
+
+            // Step 3: Combine local merge (simple arrays) with AI merge (complex fields)
+            return {
+                phases: localMerged.phases,
+                disciplines: localMerged.disciplines,
+                packages: localMerged.packages,
+                budgets: localMerged.budgets,
+                disciplineScopes: aiMerged.disciplineScopes || {},
+                scope: aiMerged.scope || '',
+                schedule: aiMerged.schedule || '',
+                confidence: aiMerged.confidence || {},
+                notes: aiMerged.notes || ''
+            };
         }
 
         /**
@@ -6438,14 +6407,16 @@ ${JSON.stringify(chunkResults, null, 2)}`;
                     // Split into chunks
                     const chunks = splitTextIntoChunks(text, MAX_TEXT_LENGTH);
                     rfpState.chunkCount = chunks.length;
-                    
-                    document.querySelector('.rfp-loading-text').textContent = `Document is large (${formatNumber(text.length)} chars). Analyzing ${chunks.length} chunks...`;
-                    
+
+                    document.querySelector('.rfp-loading-text').textContent = `Document is large (${formatNumber(text.length)} chars). Analyzing ${chunks.length} chunks with optimized processing...`;
+
                     // Analyze chunks sequentially to avoid HTTP/2 protocol errors
                     const chunkResults = [];
+                    const startTime = Date.now();
                     for (let i = 0; i < chunks.length; i++) {
-                        document.querySelector('.rfp-loading-text').textContent = `Analyzing chunk ${i + 1} of ${chunks.length}...`;
-                        
+                        const avgTime = i > 0 ? ((Date.now() - startTime) / i / 1000).toFixed(1) : '?';
+                        document.querySelector('.rfp-loading-text').textContent = `Analyzing chunk ${i + 1}/${chunks.length} (avg ${avgTime}s/chunk, optimized prompts)...`;
+
                         // Retry logic for network errors
                         let result = null;
                         let retries = 3;
@@ -6461,9 +6432,13 @@ ${JSON.stringify(chunkResults, null, 2)}`;
                         }
                         chunkResults.push(result);
                     }
-                    
-                    // Merge results
-                    document.querySelector('.rfp-loading-text').textContent = `Merging results from ${chunks.length} chunks...`;
+
+                    // Merge results - Step 1: Local merge (free, instant)
+                    document.querySelector('.rfp-loading-text').textContent = `Merging results: Local merge of arrays (instant)...`;
+                    await new Promise(r => setTimeout(r, 100)); // Brief pause to show message
+
+                    // Step 2: AI merge for complex fields only
+                    document.querySelector('.rfp-loading-text').textContent = `Merging results: AI merge of complex fields (optimized)...`;
                     extracted = await mergeChunkResults(apiKey, chunkResults);
                     
                 } else {
