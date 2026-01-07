@@ -288,6 +288,110 @@
             background: #2d2d00;
             border-color: #ffd700;
         }
+
+        /* Template Selector */
+        .template-selector {
+            background: #0d0d0d;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #1a1a00 0%, #0d0d0d 100%);
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-header:hover {
+            background: linear-gradient(135deg, #2d2d00 0%, #1a1a1a 100%);
+        }
+
+        .template-header span:first-child {
+            color: #ffd700;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .template-toggle-icon {
+            color: #666;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .template-selector.expanded .template-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .template-body {
+            padding: 16px;
+            transition: all 0.3s;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .template-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1);
+        }
+
+        .template-card-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .template-card-title {
+            color: #ffd700;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .template-card-desc {
+            color: #888;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .template-card-stats {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #333;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .template-card-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .template-card-stat span {
+            color: #ffd700;
+        }
         
         /* KPI Cards */
         .kpi-grid {
@@ -956,6 +1060,20 @@
             padding: 6px 12px;
         }
 
+        .chat-message.streaming {
+            border-color: #ffd700;
+        }
+
+        .streaming-cursor {
+            color: #ffd700;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
         .chat-typing {
             display: flex;
             gap: 4px;
@@ -1116,6 +1234,632 @@
             font-size: 13px;
             cursor: pointer;
             transition: all 0.2s;
+        }
+
+        /* Recovery Modal */
+        .recovery-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1003;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .recovery-modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .recovery-modal-content {
+            background: #0d0d0d;
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .recovery-modal.open .recovery-modal-content {
+            transform: scale(1);
+        }
+
+        .recovery-modal h3 {
+            color: #ffd700;
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recovery-modal p {
+            color: #888;
+            font-size: 13px;
+            margin: 0 0 16px 0;
+            line-height: 1.6;
+        }
+
+        .recovery-preview {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .recovery-preview-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .recovery-preview-item:last-child {
+            border-bottom: none;
+        }
+
+        .recovery-preview-label {
+            color: #888;
+        }
+
+        .recovery-preview-value {
+            color: #ffd700;
+            font-weight: 500;
+        }
+
+        .recovery-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .recovery-modal .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .recovery-modal .btn-danger {
+            background: transparent;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+
+        .recovery-modal .btn-danger:hover {
+            background: #ff4444;
+            color: #000;
+        }
+
+        /* Autosave indicator */
+        .autosave-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 11px;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .autosave-indicator.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .autosave-indicator.saving {
+            color: #ffd700;
+            border-color: #ffd700;
+        }
+
+        .autosave-indicator.saved {
+            color: #00ff00;
+            border-color: #00ff00;
+        }
+
+        /* Projects Manager Modal */
+        .projects-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1003;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .projects-modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .projects-modal-content {
+            background: #0d0d0d;
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .projects-modal.open .projects-modal-content {
+            transform: scale(1);
+        }
+
+        .projects-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #ffd700;
+            color: #000;
+        }
+
+        .projects-modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .projects-close-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            color: #000;
+        }
+
+        .projects-close-btn:hover {
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        .projects-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .projects-section {
+            margin-bottom: 24px;
+        }
+
+        .projects-section-title {
+            color: #ffd700;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .projects-save-form {
+            display: flex;
+            gap: 12px;
+        }
+
+        .projects-save-form input {
+            flex: 1;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ffd700;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .projects-save-form input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .projects-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .project-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 14px 16px;
+            transition: all 0.2s;
+        }
+
+        .project-item:hover {
+            border-color: #ffd700;
+        }
+
+        .project-item-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #ffd700;
+        }
+
+        .project-item-info {
+            flex: 1;
+        }
+
+        .project-item-name {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .project-item-meta {
+            color: #666;
+            font-size: 11px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .project-item-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .project-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .project-item-btn {
+            background: transparent;
+            border: 1px solid #444;
+            color: #888;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .project-item-btn:hover {
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        .project-item-btn.delete:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .projects-empty {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+            font-size: 13px;
+        }
+
+        .compare-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .compare-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .compare-card-title {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+
+        .compare-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 12px;
+        }
+
+        .compare-stat-label {
+            color: #888;
+        }
+
+        .compare-stat-value {
+            color: #fff;
+        }
+
+        /* AI Schedule Generator */
+        .ai-schedule-section {
+            background: linear-gradient(135deg, #1a0a2e 0%, #0d0d1a 100%);
+            border: 1px solid #6b21a8;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #6b21a8 0%, #4c1d95 100%);
+            border: 1px solid #7c3aed;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-ai:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #6b21a8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-ai:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-btn-icon {
+            font-size: 16px;
+        }
+
+        .ai-schedule-options {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .ai-schedule-options label {
+            color: #a78bfa;
+            font-size: 11px;
+        }
+
+        .ai-schedule-options input,
+        .ai-schedule-options select {
+            background: #1a1a2e;
+            border: 1px solid #4c1d95;
+            color: #e9d5ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .ai-schedule-options input:focus,
+        .ai-schedule-options select:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+
+        .ai-schedule-loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            color: #a78bfa;
+            font-size: 12px;
+        }
+
+        .ai-loading-spinner {
+            animation: spin 1s linear infinite;
+            font-size: 16px;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* AI Insights Panel */
+        .insights-panel {
+            background: linear-gradient(135deg, #0a1628 0%, #0d0d1a 100%);
+            border: 1px solid #1e3a5f;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .insights-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0a1628 100%);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .insights-header:hover {
+            background: linear-gradient(135deg, #2a4a6f 0%, #1a2638 100%);
+        }
+
+        .insights-header span:first-child {
+            color: #60a5fa;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .insights-toggle-icon {
+            color: #60a5fa;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .insights-panel.expanded .insights-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .insights-body {
+            padding: 20px;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .insight-card {
+            background: rgba(30, 58, 95, 0.3);
+            border: 1px solid #1e3a5f;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .insight-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .insight-icon {
+            font-size: 16px;
+        }
+
+        .insight-title {
+            color: #60a5fa;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .insight-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .insight-value.risk-low {
+            color: #4ade80;
+        }
+
+        .insight-value.risk-medium {
+            color: #fbbf24;
+        }
+
+        .insight-value.risk-high {
+            color: #f87171;
+        }
+
+        .insight-details {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .insights-suggestions {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .suggestions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .suggestions-header span {
+            color: #ffd700;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .suggestion-placeholder {
+            color: #64748b;
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .suggestion-item {
+            background: rgba(30, 58, 95, 0.3);
+            border: 1px solid #1e3a5f;
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .suggestion-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .suggestion-content {
+            flex: 1;
+        }
+
+        .suggestion-title {
+            color: #fff;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .suggestion-desc {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .insights-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 480px) {
@@ -1858,6 +2602,100 @@
             border-color: #ff8800;
         }
 
+        /* RFP Risks Section */
+        .rfp-risks-section {
+            background: linear-gradient(135deg, #2a0a0a 0%, #1a0a0a 100%);
+            border: 1px solid #ff4444;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .rfp-risks-section h4 {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin: 0 0 12px 0;
+        }
+
+        .rfp-risks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rfp-risk-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            border-left: 3px solid;
+        }
+
+        .rfp-risk-item.severity-high {
+            border-left-color: #ff4444;
+        }
+
+        .rfp-risk-item.severity-medium {
+            border-left-color: #ff8800;
+        }
+
+        .rfp-risk-item.severity-low {
+            border-left-color: #ffd700;
+        }
+
+        .rfp-risk-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .rfp-risk-category {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .rfp-risk-severity {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .rfp-risk-severity.high {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .rfp-risk-severity.medium {
+            background: #ff8800;
+            color: #000;
+        }
+
+        .rfp-risk-severity.low {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .rfp-risk-description {
+            color: #e0e0e0;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .rfp-risk-mitigation {
+            color: #888;
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        .rfp-risk-mitigation::before {
+            content: "💡 ";
+        }
+
         #rfp-truncation-notice h4 {
             color: #ff8800;
         }
@@ -2042,6 +2880,7 @@
                 <button id="prev-btn" class="btn btn-sm hidden" onclick="prevStep()">← BACK</button>
                 <span>■ WBS TERMINAL v1.0</span>
                 <div style="display: flex; align-items: center; gap: 8px;">
+                    <button class="rfp-header-btn" onclick="openProjectManager()">📁 PROJECTS</button>
                     <button class="rfp-header-btn" onclick="openRfpWizard()">📄 RFP WIZARD</button>
                     <span id="status-text">READY</span>
                     <button id="next-btn" class="btn btn-sm btn-primary" onclick="nextStep()">NEXT →</button>
@@ -2065,6 +2904,19 @@
 
                 <!-- Step 1: Phases -->
                 <div id="step1" class="step-content">
+                    <!-- Template Selector -->
+                    <div class="template-selector">
+                        <div class="template-header" onclick="toggleTemplateSelector()">
+                            <span>📋 START FROM TEMPLATE</span>
+                            <span class="template-toggle-icon">▼</span>
+                        </div>
+                        <div id="template-body" class="template-body hidden">
+                            <div class="template-grid" id="template-grid">
+                                <!-- Templates populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="section-title">PROJECT PHASES</div>
                     <div class="section-desc">Enter project phases separated by commas</div>
                     
@@ -2258,6 +3110,30 @@
                     <div class="section-title">PROJECT SCHEDULE</div>
                     <div class="section-desc">Set start/end dates per package</div>
                     
+                    <!-- AI Schedule Generator -->
+                    <div class="ai-schedule-section">
+                        <button class="btn btn-ai" onclick="generateAISchedule()" id="ai-schedule-btn">
+                            <span class="ai-btn-icon">🤖</span>
+                            <span>AI GENERATE SCHEDULE</span>
+                        </button>
+                        <div class="ai-schedule-options">
+                            <label>Project Start:</label>
+                            <input type="date" id="ai-schedule-start" value="">
+                            <label>Duration Target:</label>
+                            <select id="ai-schedule-duration">
+                                <option value="6">6 months</option>
+                                <option value="9">9 months</option>
+                                <option value="12" selected>12 months</option>
+                                <option value="18">18 months</option>
+                                <option value="24">24 months</option>
+                            </select>
+                        </div>
+                        <div id="ai-schedule-loading" class="ai-schedule-loading hidden">
+                            <span class="ai-loading-spinner">◐</span>
+                            <span>Analyzing project scope and generating schedule...</span>
+                        </div>
+                    </div>
+                    
                     <div style="max-height: 400px; overflow-y: auto;">
                         <table id="dates-table"></table>
                     </div>
@@ -2285,6 +3161,72 @@
                 <div class="kpi-card">
                     <div class="kpi-value" id="kpi-months">0</div>
                     <div class="kpi-label">MONTHS</div>
+                </div>
+            </div>
+
+            <!-- AI Insights Panel -->
+            <div class="insights-panel">
+                <div class="insights-header" onclick="toggleInsightsPanel()">
+                    <span>🤖 AI INSIGHTS & FORECASTING</span>
+                    <span class="insights-toggle-icon">▼</span>
+                </div>
+                <div id="insights-body" class="insights-body hidden">
+                    <div class="insights-grid">
+                        <!-- Risk Score -->
+                        <div class="insight-card">
+                            <div class="insight-card-header">
+                                <span class="insight-icon">⚠️</span>
+                                <span class="insight-title">Risk Assessment</span>
+                            </div>
+                            <div id="insight-risk-score" class="insight-value risk-medium">MEDIUM</div>
+                            <div id="insight-risk-details" class="insight-details">Analyzing project complexity...</div>
+                        </div>
+
+                        <!-- Cost Forecast -->
+                        <div class="insight-card">
+                            <div class="insight-card-header">
+                                <span class="insight-icon">💰</span>
+                                <span class="insight-title">Cost Forecast</span>
+                            </div>
+                            <div id="insight-cost-forecast" class="insight-value">$0</div>
+                            <div id="insight-cost-details" class="insight-details">Projected final cost...</div>
+                        </div>
+
+                        <!-- Schedule Forecast -->
+                        <div class="insight-card">
+                            <div class="insight-card-header">
+                                <span class="insight-icon">📅</span>
+                                <span class="insight-title">Schedule Forecast</span>
+                            </div>
+                            <div id="insight-schedule-forecast" class="insight-value">On Track</div>
+                            <div id="insight-schedule-details" class="insight-details">Completion estimate...</div>
+                        </div>
+
+                        <!-- Budget Health -->
+                        <div class="insight-card">
+                            <div class="insight-card-header">
+                                <span class="insight-icon">📊</span>
+                                <span class="insight-title">Budget Distribution</span>
+                            </div>
+                            <div id="insight-budget-health" class="insight-value">Balanced</div>
+                            <div id="insight-budget-details" class="insight-details">Analyzing discipline allocation...</div>
+                        </div>
+                    </div>
+
+                    <!-- AI Suggestions -->
+                    <div class="insights-suggestions">
+                        <div class="suggestions-header">
+                            <span>💡 AI Optimization Suggestions</span>
+                            <button class="btn btn-sm btn-ai" onclick="generateAIInsights()" id="generate-insights-btn">
+                                Generate Insights
+                            </button>
+                        </div>
+                        <div id="ai-suggestions-list" class="suggestions-list">
+                            <div class="suggestion-placeholder">
+                                Click "Generate Insights" to get AI-powered recommendations for your project.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2415,6 +3357,574 @@
         let currentStep = 1;
         let chart = null;
 
+        // ============================================
+        // PERSISTENCE SYSTEM
+        // ============================================
+        
+        const STORAGE_KEY = 'wbs_project_autosave';
+        const STORAGE_VERSION = 1;
+        let autosaveTimeout = null;
+        let lastSaveTime = null;
+
+        /**
+         * Debounce utility for autosave
+         */
+        function debounce(func, wait) {
+            return function executedFunction(...args) {
+                clearTimeout(autosaveTimeout);
+                autosaveTimeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        /**
+         * Shows the autosave indicator
+         */
+        function showAutosaveIndicator(status) {
+            const indicator = document.getElementById('autosave-indicator');
+            const icon = document.getElementById('autosave-icon');
+            const text = document.getElementById('autosave-text');
+            
+            if (!indicator) return;
+            
+            indicator.classList.remove('saving', 'saved');
+            
+            if (status === 'saving') {
+                indicator.classList.add('visible', 'saving');
+                icon.textContent = '◐';
+                text.textContent = 'Saving...';
+            } else if (status === 'saved') {
+                indicator.classList.add('visible', 'saved');
+                icon.textContent = '✓';
+                text.textContent = 'Saved';
+                setTimeout(() => {
+                    indicator.classList.remove('visible');
+                }, 2000);
+            }
+        }
+
+        /**
+         * Saves project data to localStorage
+         */
+        function saveToLocalStorage() {
+            try {
+                showAutosaveIndicator('saving');
+                
+                const saveData = {
+                    version: STORAGE_VERSION,
+                    timestamp: Date.now(),
+                    currentStep: currentStep,
+                    projectData: projectData,
+                    // Also save form values that might not be in projectData yet
+                    formState: {
+                        phases: document.getElementById('phases-input')?.value || '',
+                        packages: document.getElementById('packages-input')?.value || ''
+                    }
+                };
+                
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+                lastSaveTime = Date.now();
+                
+                setTimeout(() => showAutosaveIndicator('saved'), 300);
+                console.log('Project autosaved:', new Date().toLocaleTimeString());
+            } catch (error) {
+                console.error('Autosave failed:', error);
+            }
+        }
+
+        /**
+         * Debounced autosave function - saves 1 second after last change
+         */
+        const autosave = debounce(saveToLocalStorage, 1000);
+
+        /**
+         * Triggers autosave on any data change
+         */
+        function triggerAutosave() {
+            autosave();
+        }
+
+        /**
+         * Loads saved data from localStorage
+         * @returns {object|null} The saved data or null if none exists
+         */
+        function loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return null;
+                
+                const data = JSON.parse(saved);
+                
+                // Check version compatibility
+                if (data.version !== STORAGE_VERSION) {
+                    console.warn('Saved data version mismatch, discarding');
+                    return null;
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Failed to load saved data:', error);
+                return null;
+            }
+        }
+
+        /**
+         * Checks if saved data has meaningful content worth recovering
+         */
+        function hasMeaningfulData(data) {
+            if (!data || !data.projectData) return false;
+            
+            const pd = data.projectData;
+            return (
+                pd.phases.length > 0 ||
+                pd.disciplines.length > 0 ||
+                pd.packages.length > 0 ||
+                Object.keys(pd.budgets).length > 0 ||
+                pd.projectScope
+            );
+        }
+
+        /**
+         * Formats a timestamp for display
+         */
+        function formatTimestamp(ts) {
+            const date = new Date(ts);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            return date.toLocaleDateString();
+        }
+
+        /**
+         * Formats currency for recovery modal (local version)
+         */
+        function formatCurrencySimple(amount) {
+            return '$' + Math.round(amount || 0).toLocaleString('en-US');
+        }
+
+        /**
+         * Shows the recovery modal with saved data preview
+         */
+        function showRecoveryModal(savedData) {
+            const modal = document.getElementById('recovery-modal');
+            const preview = document.getElementById('recovery-preview');
+            
+            if (!modal || !preview) return;
+            
+            const pd = savedData.projectData;
+            const totalBudget = Object.values(pd.budgets || {}).reduce((sum, b) => sum + (parseFloat(b) || 0), 0);
+            
+            preview.innerHTML = `
+                <div class="recovery-preview-item">
+                    <span class="recovery-preview-label">Last saved:</span>
+                    <span class="recovery-preview-value">${formatTimestamp(savedData.timestamp)}</span>
+                </div>
+                <div class="recovery-preview-item">
+                    <span class="recovery-preview-label">Step:</span>
+                    <span class="recovery-preview-value">${savedData.currentStep} of 6</span>
+                </div>
+                <div class="recovery-preview-item">
+                    <span class="recovery-preview-label">Phases:</span>
+                    <span class="recovery-preview-value">${pd.phases.length > 0 ? pd.phases.join(', ') : 'None'}</span>
+                </div>
+                <div class="recovery-preview-item">
+                    <span class="recovery-preview-label">Disciplines:</span>
+                    <span class="recovery-preview-value">${pd.disciplines.length || 0} selected</span>
+                </div>
+                <div class="recovery-preview-item">
+                    <span class="recovery-preview-label">Packages:</span>
+                    <span class="recovery-preview-value">${pd.packages.length > 0 ? pd.packages.join(', ') : 'None'}</span>
+                </div>
+                <div class="recovery-preview-item">
+                    <span class="recovery-preview-label">Total Budget:</span>
+                    <span class="recovery-preview-value">${totalBudget > 0 ? formatCurrencySimple(totalBudget) : 'Not set'}</span>
+                </div>
+                ${pd.projectScope ? `
+                <div class="recovery-preview-item">
+                    <span class="recovery-preview-label">Project Scope:</span>
+                    <span class="recovery-preview-value">✓ From RFP Analysis</span>
+                </div>
+                ` : ''}
+            `;
+            
+            modal.classList.add('open');
+        }
+
+        /**
+         * Dismisses the recovery modal without action
+         */
+        function dismissRecovery() {
+            document.getElementById('recovery-modal')?.classList.remove('open');
+        }
+
+        /**
+         * Discards saved data and starts fresh
+         */
+        function discardRecovery() {
+            localStorage.removeItem(STORAGE_KEY);
+            dismissRecovery();
+            console.log('Saved data discarded');
+        }
+
+        /**
+         * Restores saved data
+         */
+        function restoreRecovery() {
+            const savedData = loadFromLocalStorage();
+            if (!savedData) {
+                dismissRecovery();
+                return;
+            }
+            
+            // Restore projectData
+            projectData = { ...projectData, ...savedData.projectData };
+            
+            // Restore form values
+            if (savedData.formState) {
+                const phasesInput = document.getElementById('phases-input');
+                const packagesInput = document.getElementById('packages-input');
+                if (phasesInput && savedData.formState.phases) {
+                    phasesInput.value = savedData.formState.phases;
+                }
+                if (packagesInput && savedData.formState.packages) {
+                    packagesInput.value = savedData.formState.packages;
+                }
+            }
+            
+            // Restore discipline selections
+            if (savedData.projectData.disciplines.length > 0) {
+                allDisciplines.forEach(d => {
+                    d.selected = savedData.projectData.disciplines.includes(d.name);
+                });
+                initDisciplines();
+            }
+            
+            // Navigate to saved step
+            currentStep = savedData.currentStep || 1;
+            showStep(currentStep);
+            updateProgress();
+            
+            dismissRecovery();
+            updateStatus('SESSION RESTORED');
+            console.log('Session restored from:', new Date(savedData.timestamp).toLocaleString());
+        }
+
+        /**
+         * Clears all saved data (for use after successful WBS generation or manual clear)
+         */
+        function clearSavedData() {
+            localStorage.removeItem(STORAGE_KEY);
+            console.log('Saved data cleared');
+        }
+
+        /**
+         * Checks for saved data on page load
+         */
+        function checkForSavedData() {
+            const savedData = loadFromLocalStorage();
+            if (savedData && hasMeaningfulData(savedData)) {
+                // Only show recovery if data is less than 7 days old
+                const ageMs = Date.now() - savedData.timestamp;
+                const maxAgeMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+                
+                if (ageMs < maxAgeMs) {
+                    showRecoveryModal(savedData);
+                } else {
+                    console.log('Saved data too old, discarding');
+                    clearSavedData();
+                }
+            }
+        }
+
+        // ============================================
+        // MULTI-PROJECT MANAGER
+        // ============================================
+        
+        const PROJECTS_STORAGE_KEY = 'wbs_saved_projects';
+
+        /**
+         * Opens the project manager modal
+         */
+        function openProjectManager() {
+            document.getElementById('projects-modal').classList.add('open');
+            populateProjectsList();
+            
+            // Pre-fill save name if project has meaningful data
+            const saveInput = document.getElementById('project-save-name');
+            if (projectData.phases.length > 0) {
+                const defaultName = projectData.phases[0] + ' Project';
+                saveInput.placeholder = defaultName;
+            }
+        }
+
+        /**
+         * Closes the project manager modal
+         */
+        function closeProjectManager() {
+            document.getElementById('projects-modal').classList.remove('open');
+        }
+
+        /**
+         * Gets all saved projects from localStorage
+         */
+        function getSavedProjects() {
+            try {
+                const saved = localStorage.getItem(PROJECTS_STORAGE_KEY);
+                return saved ? JSON.parse(saved) : [];
+            } catch (e) {
+                console.error('Failed to load saved projects:', e);
+                return [];
+            }
+        }
+
+        /**
+         * Saves the projects list to localStorage
+         */
+        function saveProjectsList(projects) {
+            localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
+        }
+
+        /**
+         * Saves the current project with a name
+         */
+        function saveNamedProject() {
+            const nameInput = document.getElementById('project-save-name');
+            let name = nameInput.value.trim();
+            
+            if (!name) {
+                name = projectData.phases.length > 0 
+                    ? projectData.phases[0] + ' Project' 
+                    : 'Untitled Project';
+            }
+            
+            // Check if project has data
+            if (!hasMeaningfulData({ projectData })) {
+                alert('No project data to save. Please complete some wizard steps first.');
+                return;
+            }
+            
+            const projects = getSavedProjects();
+            
+            // Check for existing project with same name
+            const existingIdx = projects.findIndex(p => p.name === name);
+            if (existingIdx >= 0) {
+                if (!confirm(`A project named "${name}" already exists. Overwrite it?`)) {
+                    return;
+                }
+                projects.splice(existingIdx, 1);
+            }
+            
+            // Create project snapshot
+            const totalBudget = Object.values(projectData.budgets).reduce((sum, b) => sum + (parseFloat(b) || 0), 0);
+            
+            const projectSnapshot = {
+                id: Date.now().toString(),
+                name: name,
+                savedAt: Date.now(),
+                currentStep: currentStep,
+                projectData: JSON.parse(JSON.stringify(projectData)), // Deep clone
+                summary: {
+                    phases: projectData.phases.length,
+                    disciplines: projectData.disciplines.length,
+                    packages: projectData.packages.length,
+                    totalBudget: totalBudget
+                }
+            };
+            
+            projects.unshift(projectSnapshot);
+            saveProjectsList(projects);
+            
+            nameInput.value = '';
+            populateProjectsList();
+            
+            updateStatus(`SAVED: ${name}`);
+        }
+
+        /**
+         * Populates the projects list in the modal
+         */
+        function populateProjectsList() {
+            const list = document.getElementById('projects-list');
+            const projects = getSavedProjects();
+            
+            if (projects.length === 0) {
+                list.innerHTML = `
+                    <div class="projects-empty">
+                        <div style="font-size: 24px; margin-bottom: 8px;">📂</div>
+                        No saved projects yet.<br>
+                        Save your current project using the form above.
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = projects.map(project => `
+                <div class="project-item" data-id="${project.id}">
+                    <input type="checkbox" class="project-item-checkbox" onchange="updateCompareView()">
+                    <div class="project-item-info">
+                        <div class="project-item-name">${escapeHtml(project.name)}</div>
+                        <div class="project-item-meta">
+                            <span>📅 ${formatTimestamp(project.savedAt)}</span>
+                            <span>📊 ${project.summary.disciplines} disciplines</span>
+                            <span>💰 ${formatCurrencySimple(project.summary.totalBudget)}</span>
+                        </div>
+                    </div>
+                    <div class="project-item-actions">
+                        <button class="project-item-btn" onclick="loadProject('${project.id}')">Load</button>
+                        <button class="project-item-btn" onclick="duplicateProject('${project.id}')">Clone</button>
+                        <button class="project-item-btn delete" onclick="deleteProject('${project.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Loads a saved project
+         */
+        function loadProject(projectId) {
+            const projects = getSavedProjects();
+            const project = projects.find(p => p.id === projectId);
+            
+            if (!project) {
+                alert('Project not found.');
+                return;
+            }
+            
+            // Confirm if there's current data
+            if (hasMeaningfulData({ projectData })) {
+                if (!confirm(`Load "${project.name}"? Your current unsaved work will be lost.`)) {
+                    return;
+                }
+            }
+            
+            // Load project data
+            projectData = JSON.parse(JSON.stringify(project.projectData));
+            currentStep = project.currentStep || 1;
+            
+            // Update UI
+            document.getElementById('phases-input').value = projectData.phases.join(', ');
+            document.getElementById('packages-input').value = projectData.packages.join(', ');
+            
+            // Update discipline selections
+            allDisciplines.forEach(d => {
+                d.selected = projectData.disciplines.includes(d.name);
+            });
+            initDisciplines();
+            
+            // Navigate to saved step
+            showStep(currentStep);
+            updateProgress();
+            
+            closeProjectManager();
+            triggerAutosave();
+            updateStatus(`LOADED: ${project.name}`);
+        }
+
+        /**
+         * Duplicates a saved project
+         */
+        function duplicateProject(projectId) {
+            const projects = getSavedProjects();
+            const project = projects.find(p => p.id === projectId);
+            
+            if (!project) return;
+            
+            const newProject = JSON.parse(JSON.stringify(project));
+            newProject.id = Date.now().toString();
+            newProject.name = project.name + ' (Copy)';
+            newProject.savedAt = Date.now();
+            
+            projects.unshift(newProject);
+            saveProjectsList(projects);
+            populateProjectsList();
+        }
+
+        /**
+         * Deletes a saved project
+         */
+        function deleteProject(projectId) {
+            const projects = getSavedProjects();
+            const project = projects.find(p => p.id === projectId);
+            
+            if (!project) return;
+            
+            if (!confirm(`Delete "${project.name}"? This cannot be undone.`)) {
+                return;
+            }
+            
+            const filtered = projects.filter(p => p.id !== projectId);
+            saveProjectsList(filtered);
+            populateProjectsList();
+            updateCompareView();
+        }
+
+        /**
+         * Updates the compare view based on selected projects
+         */
+        function updateCompareView() {
+            const checkboxes = document.querySelectorAll('.project-item-checkbox:checked');
+            const compareSection = document.getElementById('compare-section');
+            const compareView = document.getElementById('compare-view');
+            
+            if (checkboxes.length < 2) {
+                compareSection.classList.add('hidden');
+                return;
+            }
+            
+            compareSection.classList.remove('hidden');
+            
+            const projects = getSavedProjects();
+            const selectedProjects = [];
+            
+            checkboxes.forEach(cb => {
+                const projectItem = cb.closest('.project-item');
+                const projectId = projectItem.dataset.id;
+                const project = projects.find(p => p.id === projectId);
+                if (project) selectedProjects.push(project);
+            });
+            
+            compareView.innerHTML = selectedProjects.map(project => `
+                <div class="compare-card">
+                    <div class="compare-card-title">${escapeHtml(project.name)}</div>
+                    <div class="compare-stat">
+                        <span class="compare-stat-label">Total Budget</span>
+                        <span class="compare-stat-value">${formatCurrencySimple(project.summary.totalBudget)}</span>
+                    </div>
+                    <div class="compare-stat">
+                        <span class="compare-stat-label">Phases</span>
+                        <span class="compare-stat-value">${project.summary.phases}</span>
+                    </div>
+                    <div class="compare-stat">
+                        <span class="compare-stat-label">Disciplines</span>
+                        <span class="compare-stat-value">${project.summary.disciplines}</span>
+                    </div>
+                    <div class="compare-stat">
+                        <span class="compare-stat-label">Packages</span>
+                        <span class="compare-stat-value">${project.summary.packages}</span>
+                    </div>
+                    <div class="compare-stat">
+                        <span class="compare-stat-label">Saved</span>
+                        <span class="compare-stat-value">${formatTimestamp(project.savedAt)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Escapes HTML characters to prevent XSS
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Discipline list with pre-selected items
         const allDisciplines = [
             { name: 'Structures', selected: true },
@@ -2493,6 +4003,224 @@
                 pattern: 'equal'
             }
         };
+
+        // ============================================
+        // PROJECT TEMPLATES
+        // ============================================
+        
+        const projectTemplates = {
+            highway: {
+                id: 'highway',
+                name: 'Highway Reconstruction',
+                icon: '🛣️',
+                description: 'Highway widening, reconstruction, or improvement project',
+                projectType: 'Highway/Roadway',
+                phases: ['Base Design', 'ESDC', 'TSCD'],
+                disciplines: ['Design PM', 'Civil', 'Drainage', 'Traffic', 'Survey', 'Pavement', 'Utilities', 'Environmental', 'Lighting'],
+                packages: ['Preliminary', 'Interim', 'Final', 'RFC'],
+                constructionCost: 10000000,
+                designFeePercent: 12,
+                claimingScheme: 'bellCurve'
+            },
+            bridge: {
+                id: 'bridge',
+                name: 'Bridge Replacement',
+                icon: '🌉',
+                description: 'Bridge design, replacement, or rehabilitation project',
+                projectType: 'Bridge',
+                phases: ['Base Design', 'ESDC', 'TSCD'],
+                disciplines: ['Design PM', 'Structures', 'Bridges', 'Geotechnical', 'Civil', 'Drainage', 'H&H', 'Survey', 'Environmental'],
+                packages: ['Preliminary', 'Interim', 'Final', 'RFC'],
+                constructionCost: 15000000,
+                designFeePercent: 15,
+                claimingScheme: 'bellCurve'
+            },
+            drainage: {
+                id: 'drainage',
+                name: 'Drainage Improvement',
+                icon: '💧',
+                description: 'Stormwater management or drainage infrastructure project',
+                projectType: 'Drainage/Utilities',
+                phases: ['Base Design', 'Final Design'],
+                disciplines: ['Design PM', 'Drainage', 'H&H', 'Civil', 'Environmental', 'Survey', 'Utilities', 'Geotechnical'],
+                packages: ['Preliminary', 'Final', 'RFC'],
+                constructionCost: 5000000,
+                designFeePercent: 12,
+                claimingScheme: 'linear'
+            },
+            intersection: {
+                id: 'intersection',
+                name: 'Intersection Improvement',
+                icon: '🚦',
+                description: 'Traffic signal, intersection, or safety improvement project',
+                projectType: 'Highway/Roadway',
+                phases: ['Base Design', 'Final Design'],
+                disciplines: ['Design PM', 'Civil', 'Traffic', 'Lighting', 'Electrical', 'Drainage', 'Survey', 'Utilities'],
+                packages: ['Preliminary', 'Final', 'RFC'],
+                constructionCost: 3000000,
+                designFeePercent: 15,
+                claimingScheme: 'bellCurve'
+            },
+            multiDiscipline: {
+                id: 'multiDiscipline',
+                name: 'Multi-Discipline Infrastructure',
+                icon: '🏗️',
+                description: 'Large-scale project with multiple engineering disciplines',
+                projectType: 'Highway/Roadway',
+                phases: ['Base Design', 'ESDC', 'TSCD', 'Closeout'],
+                disciplines: ['Design PM', 'Structures', 'Civil', 'Drainage', 'Traffic', 'ITS', 'Electrical', 'Environmental', 'Survey', 'Utilities', 'Lighting', 'Pavement', 'Geotechnical'],
+                packages: ['Preliminary', 'Interim', 'Final', 'RFC', 'As-Built'],
+                constructionCost: 50000000,
+                designFeePercent: 10,
+                claimingScheme: 'bellCurve'
+            },
+            transit: {
+                id: 'transit',
+                name: 'Transit/Rail Station',
+                icon: '🚆',
+                description: 'Transit station, rail crossing, or transit infrastructure',
+                projectType: 'Bridge',
+                phases: ['Conceptual Design', 'Preliminary Design', 'Final Design'],
+                disciplines: ['Design PM', 'Structures', 'Architecture', 'Civil', 'Electrical', 'Mechanical', 'Systems', 'Traffic', 'Environmental'],
+                packages: ['30% Design', '60% Design', '90% Design', 'Final'],
+                constructionCost: 25000000,
+                designFeePercent: 12,
+                claimingScheme: 'bellCurve'
+            }
+        };
+
+        /**
+         * Toggles the template selector visibility
+         */
+        function toggleTemplateSelector() {
+            const selector = document.querySelector('.template-selector');
+            const body = document.getElementById('template-body');
+            
+            selector.classList.toggle('expanded');
+            body.classList.toggle('hidden');
+            
+            // Populate templates on first open
+            if (!body.classList.contains('hidden') && body.innerHTML.trim() === '') {
+                populateTemplates();
+            }
+        }
+
+        /**
+         * Populates the template grid with available templates
+         */
+        function populateTemplates() {
+            const grid = document.getElementById('template-grid');
+            
+            grid.innerHTML = Object.values(projectTemplates).map(template => `
+                <div class="template-card" onclick="applyTemplate('${template.id}')">
+                    <div class="template-card-icon">${template.icon}</div>
+                    <div class="template-card-title">${template.name}</div>
+                    <div class="template-card-desc">${template.description}</div>
+                    <div class="template-card-stats">
+                        <div class="template-card-stat">
+                            <span>${template.phases.length}</span> phases
+                        </div>
+                        <div class="template-card-stat">
+                            <span>${template.disciplines.length}</span> disciplines
+                        </div>
+                        <div class="template-card-stat">
+                            <span>${template.packages.length}</span> packages
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Applies a template to populate the wizard
+         */
+        function applyTemplate(templateId) {
+            const template = projectTemplates[templateId];
+            if (!template) return;
+            
+            // Confirm if there's existing data
+            const hasData = projectData.phases.length > 0 || 
+                           projectData.disciplines.length > 0 || 
+                           Object.keys(projectData.budgets).length > 0;
+            
+            if (hasData) {
+                if (!confirm(`This will replace your current project data with the "${template.name}" template. Continue?`)) {
+                    return;
+                }
+            }
+            
+            // Apply template data
+            projectData.phases = [...template.phases];
+            projectData.packages = [...template.packages];
+            projectData.disciplines = [...template.disciplines];
+            
+            // Set calculator values
+            projectData.calculator.totalConstructionCost = template.constructionCost;
+            projectData.calculator.designFeePercent = template.designFeePercent;
+            projectData.calculator.projectType = template.projectType;
+            projectData.calculator.isCalculated = false;
+            
+            // Update form inputs
+            document.getElementById('phases-input').value = template.phases.join(', ');
+            document.getElementById('packages-input').value = template.packages.join(', ');
+            
+            // Update discipline grid
+            allDisciplines.forEach(d => {
+                d.selected = template.disciplines.includes(d.name);
+            });
+            initDisciplines();
+            
+            // Initialize claiming with the template's scheme
+            const scheme = claimingSchemes[template.claimingScheme];
+            if (scheme) {
+                const adjustedScheme = adjustSchemeToPackageCount(template.claimingScheme, template.packages.length);
+                template.disciplines.forEach(disc => {
+                    template.packages.forEach((pkg, i) => {
+                        const key = `${disc}-${pkg}`;
+                        projectData.claiming[key] = adjustedScheme[i];
+                    });
+                });
+            }
+            
+            // Initialize dates (spread across typical project duration)
+            const today = new Date();
+            const monthsPerPhase = Math.ceil(12 / template.phases.length);
+            template.disciplines.forEach(disc => {
+                template.packages.forEach((pkg, i) => {
+                    const key = `${disc}-${pkg}`;
+                    const startOffset = i * (monthsPerPhase * 30 / template.packages.length);
+                    const endOffset = startOffset + (monthsPerPhase * 30 / template.packages.length) - 1;
+                    
+                    const startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() + startOffset);
+                    const endDate = new Date(today);
+                    endDate.setDate(endDate.getDate() + endOffset);
+                    
+                    projectData.dates[key] = {
+                        start: startDate.toISOString().split('T')[0],
+                        end: endDate.toISOString().split('T')[0]
+                    };
+                });
+            });
+            
+            // Initialize budgets to 0 (user will use calculator)
+            projectData.budgets = {};
+            template.disciplines.forEach(disc => {
+                projectData.budgets[disc] = 0;
+            });
+            
+            // Collapse template selector
+            toggleTemplateSelector();
+            
+            // Trigger autosave
+            triggerAutosave();
+            
+            // Update UI
+            updateStatus(`TEMPLATE: ${template.name}`);
+            
+            // Show success message
+            alert(`✅ Template "${template.name}" applied!\n\n• ${template.phases.length} phases\n• ${template.disciplines.length} disciplines\n• ${template.packages.length} packages\n\nConstruction cost pre-set to $${(template.constructionCost / 1000000).toFixed(1)}M.\nUse the Cost Estimator in Step 4 to calculate budgets.`);
+        }
 
         // Project complexity mapping per project type
         const projectComplexityMap = {
@@ -2624,7 +4352,30 @@
         document.addEventListener('DOMContentLoaded', () => {
             initDisciplines();
             updateStatus('READY');
+            
+            // Check for saved data after a brief delay to let UI initialize
+            setTimeout(checkForSavedData, 500);
+            
+            // Set up input listeners for autosave
+            setupAutosaveListeners();
         });
+
+        /**
+         * Sets up event listeners for autosave on all inputs
+         */
+        function setupAutosaveListeners() {
+            // Listen for input changes on form fields
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                el.addEventListener('change', triggerAutosave);
+                el.addEventListener('input', triggerAutosave);
+            });
+            
+            // Listen for discipline grid clicks
+            const discGrid = document.getElementById('disciplines-grid');
+            if (discGrid) {
+                discGrid.addEventListener('click', () => setTimeout(triggerAutosave, 100));
+            }
+        }
 
         /**
          * Updates the status indicator in the terminal header
@@ -2784,6 +4535,9 @@
                     });
                     break;
             }
+            
+            // Trigger autosave after any step save
+            triggerAutosave();
         }
 
         /**
@@ -6408,9 +8162,9 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
             const resultsVisible = !document.getElementById('results-section').classList.contains('hidden');
             
             if (resultsVisible) {
-                addMessage('assistant', `👋 Hi! I'm your WBS Terminal assistant. You're viewing the **Generated WBS Results**.\n\nI have access to all your project data! Ask me about:\n• **Budget analysis** - "Which discipline has the highest budget?"\n• **Schedule questions** - "When does the project end?"\n• **Comparisons** - "Compare Civil vs Structures budgets"\n• **Breakdowns** - "Show me the Preliminary package budgets"\n• **Export options** - "How do I export to CSV?"\n\nWhat would you like to know about your WBS?`);
+                addMessage('assistant', `👋 Hi! I'm your WBS Terminal assistant. You're viewing the **Generated WBS Results**.\n\nI can **analyze your data** and **make changes** using natural language:\n\n**📊 Analysis:**\n• "Which discipline has the highest budget?"\n• "Compare Civil vs Structures budgets"\n• "Run a what-if scenario if we cut Traffic by 20%"\n\n**✏️ Editing (I can do this!):**\n• "Add $50,000 to Structures budget"\n• "Transfer 10% from Civil to Drainage"\n• "Add a new QA/QC discipline with $75,000"\n• "Extend all Final packages by 2 weeks"\n\nWhat would you like to do?`);
             } else {
-                addMessage('assistant', `👋 Hi! I'm your WBS Terminal assistant. You're currently on **${context.currentView}**.\n\nAsk me anything about:\n• This step and what to do\n• Your project data\n• WBS concepts & best practices\n\nHow can I help?`);
+                addMessage('assistant', `👋 Hi! I'm your WBS Terminal assistant. You're currently on **${context.currentView}**.\n\nAsk me anything about:\n• This step and what to do\n• Your project data\n• WBS concepts & best practices\n\n💡 **Tip:** Generate your WBS first, then I can help you edit budgets and schedules using natural language!\n\nHow can I help?`);
             }
         }
 
@@ -6601,17 +8355,41 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
         }
 
         /**
+         * Updates the last message in place (for streaming)
+         * @param {string} content - The updated content
+         */
+        function updateLastMessage(content) {
+            if (chatState.messages.length > 0) {
+                chatState.messages[chatState.messages.length - 1].content = content;
+                renderMessages();
+            }
+        }
+
+        /**
+         * Adds a streaming message placeholder
+         * @param {string} role - The role of the message
+         * @returns {number} Index of the added message
+         */
+        function addStreamingMessage(role) {
+            chatState.messages.push({ role, content: '' });
+            renderMessages();
+            return chatState.messages.length - 1;
+        }
+
+        /**
          * Renders all chat messages
          */
         function renderMessages() {
             const container = document.getElementById('chat-messages');
-            container.innerHTML = chatState.messages.map(msg => {
+            container.innerHTML = chatState.messages.map((msg, idx) => {
                 const formattedContent = msg.content
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/`(.*?)`/g, '<code>$1</code>')
                     .replace(/\n/g, '<br>')
                     .replace(/• /g, '&bull; ');
-                return `<div class="chat-message ${msg.role}">${formattedContent}</div>`;
+                const isStreaming = idx === chatState.messages.length - 1 && chatState.isLoading && msg.role === 'assistant';
+                const streamingClass = isStreaming ? ' streaming' : '';
+                return `<div class="chat-message ${msg.role}${streamingClass}">${formattedContent || '<span class="streaming-cursor">▋</span>'}</div>`;
             }).join('');
             
             // Scroll to bottom
@@ -6634,8 +8412,974 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
             }
         }
 
+        // ============================================
+        // NATURAL LANGUAGE WBS EDITING (TOOL CALLING)
+        // ============================================
+
         /**
-         * Sends a message to the OpenAI API
+         * Tool definitions for OpenAI function calling
+         */
+        const chatTools = [
+            {
+                type: "function",
+                function: {
+                    name: "adjust_budget",
+                    description: "Adjust a discipline's budget by setting a new amount or modifying by a percentage or fixed amount",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            discipline: {
+                                type: "string",
+                                description: "The name of the discipline to adjust (e.g., 'Structures', 'Civil')"
+                            },
+                            action: {
+                                type: "string",
+                                enum: ["set", "increase", "decrease", "transfer"],
+                                description: "The type of adjustment: set absolute value, increase, decrease, or transfer to another discipline"
+                            },
+                            amount: {
+                                type: "number",
+                                description: "The amount to adjust (in dollars, or percentage if is_percentage is true)"
+                            },
+                            is_percentage: {
+                                type: "boolean",
+                                description: "If true, the amount is a percentage; if false, it's a dollar amount"
+                            },
+                            target_discipline: {
+                                type: "string",
+                                description: "For transfer action only: the discipline to transfer funds to"
+                            }
+                        },
+                        required: ["discipline", "action", "amount"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "add_discipline",
+                    description: "Add a new discipline to the project",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            name: {
+                                type: "string",
+                                description: "Name of the new discipline"
+                            },
+                            budget: {
+                                type: "number",
+                                description: "Initial budget for the discipline"
+                            }
+                        },
+                        required: ["name"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "remove_discipline",
+                    description: "Remove a discipline from the project",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            discipline: {
+                                type: "string",
+                                description: "Name of the discipline to remove"
+                            }
+                        },
+                        required: ["discipline"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "modify_schedule",
+                    description: "Modify the schedule dates for a discipline or package",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            discipline: {
+                                type: "string",
+                                description: "The discipline to modify (or 'all' for all disciplines)"
+                            },
+                            package: {
+                                type: "string",
+                                description: "The package to modify (or 'all' for all packages)"
+                            },
+                            action: {
+                                type: "string",
+                                enum: ["extend", "shorten", "shift", "set_start", "set_end"],
+                                description: "Type of schedule modification"
+                            },
+                            days: {
+                                type: "integer",
+                                description: "Number of days to adjust (positive or negative)"
+                            },
+                            date: {
+                                type: "string",
+                                description: "For set_start/set_end: the new date (YYYY-MM-DD format)"
+                            }
+                        },
+                        required: ["discipline", "action"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "run_what_if",
+                    description: "Run a what-if scenario analysis showing impacts of proposed changes",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            scenario_description: {
+                                type: "string",
+                                description: "Description of the scenario to analyze"
+                            },
+                            changes: {
+                                type: "array",
+                                description: "List of proposed changes to analyze",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        discipline: { type: "string" },
+                                        budget_change: { type: "number" },
+                                        is_percentage: { type: "boolean" }
+                                    }
+                                }
+                            }
+                        },
+                        required: ["scenario_description"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "get_project_summary",
+                    description: "Get detailed project statistics and KPIs",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            include_details: {
+                                type: "boolean",
+                                description: "Whether to include detailed breakdowns"
+                            }
+                        }
+                    }
+                }
+            }
+        ];
+
+        /**
+         * Executes a tool call and returns the result
+         * @param {string} name - Tool function name
+         * @param {object} args - Tool arguments
+         * @returns {object} Result of the tool execution
+         */
+        function executeToolCall(name, args) {
+            try {
+                switch (name) {
+                    case 'adjust_budget':
+                        return executeAdjustBudget(args);
+                    case 'add_discipline':
+                        return executeAddDiscipline(args);
+                    case 'remove_discipline':
+                        return executeRemoveDiscipline(args);
+                    case 'modify_schedule':
+                        return executeModifySchedule(args);
+                    case 'run_what_if':
+                        return executeWhatIf(args);
+                    case 'get_project_summary':
+                        return executeGetProjectSummary(args);
+                    default:
+                        return { success: false, error: `Unknown tool: ${name}` };
+                }
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        /**
+         * Adjusts a discipline's budget
+         */
+        function executeAdjustBudget(args) {
+            const { discipline, action, amount, is_percentage, target_discipline } = args;
+            
+            // Find the discipline (case-insensitive)
+            const discKey = Object.keys(projectData.budgets).find(
+                d => d.toLowerCase() === discipline.toLowerCase()
+            );
+            
+            if (!discKey && action !== 'set') {
+                return { success: false, error: `Discipline "${discipline}" not found in project` };
+            }
+            
+            const currentBudget = projectData.budgets[discKey] || 0;
+            let newBudget = currentBudget;
+            let changeAmount = is_percentage ? (currentBudget * amount / 100) : amount;
+            
+            switch (action) {
+                case 'set':
+                    newBudget = amount;
+                    changeAmount = amount - currentBudget;
+                    break;
+                case 'increase':
+                    newBudget = currentBudget + changeAmount;
+                    break;
+                case 'decrease':
+                    newBudget = Math.max(0, currentBudget - changeAmount);
+                    changeAmount = currentBudget - newBudget;
+                    break;
+                case 'transfer':
+                    if (!target_discipline) {
+                        return { success: false, error: 'Target discipline required for transfer' };
+                    }
+                    const targetKey = Object.keys(projectData.budgets).find(
+                        d => d.toLowerCase() === target_discipline.toLowerCase()
+                    );
+                    if (!targetKey) {
+                        return { success: false, error: `Target discipline "${target_discipline}" not found` };
+                    }
+                    const transferAmt = is_percentage ? (currentBudget * amount / 100) : amount;
+                    projectData.budgets[discKey] = currentBudget - transferAmt;
+                    projectData.budgets[targetKey] = (projectData.budgets[targetKey] || 0) + transferAmt;
+                    triggerAutosave();
+                    return {
+                        success: true,
+                        message: `Transferred $${formatNumberShort(transferAmt)} from ${discKey} to ${targetKey}`,
+                        changes: {
+                            [discKey]: { from: currentBudget, to: projectData.budgets[discKey] },
+                            [targetKey]: { from: projectData.budgets[targetKey] - transferAmt, to: projectData.budgets[targetKey] }
+                        }
+                    };
+            }
+            
+            if (discKey) {
+                projectData.budgets[discKey] = newBudget;
+            } else {
+                // Adding new discipline with set action
+                projectData.budgets[discipline] = newBudget;
+                if (!projectData.disciplines.includes(discipline)) {
+                    projectData.disciplines.push(discipline);
+                }
+            }
+            
+            triggerAutosave();
+            
+            return {
+                success: true,
+                message: `${action === 'set' ? 'Set' : action === 'increase' ? 'Increased' : 'Decreased'} ${discKey || discipline} budget`,
+                changes: {
+                    discipline: discKey || discipline,
+                    previous: currentBudget,
+                    new: newBudget,
+                    difference: newBudget - currentBudget
+                },
+                newTotalBudget: Object.values(projectData.budgets).reduce((sum, b) => sum + b, 0)
+            };
+        }
+
+        /**
+         * Adds a new discipline to the project
+         */
+        function executeAddDiscipline(args) {
+            const { name, budget = 0 } = args;
+            
+            // Check if discipline already exists
+            const exists = projectData.disciplines.some(
+                d => d.toLowerCase() === name.toLowerCase()
+            );
+            
+            if (exists) {
+                return { success: false, error: `Discipline "${name}" already exists` };
+            }
+            
+            // Add discipline
+            projectData.disciplines.push(name);
+            projectData.budgets[name] = budget;
+            
+            // Initialize claiming for new discipline
+            projectData.packages.forEach((pkg, i) => {
+                const key = `${name}-${pkg}`;
+                const claimPerPackage = Math.floor(100 / projectData.packages.length);
+                const remainder = 100 - (claimPerPackage * projectData.packages.length);
+                projectData.claiming[key] = claimPerPackage + (i === projectData.packages.length - 1 ? remainder : 0);
+            });
+            
+            // Initialize dates
+            const today = new Date();
+            projectData.packages.forEach((pkg, i) => {
+                const key = `${name}-${pkg}`;
+                const startDate = new Date(today);
+                startDate.setDate(startDate.getDate() + i * 30);
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 28);
+                projectData.dates[key] = {
+                    start: startDate.toISOString().split('T')[0],
+                    end: endDate.toISOString().split('T')[0]
+                };
+            });
+            
+            triggerAutosave();
+            
+            return {
+                success: true,
+                message: `Added discipline "${name}" with budget $${formatNumberShort(budget)}`,
+                discipline: name,
+                budget: budget,
+                totalDisciplines: projectData.disciplines.length
+            };
+        }
+
+        /**
+         * Removes a discipline from the project
+         */
+        function executeRemoveDiscipline(args) {
+            const { discipline } = args;
+            
+            const idx = projectData.disciplines.findIndex(
+                d => d.toLowerCase() === discipline.toLowerCase()
+            );
+            
+            if (idx === -1) {
+                return { success: false, error: `Discipline "${discipline}" not found` };
+            }
+            
+            const discName = projectData.disciplines[idx];
+            const removedBudget = projectData.budgets[discName] || 0;
+            
+            // Remove discipline
+            projectData.disciplines.splice(idx, 1);
+            delete projectData.budgets[discName];
+            
+            // Remove claiming and dates entries
+            Object.keys(projectData.claiming).forEach(key => {
+                if (key.startsWith(`${discName}-`)) {
+                    delete projectData.claiming[key];
+                }
+            });
+            Object.keys(projectData.dates).forEach(key => {
+                if (key.startsWith(`${discName}-`)) {
+                    delete projectData.dates[key];
+                }
+            });
+            
+            triggerAutosave();
+            
+            return {
+                success: true,
+                message: `Removed discipline "${discName}" (freed $${formatNumberShort(removedBudget)})`,
+                removedBudget: removedBudget,
+                remainingDisciplines: projectData.disciplines.length
+            };
+        }
+
+        /**
+         * Modifies schedule dates
+         */
+        function executeModifySchedule(args) {
+            const { discipline, package: pkg, action, days, date } = args;
+            let modified = 0;
+            const changes = [];
+            
+            // Build list of keys to modify
+            const keysToModify = [];
+            if (discipline.toLowerCase() === 'all') {
+                projectData.disciplines.forEach(d => {
+                    if (pkg && pkg.toLowerCase() !== 'all') {
+                        keysToModify.push(`${d}-${pkg}`);
+                    } else {
+                        projectData.packages.forEach(p => keysToModify.push(`${d}-${p}`));
+                    }
+                });
+            } else {
+                const discName = projectData.disciplines.find(
+                    d => d.toLowerCase() === discipline.toLowerCase()
+                );
+                if (!discName) {
+                    return { success: false, error: `Discipline "${discipline}" not found` };
+                }
+                if (pkg && pkg.toLowerCase() !== 'all') {
+                    keysToModify.push(`${discName}-${pkg}`);
+                } else {
+                    projectData.packages.forEach(p => keysToModify.push(`${discName}-${p}`));
+                }
+            }
+            
+            keysToModify.forEach(key => {
+                if (!projectData.dates[key]) return;
+                
+                const dates = projectData.dates[key];
+                const startDate = new Date(dates.start);
+                const endDate = new Date(dates.end);
+                
+                switch (action) {
+                    case 'extend':
+                        endDate.setDate(endDate.getDate() + (days || 7));
+                        break;
+                    case 'shorten':
+                        endDate.setDate(endDate.getDate() - (days || 7));
+                        break;
+                    case 'shift':
+                        startDate.setDate(startDate.getDate() + (days || 0));
+                        endDate.setDate(endDate.getDate() + (days || 0));
+                        break;
+                    case 'set_start':
+                        if (date) {
+                            const newStart = new Date(date);
+                            const duration = (endDate - startDate) / (1000 * 60 * 60 * 24);
+                            startDate.setTime(newStart.getTime());
+                            endDate.setTime(newStart.getTime() + duration * 24 * 60 * 60 * 1000);
+                        }
+                        break;
+                    case 'set_end':
+                        if (date) {
+                            endDate.setTime(new Date(date).getTime());
+                        }
+                        break;
+                }
+                
+                projectData.dates[key] = {
+                    start: startDate.toISOString().split('T')[0],
+                    end: endDate.toISOString().split('T')[0]
+                };
+                
+                modified++;
+                changes.push({
+                    key,
+                    newStart: projectData.dates[key].start,
+                    newEnd: projectData.dates[key].end
+                });
+            });
+            
+            triggerAutosave();
+            
+            return {
+                success: true,
+                message: `Modified ${modified} schedule entries`,
+                action: action,
+                daysChanged: days || 0,
+                modifiedCount: modified,
+                changes: changes.slice(0, 5) // Limit to first 5 for readability
+            };
+        }
+
+        /**
+         * Runs a what-if scenario analysis
+         */
+        function executeWhatIf(args) {
+            const { scenario_description, changes = [] } = args;
+            
+            const currentTotal = Object.values(projectData.budgets).reduce((sum, b) => sum + b, 0);
+            let projectedTotal = currentTotal;
+            const impacts = [];
+            
+            changes.forEach(change => {
+                const discKey = Object.keys(projectData.budgets).find(
+                    d => d.toLowerCase() === change.discipline?.toLowerCase()
+                );
+                if (discKey) {
+                    const current = projectData.budgets[discKey] || 0;
+                    const changeAmt = change.is_percentage 
+                        ? (current * change.budget_change / 100) 
+                        : change.budget_change;
+                    projectedTotal += changeAmt;
+                    impacts.push({
+                        discipline: discKey,
+                        currentBudget: current,
+                        projectedBudget: current + changeAmt,
+                        change: changeAmt,
+                        percentageChange: ((changeAmt / current) * 100).toFixed(1) + '%'
+                    });
+                }
+            });
+            
+            return {
+                success: true,
+                scenario: scenario_description,
+                currentTotalBudget: currentTotal,
+                projectedTotalBudget: projectedTotal,
+                netChange: projectedTotal - currentTotal,
+                percentageChange: ((projectedTotal - currentTotal) / currentTotal * 100).toFixed(1) + '%',
+                impacts: impacts,
+                note: "This is a simulation. No changes have been applied."
+            };
+        }
+
+        /**
+         * Gets project summary and KPIs
+         */
+        function executeGetProjectSummary(args) {
+            const { include_details = false } = args || {};
+            
+            const totalBudget = Object.values(projectData.budgets).reduce((sum, b) => sum + b, 0);
+            const wbsCount = projectData.phases.length * projectData.disciplines.length * projectData.packages.length;
+            
+            // Find date range
+            let minDate = null, maxDate = null;
+            Object.values(projectData.dates).forEach(d => {
+                if (d.start && (!minDate || d.start < minDate)) minDate = d.start;
+                if (d.end && (!maxDate || d.end > maxDate)) maxDate = d.end;
+            });
+            
+            const durationDays = minDate && maxDate 
+                ? Math.ceil((new Date(maxDate) - new Date(minDate)) / (1000 * 60 * 60 * 24))
+                : 0;
+            
+            const summary = {
+                success: true,
+                kpis: {
+                    totalBudget: totalBudget,
+                    formattedBudget: formatCurrencySimple(totalBudget),
+                    wbsElementCount: wbsCount,
+                    phaseCount: projectData.phases.length,
+                    disciplineCount: projectData.disciplines.length,
+                    packageCount: projectData.packages.length,
+                    projectStart: minDate,
+                    projectEnd: maxDate,
+                    durationDays: durationDays,
+                    durationMonths: Math.ceil(durationDays / 30)
+                },
+                phases: projectData.phases,
+                disciplines: projectData.disciplines,
+                packages: projectData.packages
+            };
+            
+            if (include_details) {
+                summary.budgetBreakdown = {};
+                projectData.disciplines.forEach(d => {
+                    summary.budgetBreakdown[d] = {
+                        amount: projectData.budgets[d] || 0,
+                        percentage: totalBudget > 0 
+                            ? ((projectData.budgets[d] || 0) / totalBudget * 100).toFixed(1) + '%'
+                            : '0%'
+                    };
+                });
+            }
+            
+            return summary;
+        }
+
+        /**
+         * Helper to format numbers with K/M suffix
+         */
+        function formatNumberShort(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(0) + 'K';
+            return num.toFixed(0);
+        }
+
+        // ============================================
+        // PREDICTIVE ANALYTICS / AI INSIGHTS
+        // ============================================
+
+        /**
+         * Toggles the insights panel visibility
+         */
+        function toggleInsightsPanel() {
+            const panel = document.querySelector('.insights-panel');
+            const body = document.getElementById('insights-body');
+            
+            panel.classList.toggle('expanded');
+            body.classList.toggle('hidden');
+            
+            // Calculate basic insights when opened for the first time
+            if (!body.classList.contains('hidden')) {
+                calculateBasicInsights();
+            }
+        }
+
+        /**
+         * Calculates basic insights without AI
+         */
+        function calculateBasicInsights() {
+            const totalBudget = Object.values(projectData.budgets).reduce((sum, b) => sum + b, 0);
+            const disciplineCount = projectData.disciplines.length;
+            const packageCount = projectData.packages.length;
+            
+            // Risk Score Calculation
+            let riskScore = 50; // Base medium
+            const riskFactors = [];
+            
+            // Factor 1: Number of disciplines (more = more coordination risk)
+            if (disciplineCount > 10) {
+                riskScore += 15;
+                riskFactors.push(`${disciplineCount} disciplines increases coordination complexity`);
+            } else if (disciplineCount < 5) {
+                riskScore -= 10;
+                riskFactors.push('Manageable number of disciplines');
+            }
+            
+            // Factor 2: Budget concentration
+            const budgetValues = Object.values(projectData.budgets).filter(b => b > 0);
+            if (budgetValues.length > 0) {
+                const maxBudget = Math.max(...budgetValues);
+                const concentration = maxBudget / totalBudget;
+                if (concentration > 0.4) {
+                    riskScore += 10;
+                    riskFactors.push('High budget concentration in one discipline');
+                }
+            }
+            
+            // Factor 3: Schedule density
+            let minDate = null, maxDate = null;
+            Object.values(projectData.dates).forEach(d => {
+                if (d.start && (!minDate || d.start < minDate)) minDate = d.start;
+                if (d.end && (!maxDate || d.end > maxDate)) maxDate = d.end;
+            });
+            
+            if (minDate && maxDate) {
+                const durationDays = Math.ceil((new Date(maxDate) - new Date(minDate)) / (1000 * 60 * 60 * 24));
+                const monthsPerMillion = durationDays / 30 / (totalBudget / 1000000);
+                if (monthsPerMillion < 3) {
+                    riskScore += 15;
+                    riskFactors.push('Aggressive schedule relative to budget');
+                }
+            }
+            
+            // Clamp risk score
+            riskScore = Math.max(0, Math.min(100, riskScore));
+            
+            // Determine risk level
+            let riskLevel, riskClass;
+            if (riskScore < 35) {
+                riskLevel = 'LOW';
+                riskClass = 'risk-low';
+            } else if (riskScore < 65) {
+                riskLevel = 'MEDIUM';
+                riskClass = 'risk-medium';
+            } else {
+                riskLevel = 'HIGH';
+                riskClass = 'risk-high';
+            }
+            
+            // Update risk display
+            const riskValue = document.getElementById('insight-risk-score');
+            riskValue.textContent = riskLevel;
+            riskValue.className = `insight-value ${riskClass}`;
+            document.getElementById('insight-risk-details').textContent = 
+                riskFactors.length > 0 ? riskFactors[0] : 'Project parameters within normal ranges';
+            
+            // Cost Forecast (simple projection with contingency)
+            const contingencyRate = riskScore > 65 ? 0.15 : riskScore > 35 ? 0.10 : 0.05;
+            const projectedCost = totalBudget * (1 + contingencyRate);
+            document.getElementById('insight-cost-forecast').textContent = formatCurrencySimple(projectedCost);
+            document.getElementById('insight-cost-details').textContent = 
+                `Includes ${(contingencyRate * 100).toFixed(0)}% risk contingency (${formatCurrencySimple(totalBudget * contingencyRate)})`;
+            
+            // Schedule Forecast
+            if (minDate && maxDate) {
+                const today = new Date();
+                const endDate = new Date(maxDate);
+                const daysRemaining = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                
+                if (daysRemaining < 0) {
+                    document.getElementById('insight-schedule-forecast').textContent = 'Complete';
+                    document.getElementById('insight-schedule-forecast').style.color = '#4ade80';
+                    document.getElementById('insight-schedule-details').textContent = 'Project end date has passed';
+                } else if (daysRemaining < 30) {
+                    document.getElementById('insight-schedule-forecast').textContent = 'Final Phase';
+                    document.getElementById('insight-schedule-forecast').style.color = '#fbbf24';
+                    document.getElementById('insight-schedule-details').textContent = `${daysRemaining} days until scheduled completion`;
+                } else {
+                    document.getElementById('insight-schedule-forecast').textContent = 'On Track';
+                    document.getElementById('insight-schedule-forecast').style.color = '#4ade80';
+                    document.getElementById('insight-schedule-details').textContent = 
+                        `Completion: ${new Date(maxDate).toLocaleDateString()} (${Math.ceil(daysRemaining / 30)} months)`;
+                }
+            }
+            
+            // Budget Health Analysis
+            const avgBudget = totalBudget / disciplineCount;
+            const variance = budgetValues.reduce((sum, b) => sum + Math.pow(b - avgBudget, 2), 0) / budgetValues.length;
+            const stdDev = Math.sqrt(variance);
+            const coeffVar = stdDev / avgBudget;
+            
+            if (coeffVar < 0.5) {
+                document.getElementById('insight-budget-health').textContent = 'Balanced';
+                document.getElementById('insight-budget-health').style.color = '#4ade80';
+                document.getElementById('insight-budget-details').textContent = 'Budget evenly distributed across disciplines';
+            } else if (coeffVar < 1.0) {
+                document.getElementById('insight-budget-health').textContent = 'Moderate';
+                document.getElementById('insight-budget-health').style.color = '#fbbf24';
+                document.getElementById('insight-budget-details').textContent = 'Some disciplines have significantly higher budgets';
+            } else {
+                document.getElementById('insight-budget-health').textContent = 'Concentrated';
+                document.getElementById('insight-budget-health').style.color = '#f87171';
+                document.getElementById('insight-budget-details').textContent = 'Budget heavily weighted toward few disciplines';
+            }
+        }
+
+        /**
+         * Generates AI-powered insights and optimization suggestions
+         */
+        async function generateAIInsights() {
+            const apiKey = localStorage.getItem('wbs_openai_key');
+            if (!apiKey) {
+                alert('Please set your OpenAI API key first. Click the chat button and enter your key.');
+                return;
+            }
+            
+            const btn = document.getElementById('generate-insights-btn');
+            const suggestionsList = document.getElementById('ai-suggestions-list');
+            
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+            suggestionsList.innerHTML = '<div class="suggestion-placeholder">🔄 Analyzing project data with AI...</div>';
+            
+            try {
+                const totalBudget = Object.values(projectData.budgets).reduce((sum, b) => sum + b, 0);
+                
+                const prompt = `You are a project management expert analyzing an engineering design project. Provide 4-5 specific, actionable optimization suggestions.
+
+PROJECT DATA:
+- Total Budget: $${totalBudget.toLocaleString()}
+- Phases: ${projectData.phases.join(', ')}
+- Disciplines: ${projectData.disciplines.join(', ')}
+- Packages: ${projectData.packages.join(', ')}
+
+BUDGET BY DISCIPLINE:
+${projectData.disciplines.map(d => `- ${d}: $${(projectData.budgets[d] || 0).toLocaleString()} (${((projectData.budgets[d] || 0) / totalBudget * 100).toFixed(1)}%)`).join('\n')}
+
+${projectData.projectScope ? `PROJECT SCOPE: ${projectData.projectScope.substring(0, 500)}` : ''}
+
+Provide suggestions as a JSON array:
+[{"icon":"emoji","title":"short title","description":"specific actionable recommendation"}]
+
+Focus on:
+1. Budget optimization opportunities
+2. Schedule efficiency improvements
+3. Risk mitigation strategies
+4. Resource allocation recommendations
+5. Discipline coordination tips
+
+Return ONLY the JSON array, no markdown.`;
+
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-5.2',
+                        messages: [{ role: 'user', content: prompt }],
+                        max_completion_tokens: 1500,
+                        temperature: 0.7
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API error');
+                }
+                
+                const data = await response.json();
+                const content = data.choices[0]?.message?.content || '';
+                
+                // Parse suggestions
+                let suggestions = [];
+                try {
+                    const jsonMatch = content.match(/\[[\s\S]*\]/);
+                    if (jsonMatch) {
+                        suggestions = JSON.parse(jsonMatch[0]);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse AI suggestions:', e);
+                }
+                
+                if (suggestions.length > 0) {
+                    suggestionsList.innerHTML = suggestions.map(s => `
+                        <div class="suggestion-item">
+                            <span class="suggestion-icon">${s.icon || '💡'}</span>
+                            <div class="suggestion-content">
+                                <div class="suggestion-title">${escapeHtml(s.title || 'Suggestion')}</div>
+                                <div class="suggestion-desc">${escapeHtml(s.description || '')}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    suggestionsList.innerHTML = '<div class="suggestion-placeholder">No specific suggestions generated. Try again.</div>';
+                }
+                
+            } catch (error) {
+                console.error('AI Insights error:', error);
+                suggestionsList.innerHTML = '<div class="suggestion-placeholder">Failed to generate insights. Check your API key and try again.</div>';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Generate Insights';
+            }
+        }
+
+        // ============================================
+        // AI SCHEDULE GENERATION
+        // ============================================
+
+        /**
+         * Generates an AI-powered schedule based on project scope and disciplines
+         */
+        async function generateAISchedule() {
+            const apiKey = localStorage.getItem('wbs_openai_key');
+            if (!apiKey) {
+                alert('Please set your OpenAI API key first. Click the chat button and enter your key.');
+                return;
+            }
+            
+            // Get schedule parameters
+            const startDateInput = document.getElementById('ai-schedule-start');
+            const durationSelect = document.getElementById('ai-schedule-duration');
+            
+            // Default to today if no start date selected
+            let startDate = startDateInput.value;
+            if (!startDate) {
+                const today = new Date();
+                startDate = today.toISOString().split('T')[0];
+                startDateInput.value = startDate;
+            }
+            
+            const targetDuration = parseInt(durationSelect.value) || 12;
+            
+            // Show loading state
+            const btn = document.getElementById('ai-schedule-btn');
+            const loading = document.getElementById('ai-schedule-loading');
+            btn.disabled = true;
+            loading.classList.remove('hidden');
+            
+            try {
+                // Build context for AI
+                const totalBudget = Object.values(projectData.budgets).reduce((sum, b) => sum + b, 0);
+                
+                const contextPrompt = `You are a project scheduling expert for engineering design projects. Generate a realistic schedule for the following project:
+
+**PROJECT DETAILS:**
+- Phases: ${projectData.phases.join(', ')}
+- Disciplines: ${projectData.disciplines.join(', ')}
+- Packages/Milestones: ${projectData.packages.join(', ')}
+- Total Budget: $${totalBudget.toLocaleString()}
+- Project Start Date: ${startDate}
+- Target Duration: ${targetDuration} months
+
+**BUDGET DISTRIBUTION:**
+${projectData.disciplines.map(d => `- ${d}: $${(projectData.budgets[d] || 0).toLocaleString()}`).join('\n')}
+
+**CLAIMING PERCENTAGES:**
+${projectData.disciplines.slice(0, 3).map(disc => {
+    const claims = projectData.packages.map(pkg => {
+        const key = `${disc}-${pkg}`;
+        return `${pkg}: ${projectData.claiming[key] || 0}%`;
+    }).join(', ');
+    return `- ${disc}: ${claims}`;
+}).join('\n')}
+${projectData.disciplines.length > 3 ? `... and ${projectData.disciplines.length - 3} more disciplines with similar patterns` : ''}
+
+${projectData.projectScope ? `**PROJECT SCOPE:**\n${projectData.projectScope.substring(0, 500)}` : ''}
+
+**REQUIREMENTS:**
+1. Schedule should fit within ${targetDuration} months starting from ${startDate}
+2. Packages should overlap appropriately (engineering projects often have concurrent work)
+3. Higher-budget disciplines may need more time
+4. Earlier packages (Preliminary) should start first, later packages (RFC, Final) should end last
+5. Consider typical engineering workflow dependencies
+
+Return a JSON object with the schedule. Format:
+{
+  "schedule": {
+    "discipline-package": {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD", "notes": "brief note"}
+  },
+  "summary": "Brief explanation of the schedule approach"
+}
+
+Return ONLY the JSON, no markdown formatting.`;
+
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-5.2',
+                        messages: [
+                            { role: 'user', content: contextPrompt }
+                        ],
+                        max_completion_tokens: 4000,
+                        temperature: 0.3
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const content = data.choices[0]?.message?.content || '';
+                
+                // Parse the JSON response
+                let scheduleData;
+                try {
+                    // Try to extract JSON from the response
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        scheduleData = JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error('No JSON found in response');
+                    }
+                } catch (e) {
+                    console.error('Failed to parse AI schedule response:', e, content);
+                    throw new Error('Failed to parse AI response. Please try again.');
+                }
+                
+                // Apply the generated schedule
+                if (scheduleData.schedule) {
+                    Object.entries(scheduleData.schedule).forEach(([key, dates]) => {
+                        if (projectData.dates[key]) {
+                            projectData.dates[key] = {
+                                start: dates.start,
+                                end: dates.end
+                            };
+                        } else {
+                            // Handle slight key mismatches by finding closest match
+                            const [disc, pkg] = key.split('-');
+                            const matchedDisc = projectData.disciplines.find(d => 
+                                d.toLowerCase().includes(disc.toLowerCase()) || 
+                                disc.toLowerCase().includes(d.toLowerCase())
+                            );
+                            const matchedPkg = projectData.packages.find(p => 
+                                p.toLowerCase().includes(pkg.toLowerCase()) || 
+                                pkg.toLowerCase().includes(p.toLowerCase())
+                            );
+                            if (matchedDisc && matchedPkg) {
+                                const correctKey = `${matchedDisc}-${matchedPkg}`;
+                                projectData.dates[correctKey] = {
+                                    start: dates.start,
+                                    end: dates.end
+                                };
+                            }
+                        }
+                    });
+                    
+                    // Rebuild the dates table to show updated values
+                    buildDatesTable();
+                    triggerAutosave();
+                    
+                    // Show summary
+                    alert(`✅ AI Schedule Generated!\n\n${scheduleData.summary || 'Schedule has been applied to all disciplines and packages.'}\n\nReview and adjust dates as needed.`);
+                }
+                
+            } catch (error) {
+                console.error('AI Schedule generation error:', error);
+                alert('Error generating schedule: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Sends a message to the OpenAI API with tool calling and streaming support
          */
         async function sendMessage() {
             const input = document.getElementById('chat-input');
@@ -6660,6 +9404,20 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
             showTypingIndicator(true);
             
             try {
+                // Check if we're on the results page (tools are available)
+                const resultsVisible = !document.getElementById('results-section').classList.contains('hidden');
+                const useTools = resultsVisible && projectData.disciplines.length > 0;
+                
+                // Build messages for API
+                const apiMessages = [
+                    { role: 'system', content: buildSystemPrompt() + (useTools ? '\n\nYou have access to tools to modify the project. Use them when the user asks to make changes.' : '') },
+                    ...chatState.messages.filter(m => m.role !== 'system').slice(-10).map(m => ({
+                        role: m.role,
+                        content: m.content
+                    }))
+                ];
+                
+                // Make initial API call (non-streaming to detect tool calls)
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -6667,15 +9425,11 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
                         'Authorization': `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: 'gpt-5-mini',
-                        messages: [
-                            { role: 'system', content: buildSystemPrompt() },
-                            ...chatState.messages.filter(m => m.role !== 'system').slice(-10).map(m => ({
-                                role: m.role,
-                                content: m.content
-                            }))
-                        ],
-                        max_completion_tokens: 500
+                        model: 'gpt-5.2-chat-latest',
+                        messages: apiMessages,
+                        max_completion_tokens: 1000,
+                        tools: useTools ? chatTools : undefined,
+                        tool_choice: useTools ? 'auto' : undefined
                     })
                 });
                 
@@ -6690,10 +9444,78 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
                     }
                 }
                 
-                const data = await response.json();
-                const assistantMessage = data.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+                let data = await response.json();
+                let assistantMessage = data.choices[0]?.message;
                 
-                addMessage('assistant', assistantMessage);
+                // Handle tool calls if present
+                if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
+                    showTypingIndicator(false);
+                    
+                    // Execute all tool calls
+                    const toolResults = [];
+                    const toolSummaries = [];
+                    
+                    for (const toolCall of assistantMessage.tool_calls) {
+                        const funcName = toolCall.function.name;
+                        let funcArgs = {};
+                        
+                        try {
+                            funcArgs = JSON.parse(toolCall.function.arguments);
+                        } catch (e) {
+                            console.error('Failed to parse tool arguments:', e);
+                        }
+                        
+                        console.log(`Executing tool: ${funcName}`, funcArgs);
+                        const result = executeToolCall(funcName, funcArgs);
+                        
+                        toolResults.push({
+                            tool_call_id: toolCall.id,
+                            role: 'tool',
+                            content: JSON.stringify(result)
+                        });
+                        
+                        // Build summary for display
+                        if (result.success) {
+                            toolSummaries.push(`✅ ${result.message || funcName}`);
+                        } else {
+                            toolSummaries.push(`❌ ${result.error || 'Tool failed'}`);
+                        }
+                    }
+                    
+                    // Show tool execution summary
+                    addMessage('system', `🔧 ${toolSummaries.join(' • ')}`);
+                    
+                    showTypingIndicator(true);
+                    
+                    // Send tool results back to get final response
+                    const followUpMessages = [
+                        ...apiMessages,
+                        assistantMessage,
+                        ...toolResults
+                    ];
+                    
+                    const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-5.2-chat-latest',
+                            messages: followUpMessages,
+                            max_completion_tokens: 1000
+                        })
+                    });
+                    
+                    if (followUpResponse.ok) {
+                        data = await followUpResponse.json();
+                        assistantMessage = data.choices[0]?.message;
+                    }
+                }
+                
+                // Add assistant's final message
+                const content = assistantMessage?.content || 'Done! The changes have been applied.';
+                addMessage('assistant', content);
                 
             } catch (error) {
                 console.error('Chat error:', error);
@@ -7065,8 +9887,8 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
          * Analyzes a single text chunk with OpenAI
          */
         async function analyzeChunk(apiKey, chunkText, chunkIndex, totalChunks) {
-            const systemPrompt = `Extract WBS info from engineering RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
-{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low"},"notes":""}
+            const systemPrompt = `Extract WBS info and RISKS from engineering RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
+{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","risks":[],"confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low"},"notes":""}
 
 **PHASES**: Project stages (e.g. Base Design, ESDC, TSCD, Preliminary, Final, As-Builts, Closeout, Phase 1/2/3)
 **DISCIPLINES**: Use EXACT names: Structures, Design PM, Civil, Drainage, Electrical, Environmental, Traffic, ITS, Mechanical, Geotechnical, Survey, Landscape, Utilities, Lighting, Pavement, Bridges, H&H, Communications, Architecture, Systems
@@ -7074,6 +9896,8 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
 **PACKAGES**: Milestones (e.g. Preliminary, Interim, Final, RFC, As-Built, 30%, 60%, 90%)
 **SCOPE**: Project location, type, major work elements, requirements
 **SCHEDULE**: Timeline info, durations, milestones, deadlines
+**RISKS**: Array of risk objects: [{"category":"Schedule|Budget|Technical|Scope|Coordination","severity":"High|Medium|Low","description":"specific risk","mitigation":"suggested mitigation"}]
+- Look for: tight deadlines, complex requirements, undefined scope, multi-agency coordination, environmental constraints, utility conflicts, ROW issues, phased construction, regulatory requirements
 Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -7158,7 +9982,8 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
                 phases: [],
                 disciplines: [],
                 packages: [],
-                budgets: {}
+                budgets: {},
+                risks: []
             };
 
             // Merge phases - deduplicate and preserve order
@@ -7198,6 +10023,21 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
                         if (pkg && !packagesSet.has(pkg)) {
                             packagesSet.add(pkg);
                             merged.packages.push(pkg);
+                        }
+                    });
+                }
+            });
+
+            // Merge risks - collect all risks, deduplicate by description similarity
+            const riskDescriptions = new Set();
+            chunkResults.forEach(resultObj => {
+                const result = resultObj.data || resultObj;
+                if (result.risks && Array.isArray(result.risks)) {
+                    result.risks.forEach(risk => {
+                        const descKey = (risk.description || '').toLowerCase().substring(0, 50);
+                        if (descKey && !riskDescriptions.has(descKey)) {
+                            riskDescriptions.add(descKey);
+                            merged.risks.push(risk);
                         }
                     });
                 }
@@ -7324,6 +10164,7 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     disciplines: localMerged.disciplines,
                     packages: localMerged.packages,
                     budgets: localMerged.budgets,
+                    risks: localMerged.risks || [],
                     disciplineScopes: aiMerged.disciplineScopes || {},
                     scope: aiMerged.scope || '',
                     schedule: aiMerged.schedule || '',
@@ -7681,6 +10522,29 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 document.getElementById('rfp-notes').style.display = 'none';
             }
             
+            // Risks
+            const risksSection = document.getElementById('rfp-risks');
+            const risksList = document.getElementById('rfp-risks-list');
+            
+            if (data.risks && data.risks.length > 0) {
+                risksSection.style.display = 'block';
+                risksList.innerHTML = data.risks.map(risk => {
+                    const severity = (risk.severity || 'Medium').toLowerCase();
+                    return `
+                        <div class="rfp-risk-item severity-${severity}">
+                            <div class="rfp-risk-header">
+                                <span class="rfp-risk-category">${risk.category || 'General'}</span>
+                                <span class="rfp-risk-severity ${severity}">${(risk.severity || 'Medium').toUpperCase()}</span>
+                            </div>
+                            <div class="rfp-risk-description">${escapeHtml(risk.description || '')}</div>
+                            ${risk.mitigation ? `<div class="rfp-risk-mitigation">${escapeHtml(risk.mitigation)}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                risksSection.style.display = 'none';
+            }
+            
             // Usage Statistics
             const stats = rfpState.usageStats;
             if (stats && stats.totalTokens > 0) {
@@ -7824,6 +10688,9 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             });
             
             updateSelectedCount();
+            
+            // Trigger autosave with RFP data
+            triggerAutosave();
             
             // Close modal and go to step 1
             closeRfpWizard();
@@ -8295,6 +11162,13 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                             <p id="rfp-notes-text">Analysis notes will appear here...</p>
                         </div>
 
+                        <div id="rfp-risks" class="rfp-risks-section" style="display: none;">
+                            <h4>⚠️ Identified Risks</h4>
+                            <div id="rfp-risks-list" class="rfp-risks-list">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
                         <div id="rfp-usage-stats" class="rfp-notes" style="display: none;">
                             <h4>📊 Usage Statistics</h4>
                             <div class="rfp-usage-grid">
@@ -8400,6 +11274,64 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 </svg>
             </button>
         </div>
+    </div>
+
+    <!-- Projects Manager Modal -->
+    <div id="projects-modal" class="projects-modal" onclick="if(event.target===this)closeProjectManager()">
+        <div class="projects-modal-content">
+            <div class="projects-modal-header">
+                <h3>📁 Project Manager</h3>
+                <button class="projects-close-btn" onclick="closeProjectManager()">✕</button>
+            </div>
+            
+            <div class="projects-modal-body">
+                <!-- Save Current Project -->
+                <div class="projects-section">
+                    <div class="projects-section-title">Save Current Project</div>
+                    <div class="projects-save-form">
+                        <input type="text" id="project-save-name" placeholder="Enter project name...">
+                        <button class="btn btn-primary btn-sm" onclick="saveNamedProject()">SAVE</button>
+                    </div>
+                </div>
+                
+                <!-- Saved Projects List -->
+                <div class="projects-section">
+                    <div class="projects-section-title">Saved Projects</div>
+                    <div id="projects-list" class="projects-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- Compare Projects -->
+                <div id="compare-section" class="projects-section hidden">
+                    <div class="projects-section-title">Compare Selected Projects</div>
+                    <div id="compare-view" class="compare-view">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recovery Modal -->
+    <div id="recovery-modal" class="recovery-modal" onclick="if(event.target===this)dismissRecovery()">
+        <div class="recovery-modal-content">
+            <h3>💾 Recover Previous Session?</h3>
+            <p>We found unsaved work from a previous session. Would you like to restore it?</p>
+            <div class="recovery-preview" id="recovery-preview">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="recovery-modal-actions">
+                <button class="btn btn-danger" onclick="discardRecovery()">Start Fresh</button>
+                <button class="btn btn-primary" onclick="restoreRecovery()">Restore Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Autosave Indicator -->
+    <div id="autosave-indicator" class="autosave-indicator">
+        <span id="autosave-icon">●</span>
+        <span id="autosave-text">Saved</span>
     </div>
 
     <!-- API Key Modal -->
