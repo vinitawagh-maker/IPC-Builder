@@ -1865,6 +1865,60 @@
             color: #ffaa44;
         }
 
+        /* Usage Statistics Styles */
+        #rfp-usage-stats {
+            background: linear-gradient(135deg, #0a1a0a 0%, #1a2a1a 100%);
+            border-color: #00cc66;
+        }
+
+        #rfp-usage-stats h4 {
+            color: #00cc66;
+        }
+
+        .rfp-usage-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .rfp-usage-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 204, 102, 0.1);
+            border-radius: 4px;
+            border: 1px solid rgba(0, 204, 102, 0.2);
+        }
+
+        .rfp-usage-item.full-width {
+            grid-column: span 2;
+        }
+
+        .rfp-usage-label {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .rfp-usage-value {
+            color: #00cc66;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .rfp-usage-value.cost {
+            color: #ffd700;
+            font-size: 16px;
+        }
+
+        .rfp-usage-value.time {
+            color: #00aaff;
+        }
+
         /* Loading State */
         .rfp-loading {
             display: none;
@@ -5767,7 +5821,17 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
             wasTruncated: false,
             originalLength: 0,
             analyzedLength: 0,
-            chunkCount: 1
+            chunkCount: 1,
+            usageStats: {
+                totalPromptTokens: 0,
+                totalCompletionTokens: 0,
+                totalTokens: 0,
+                apiCalls: 0,
+                estimatedCost: 0,
+                model: '',
+                startTime: null,
+                endTime: null
+            }
         };
 
         // Initialize PDF.js worker
@@ -5804,6 +5868,18 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
             rfpState.analyzedLength = 0;
             rfpState.chunkCount = 1;
             
+            // Reset usage stats
+            rfpState.usageStats = {
+                totalPromptTokens: 0,
+                totalCompletionTokens: 0,
+                totalTokens: 0,
+                apiCalls: 0,
+                estimatedCost: 0,
+                model: '',
+                startTime: null,
+                endTime: null
+            };
+            
             // Reset UI
             document.getElementById('rfp-file-info').classList.remove('visible');
             document.getElementById('rfp-file-input').value = '';
@@ -5812,6 +5888,7 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
             document.getElementById('rfp-loading').classList.add('visible');
             document.getElementById('rfp-preview').style.display = 'none';
             document.getElementById('rfp-truncation-notice').style.display = 'none';
+            document.getElementById('rfp-usage-stats').style.display = 'none';
             
             // Reset preview section
             const previewSection = document.getElementById('rfp-text-preview-section');
@@ -6084,12 +6161,17 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
             // Log full API response structure for debugging
             console.log(`Chunk ${chunkIndex + 1} full API response:`, JSON.stringify(data, null, 2).substring(0, 1000));
             
+            // Extract usage data from response
+            const usage = data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+            
             const content = data.choices?.[0]?.message?.content || data.output?.message?.content || '';
             
             // Log raw response for debugging
             console.log(`Chunk ${chunkIndex + 1} extracted content:`, content ? content.substring(0, 500) : 'EMPTY CONTENT');
+            console.log(`Chunk ${chunkIndex + 1} usage:`, usage);
             
             // Parse JSON response - handle various formats
+            let parsedData;
             try {
                 // Try to extract JSON from markdown code blocks first
                 const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -6097,27 +6179,37 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
                     const jsonContent = codeBlockMatch[1].trim();
                     const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
-                        return JSON.parse(jsonMatch[0]);
+                        parsedData = JSON.parse(jsonMatch[0]);
                     }
                 }
                 
-                // Try to find JSON object directly
-                const jsonMatch = content.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    return JSON.parse(jsonMatch[0]);
+                if (!parsedData) {
+                    // Try to find JSON object directly
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        parsedData = JSON.parse(jsonMatch[0]);
+                    } else {
+                        // Last resort: try parsing the whole content
+                        parsedData = JSON.parse(content);
+                    }
                 }
-                
-                // Last resort: try parsing the whole content
-                return JSON.parse(content);
             } catch (e) {
                 console.error(`JSON parse error for chunk ${chunkIndex + 1}:`, e.message);
                 console.error('Content was:', content);
                 throw new Error(`Could not parse AI response as JSON for chunk ${chunkIndex + 1}`);
             }
+            
+            // Return both parsed data and usage stats
+            return {
+                data: parsedData,
+                usage: usage,
+                model: data.model || 'gpt-5.2'
+            };
         }
 
         /**
          * Locally merges simple array fields (phases, disciplines, packages) to reduce API cost
+         * @param {Array} chunkResults - Array of {data, usage, model} objects from analyzeChunk
          */
         function localMergeSimpleFields(chunkResults) {
             const merged = {
@@ -6129,7 +6221,8 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
 
             // Merge phases - deduplicate and preserve order
             const phasesSet = new Set();
-            chunkResults.forEach(result => {
+            chunkResults.forEach(resultObj => {
+                const result = resultObj.data || resultObj; // Handle both new {data, usage} and legacy formats
                 if (result.phases && Array.isArray(result.phases)) {
                     result.phases.forEach(phase => {
                         if (phase && !phasesSet.has(phase)) {
@@ -6142,7 +6235,8 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
 
             // Merge disciplines - deduplicate and preserve order
             const disciplinesSet = new Set();
-            chunkResults.forEach(result => {
+            chunkResults.forEach(resultObj => {
+                const result = resultObj.data || resultObj;
                 if (result.disciplines && Array.isArray(result.disciplines)) {
                     result.disciplines.forEach(disc => {
                         if (disc && !disciplinesSet.has(disc)) {
@@ -6155,7 +6249,8 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
 
             // Merge packages - deduplicate and preserve order
             const packagesSet = new Set();
-            chunkResults.forEach(result => {
+            chunkResults.forEach(resultObj => {
+                const result = resultObj.data || resultObj;
                 if (result.packages && Array.isArray(result.packages)) {
                     result.packages.forEach(pkg => {
                         if (pkg && !packagesSet.has(pkg)) {
@@ -6179,6 +6274,8 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
             console.log('Local merge complete:', localMerged);
 
             // Step 2: Use AI to merge only complex fields (disciplineScopes, scope, schedule, confidence, notes)
+            // Extract just the data portion for the AI (not usage stats)
+            const dataOnly = chunkResults.map(r => r.data || r);
             const mergePrompt = `Merge ${chunkResults.length} WBS chunk analyses. Return raw JSON:
 {"disciplineScopes":{},"scope":"","schedule":"","confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low"},"notes":""}
 
@@ -6189,7 +6286,7 @@ Merge rules:
 - confidence: Use highest confidence level found across chunks (high > medium > low)
 - notes: Combine all notes
 
-Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
+Chunks: ${JSON.stringify(dataOnly, null, 2)}`;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -6214,6 +6311,10 @@ Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
 
             const data = await response.json();
             const content = data.choices[0]?.message?.content || '';
+            
+            // Extract usage data from merge API call
+            const usage = data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+            console.log('AI merge usage:', usage);
 
             console.log('AI merge raw response:', content.substring(0, 500));
 
@@ -6244,15 +6345,19 @@ Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
 
             // Step 3: Combine local merge (simple arrays) with AI merge (complex fields)
             return {
-                phases: localMerged.phases,
-                disciplines: localMerged.disciplines,
-                packages: localMerged.packages,
-                budgets: localMerged.budgets,
-                disciplineScopes: aiMerged.disciplineScopes || {},
-                scope: aiMerged.scope || '',
-                schedule: aiMerged.schedule || '',
-                confidence: aiMerged.confidence || {},
-                notes: aiMerged.notes || ''
+                data: {
+                    phases: localMerged.phases,
+                    disciplines: localMerged.disciplines,
+                    packages: localMerged.packages,
+                    budgets: localMerged.budgets,
+                    disciplineScopes: aiMerged.disciplineScopes || {},
+                    scope: aiMerged.scope || '',
+                    schedule: aiMerged.schedule || '',
+                    confidence: aiMerged.confidence || {},
+                    notes: aiMerged.notes || ''
+                },
+                usage: usage,
+                model: data.model || 'gpt-5.2'
             };
         }
 
@@ -6400,6 +6505,18 @@ Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
                 rfpState.analyzedLength = text.length; // We analyze everything now
                 rfpState.chunkCount = 1;
                 
+                // Reset usage stats for this analysis run
+                rfpState.usageStats = {
+                    totalPromptTokens: 0,
+                    totalCompletionTokens: 0,
+                    totalTokens: 0,
+                    apiCalls: 0,
+                    estimatedCost: 0,
+                    model: 'gpt-5.2',
+                    startTime: Date.now(),
+                    endTime: null
+                };
+                
                 let extracted;
                 
                 if (needsChunking) {
@@ -6411,9 +6528,9 @@ Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
 
                     // Analyze chunks sequentially to avoid HTTP/2 protocol errors
                     const chunkResults = [];
-                    const startTime = Date.now();
+                    const analysisStartTime = Date.now();
                     for (let i = 0; i < chunks.length; i++) {
-                        const avgTime = i > 0 ? ((Date.now() - startTime) / i / 1000).toFixed(1) : '?';
+                        const avgTime = i > 0 ? ((Date.now() - analysisStartTime) / i / 1000).toFixed(1) : '?';
                         document.querySelector('.rfp-loading-text').textContent = `Analyzing chunk ${i + 1}/${chunks.length} (avg ${avgTime}s/chunk, optimized prompts)...`;
 
                         // Retry logic for network errors
@@ -6429,6 +6546,18 @@ Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
                                 await new Promise(r => setTimeout(r, 2000)); // Wait 2 seconds before retry
                             }
                         }
+                        
+                        // Accumulate usage stats from each chunk
+                        if (result.usage) {
+                            rfpState.usageStats.totalPromptTokens += result.usage.prompt_tokens || 0;
+                            rfpState.usageStats.totalCompletionTokens += result.usage.completion_tokens || 0;
+                            rfpState.usageStats.totalTokens += result.usage.total_tokens || 0;
+                            rfpState.usageStats.apiCalls++;
+                        }
+                        if (result.model) {
+                            rfpState.usageStats.model = result.model;
+                        }
+                        
                         chunkResults.push(result);
                     }
 
@@ -6438,13 +6567,49 @@ Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
 
                     // Step 2: AI merge for complex fields only
                     document.querySelector('.rfp-loading-text').textContent = `Merging results: AI merge of complex fields (optimized)...`;
-                    extracted = await mergeChunkResults(apiKey, chunkResults);
+                    const mergeResult = await mergeChunkResults(apiKey, chunkResults);
+                    
+                    // Accumulate usage stats from merge call
+                    if (mergeResult.usage) {
+                        rfpState.usageStats.totalPromptTokens += mergeResult.usage.prompt_tokens || 0;
+                        rfpState.usageStats.totalCompletionTokens += mergeResult.usage.completion_tokens || 0;
+                        rfpState.usageStats.totalTokens += mergeResult.usage.total_tokens || 0;
+                        rfpState.usageStats.apiCalls++;
+                    }
+                    
+                    extracted = mergeResult.data;
                     
                 } else {
                     // Single chunk - use original approach
                     document.querySelector('.rfp-loading-text').textContent = `Analyzing ${formatNumber(text.length)} characters with AI...`;
-                    extracted = await analyzeChunk(apiKey, text, 0, 1);
+                    const result = await analyzeChunk(apiKey, text, 0, 1);
+                    
+                    // Accumulate usage stats
+                    if (result.usage) {
+                        rfpState.usageStats.totalPromptTokens += result.usage.prompt_tokens || 0;
+                        rfpState.usageStats.totalCompletionTokens += result.usage.completion_tokens || 0;
+                        rfpState.usageStats.totalTokens += result.usage.total_tokens || 0;
+                        rfpState.usageStats.apiCalls++;
+                    }
+                    if (result.model) {
+                        rfpState.usageStats.model = result.model;
+                    }
+                    
+                    extracted = result.data;
                 }
+                
+                // Record end time and calculate cost
+                rfpState.usageStats.endTime = Date.now();
+                
+                // Estimate cost based on GPT-5.2 pricing (adjust as needed)
+                // Assuming: $5/1M input tokens, $15/1M output tokens
+                const inputCostPer1M = 5.00;
+                const outputCostPer1M = 15.00;
+                rfpState.usageStats.estimatedCost = 
+                    (rfpState.usageStats.totalPromptTokens / 1000000 * inputCostPer1M) + 
+                    (rfpState.usageStats.totalCompletionTokens / 1000000 * outputCostPer1M);
+                
+                console.log('Final usage stats:', rfpState.usageStats);
                 
                 rfpState.extractedData = extracted;
                 displayRfpPreview(extracted);
@@ -6540,6 +6705,29 @@ Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
                 document.getElementById('rfp-notes-text').textContent = data.notes;
             } else {
                 document.getElementById('rfp-notes').style.display = 'none';
+            }
+            
+            // Usage Statistics
+            const stats = rfpState.usageStats;
+            if (stats && stats.totalTokens > 0) {
+                document.getElementById('rfp-usage-stats').style.display = 'block';
+                document.getElementById('rfp-stats-calls').textContent = stats.apiCalls;
+                document.getElementById('rfp-stats-model').textContent = stats.model || 'gpt-5.2';
+                document.getElementById('rfp-stats-prompt').textContent = formatNumber(stats.totalPromptTokens);
+                document.getElementById('rfp-stats-completion').textContent = formatNumber(stats.totalCompletionTokens);
+                document.getElementById('rfp-stats-tokens').textContent = formatNumber(stats.totalTokens);
+                
+                // Calculate processing time
+                if (stats.startTime && stats.endTime) {
+                    const durationMs = stats.endTime - stats.startTime;
+                    const durationSec = (durationMs / 1000).toFixed(1);
+                    document.getElementById('rfp-stats-time').textContent = `${durationSec}s`;
+                }
+                
+                // Format cost
+                document.getElementById('rfp-stats-cost').textContent = `$${stats.estimatedCost.toFixed(4)}`;
+            } else {
+                document.getElementById('rfp-usage-stats').style.display = 'none';
             }
         }
 
@@ -6805,6 +6993,40 @@ Chunks: ${JSON.stringify(chunkResults, null, 2)}`;
                         <div id="rfp-notes" class="rfp-notes" style="display: none;">
                             <h4>📝 AI Notes</h4>
                             <p id="rfp-notes-text">Analysis notes will appear here...</p>
+                        </div>
+
+                        <div id="rfp-usage-stats" class="rfp-notes" style="display: none;">
+                            <h4>📊 Usage Statistics</h4>
+                            <div class="rfp-usage-grid">
+                                <div class="rfp-usage-item">
+                                    <span class="rfp-usage-label">API Calls</span>
+                                    <span class="rfp-usage-value" id="rfp-stats-calls">0</span>
+                                </div>
+                                <div class="rfp-usage-item">
+                                    <span class="rfp-usage-label">Model</span>
+                                    <span class="rfp-usage-value" id="rfp-stats-model">-</span>
+                                </div>
+                                <div class="rfp-usage-item">
+                                    <span class="rfp-usage-label">Prompt Tokens</span>
+                                    <span class="rfp-usage-value" id="rfp-stats-prompt">0</span>
+                                </div>
+                                <div class="rfp-usage-item">
+                                    <span class="rfp-usage-label">Completion Tokens</span>
+                                    <span class="rfp-usage-value" id="rfp-stats-completion">0</span>
+                                </div>
+                                <div class="rfp-usage-item">
+                                    <span class="rfp-usage-label">Total Tokens</span>
+                                    <span class="rfp-usage-value" id="rfp-stats-tokens">0</span>
+                                </div>
+                                <div class="rfp-usage-item">
+                                    <span class="rfp-usage-label">Processing Time</span>
+                                    <span class="rfp-usage-value time" id="rfp-stats-time">0s</span>
+                                </div>
+                                <div class="rfp-usage-item full-width">
+                                    <span class="rfp-usage-label">Estimated Cost</span>
+                                    <span class="rfp-usage-value cost" id="rfp-stats-cost">$0.0000</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="rfp-modal-actions">
