@@ -266,6 +266,74 @@
         .hidden {
             display: none !important;
         }
+
+        /* ============================================
+           MODAL BASE STYLES (shared by all modals)
+           ============================================ */
+        .modal-base {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1003;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .modal-base.open { opacity: 1; visibility: visible; }
+        .modal-base-content {
+            background: #0d0d0d;
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        .modal-base.open .modal-base-content { transform: scale(1); }
+        .modal-base-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #ffd700;
+            color: #000;
+        }
+        .modal-base-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
+        .modal-base-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            color: #000;
+        }
+        .modal-base-close:hover { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        .modal-base-body { padding: 20px; overflow-y: auto; flex: 1; }
+
+        /* ============================================
+           CARD BASE STYLES (shared by all cards)
+           ============================================ */
+        .card-base {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        .card-base:hover {
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1);
+        }
+        .card-base-title { color: #ffd700; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .card-base-desc { color: #888; font-size: 11px; line-height: 1.4; }
+        .card-base-icon { font-size: 24px; flex-shrink: 0; }
         
         /* Quick Tags */
         .quick-tags {
@@ -340,38 +408,11 @@
             gap: 12px;
         }
 
-        .template-card {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .template-card:hover {
-            border-color: #ffd700;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1);
-        }
-
-        .template-card-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-
-        .template-card-title {
-            color: #ffd700;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .template-card-desc {
-            color: #888;
-            font-size: 11px;
-            line-height: 1.4;
-        }
+        /* Template Card - extends card-base */
+        .template-card { cursor: pointer; }
+        .template-card-icon { margin-bottom: 8px; }
+        .template-card-title { } /* uses card-base-title */
+        .template-card-desc { } /* uses card-base-desc */
 
         .template-card-stats {
             display: flex;
@@ -673,6 +714,366 @@
 
         .industry-indicator.within {
             color: #ffd700;
+        }
+
+        /* MH Benchmark Estimator */
+        .mh-estimator {
+            border: 2px solid #ffd700;
+            margin-bottom: 20px;
+            background: #0a0a00;
+        }
+
+        .mh-estimator-header {
+            background: linear-gradient(135deg, #1a1a00 0%, #2d2d00 100%);
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ffd700;
+        }
+
+        .mh-estimator-header:hover {
+            background: linear-gradient(135deg, #2d2d00 0%, #3d3d00 100%);
+        }
+
+        .mh-estimator-header h3 {
+            color: #ffd700;
+            font-weight: 700;
+            font-size: 14px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mh-estimator-body {
+            padding: 16px;
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+
+        .mh-estimator-body.collapsed {
+            max-height: 0;
+            padding: 0 16px;
+        }
+
+        .mh-input-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mh-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mh-input-group label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .mh-input-group input,
+        .mh-input-group select {
+            padding: 8px 10px;
+            font-size: 13px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+        }
+
+        .mh-input-group input:focus,
+        .mh-input-group select:focus {
+            border-color: #ffd700;
+            outline: none;
+        }
+
+        .mh-estimate-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        .mh-estimate-table th {
+            background: #1a1a00;
+            color: #ffd700;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #ffd700;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .mh-estimate-table th.numeric {
+            text-align: right;
+        }
+
+        .mh-estimate-table td {
+            padding: 8px;
+            border-bottom: 1px solid #333;
+            vertical-align: middle;
+        }
+
+        .mh-estimate-table td.numeric {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        .mh-estimate-table tr:hover {
+            background: #1a1a00;
+        }
+
+        .mh-estimate-table tr.total-row {
+            background: #1a1a00;
+            font-weight: 700;
+        }
+
+        .mh-estimate-table tr.total-row td {
+            border-top: 2px solid #ffd700;
+            color: #ffd700;
+            font-size: 14px;
+            padding: 12px 8px;
+        }
+
+        .mh-estimate-table .discipline-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mh-estimate-table .discipline-code {
+            font-size: 10px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        .mh-estimate-table .qty-input {
+            width: 100px;
+            padding: 4px 6px;
+            font-size: 12px;
+            text-align: right;
+            background: #0a0a0a;
+            border: 1px solid #444;
+            color: #fff;
+        }
+
+        .mh-estimate-table .qty-input:focus {
+            border-color: #ffd700;
+            outline: none;
+        }
+
+        .mh-estimate-table .rate-display {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .mh-estimate-table .mh-value {
+            color: #ffd700;
+            font-weight: 600;
+        }
+
+        .mh-estimate-table .projects-used {
+            font-size: 10px;
+            color: #666;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mh-estimate-table .expand-projects {
+            cursor: pointer;
+            color: #ffd700;
+            font-size: 10px;
+            margin-left: 4px;
+        }
+
+        .mh-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #333;
+        }
+
+        .btn-mh {
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            color: #000;
+            font-weight: 700;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-mh:hover {
+            background: linear-gradient(135deg, #ffaa00 0%, #ff8800 100%);
+            transform: translateY(-1px);
+        }
+
+        .mh-summary-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a1a00;
+            padding: 12px 16px;
+            border: 1px solid #ffd700;
+            margin-top: 12px;
+        }
+
+        .mh-summary-bar .total-mh {
+            font-size: 20px;
+            color: #ffd700;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .mh-summary-bar .total-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .discipline-row-inactive {
+            opacity: 0.4;
+        }
+
+        .discipline-toggle {
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 10px;
+            background: #333;
+            border: 1px solid #444;
+            color: #888;
+            border-radius: 3px;
+        }
+
+        .discipline-toggle.active {
+            background: #1a1a00;
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        /* Benchmark Selection Modal */
+        .benchmark-modal-wrapper {
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .benchmark-modal-content {
+            padding: 0;
+        }
+
+        .benchmark-modal-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #1a1a00 0%, #2d2d00 100%);
+            border-bottom: 2px solid #ffd700;
+        }
+
+        .benchmark-modal-header h3 {
+            color: #ffd700;
+            margin: 0 0 4px 0;
+            font-size: 16px;
+        }
+
+        .benchmark-modal-header p {
+            color: #888;
+            margin: 0;
+            font-size: 12px;
+        }
+
+        .benchmark-disciplines {
+            padding: 12px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .benchmark-discipline-section {
+            margin-bottom: 8px;
+            border: 1px solid #333;
+            background: #0a0a0a;
+        }
+
+        .benchmark-discipline-header {
+            padding: 10px 12px;
+            background: #111;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #ffd700;
+        }
+
+        .benchmark-discipline-header:hover {
+            background: #1a1a00;
+        }
+
+        .benchmark-count {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .benchmark-projects {
+            padding: 8px 12px;
+            background: #0a0a0a;
+            border-top: 1px solid #333;
+        }
+
+        .benchmark-project-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+            cursor: pointer;
+        }
+
+        .benchmark-project-item:last-child {
+            border-bottom: none;
+        }
+
+        .benchmark-project-item:hover {
+            background: #111;
+        }
+
+        .benchmark-project-item input[type="checkbox"] {
+            margin-top: 3px;
+        }
+
+        .benchmark-project-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .benchmark-project-info .project-name {
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .benchmark-project-info .project-stats {
+            font-size: 10px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        .benchmark-modal-actions {
+            padding: 12px 16px;
+            background: #111;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
         }
 
         /* Tooltip */
@@ -1159,186 +1560,29 @@
             height: 20px;
         }
 
-        /* API Key Modal */
-        .chat-api-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1002;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
+        /* API Key Modal - extends modal-base */
+        .chat-api-modal { z-index: 1002; background: rgba(0,0,0,0.8); }
+        .chat-api-modal .modal-base-content { max-width: 400px; padding: 24px; }
+        .chat-api-modal h3 { color: #ffd700; margin: 0 0 8px 0; font-size: 16px; }
+        .chat-api-modal p { color: #888; font-size: 12px; margin: 0 0 16px 0; line-height: 1.5; }
+        .chat-api-modal input { width: 100%; background: #1a1a1a; border: 1px solid #444; color: #ffd700; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .chat-api-modal input:focus { outline: none; border-color: #ffd700; }
+        .chat-api-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .chat-api-modal .btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; }
 
-        .chat-api-modal.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .chat-api-modal-content {
-            background: #0d0d0d;
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            padding: 24px;
-            width: 90%;
-            max-width: 400px;
-            transform: scale(0.9);
-            transition: transform 0.3s;
-        }
-
-        .chat-api-modal.open .chat-api-modal-content {
-            transform: scale(1);
-        }
-
-        .chat-api-modal h3 {
-            color: #ffd700;
-            margin: 0 0 8px 0;
-            font-size: 16px;
-        }
-
-        .chat-api-modal p {
-            color: #888;
-            font-size: 12px;
-            margin: 0 0 16px 0;
-            line-height: 1.5;
-        }
-
-        .chat-api-modal input {
-            width: 100%;
-            background: #1a1a1a;
-            border: 1px solid #444;
-            color: #ffd700;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 16px;
-        }
-
-        .chat-api-modal input:focus {
-            outline: none;
-            border-color: #ffd700;
-        }
-
-        .chat-api-modal-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .chat-api-modal .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        /* Recovery Modal */
-        .recovery-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1003;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .recovery-modal.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .recovery-modal-content {
-            background: #0d0d0d;
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            padding: 24px;
-            width: 90%;
-            max-width: 500px;
-            transform: scale(0.9);
-            transition: transform 0.3s;
-        }
-
-        .recovery-modal.open .recovery-modal-content {
-            transform: scale(1);
-        }
-
-        .recovery-modal h3 {
-            color: #ffd700;
-            margin: 0 0 8px 0;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .recovery-modal p {
-            color: #888;
-            font-size: 13px;
-            margin: 0 0 16px 0;
-            line-height: 1.6;
-        }
-
-        .recovery-preview {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-            font-size: 12px;
-        }
-
-        .recovery-preview-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid #222;
-        }
-
-        .recovery-preview-item:last-child {
-            border-bottom: none;
-        }
-
-        .recovery-preview-label {
-            color: #888;
-        }
-
-        .recovery-preview-value {
-            color: #ffd700;
-            font-weight: 500;
-        }
-
-        .recovery-modal-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-
-        .recovery-modal .btn {
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .recovery-modal .btn-danger {
-            background: transparent;
-            border: 1px solid #ff4444;
-            color: #ff4444;
-        }
-
-        .recovery-modal .btn-danger:hover {
-            background: #ff4444;
-            color: #000;
-        }
+        /* Recovery Modal - extends modal-base */
+        .recovery-modal .modal-base-content { max-width: 500px; padding: 24px; }
+        .recovery-modal h3 { color: #ffd700; margin: 0 0 8px 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .recovery-modal p { color: #888; font-size: 13px; margin: 0 0 16px 0; line-height: 1.6; }
+        .recovery-preview { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 12px; }
+        .recovery-preview-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #222; }
+        .recovery-preview-item:last-child { border-bottom: none; }
+        .recovery-preview-label { color: #888; }
+        .recovery-preview-value { color: #ffd700; font-weight: 500; }
+        .recovery-modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+        .recovery-modal .btn { padding: 12px 24px; border-radius: 8px; font-size: 13px; }
+        .recovery-modal .btn-danger { background: transparent; border: 1px solid #ff4444; color: #ff4444; }
+        .recovery-modal .btn-danger:hover { background: #ff4444; color: #000; }
 
         /* Autosave indicator */
         .autosave-indicator {
@@ -1375,77 +1619,8 @@
             border-color: #00ff00;
         }
 
-        /* Reports Modal */
-        .reports-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1003;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .reports-modal.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .reports-modal-content {
-            background: #0d0d0d;
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transform: scale(0.9);
-            transition: transform 0.3s;
-        }
-
-        .reports-modal.open .reports-modal-content {
-            transform: scale(1);
-        }
-
-        .reports-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            background: #ffd700;
-            color: #000;
-        }
-
-        .reports-modal-header h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .reports-close-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 4px 8px;
-            color: #000;
-        }
-
-        .reports-close-btn:hover {
-            background: rgba(0,0,0,0.1);
-            border-radius: 4px;
-        }
-
-        .reports-modal-body {
-            padding: 20px;
-            overflow-y: auto;
-            flex: 1;
-        }
+        /* Reports Modal - extends modal-base */
+        .reports-modal .modal-base-content { max-width: 600px; }
 
         .reports-section {
             margin-bottom: 24px;
@@ -1470,45 +1645,9 @@
             gap: 12px;
         }
 
-        .report-card {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .report-card:hover {
-            border-color: #ffd700;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1);
-        }
-
-        .report-card-icon {
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-
-        .report-card-info {
-            flex: 1;
-        }
-
-        .report-card-title {
-            color: #ffd700;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .report-card-desc {
-            color: #888;
-            font-size: 11px;
-            line-height: 1.4;
-        }
+        /* Report Card - extends card-base */
+        .report-card { cursor: pointer; display: flex; gap: 12px; align-items: flex-start; }
+        .report-card-info { flex: 1; }
 
         .reports-quick-actions {
             display: flex;
@@ -1522,77 +1661,8 @@
             }
         }
 
-        /* Projects Manager Modal */
-        .projects-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1003;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .projects-modal.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .projects-modal-content {
-            background: #0d0d0d;
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 700px;
-            max-height: 80vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transform: scale(0.9);
-            transition: transform 0.3s;
-        }
-
-        .projects-modal.open .projects-modal-content {
-            transform: scale(1);
-        }
-
-        .projects-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            background: #ffd700;
-            color: #000;
-        }
-
-        .projects-modal-header h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .projects-close-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 4px 8px;
-            color: #000;
-        }
-
-        .projects-close-btn:hover {
-            background: rgba(0,0,0,0.1);
-            border-radius: 4px;
-        }
-
-        .projects-modal-body {
-            padding: 20px;
-            overflow-y: auto;
-            flex: 1;
-        }
+        /* Projects Manager Modal - extends modal-base */
+        .projects-modal .modal-base-content { max-width: 700px; }
 
         .projects-section {
             margin-bottom: 24px;
@@ -1635,76 +1705,18 @@
             overflow-y: auto;
         }
 
-        .project-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 14px 16px;
-            transition: all 0.2s;
-        }
-
-        .project-item:hover {
-            border-color: #ffd700;
-        }
-
-        .project-item-checkbox {
-            width: 18px;
-            height: 18px;
-            accent-color: #ffd700;
-        }
-
-        .project-item-info {
-            flex: 1;
-        }
-
-        .project-item-name {
-            color: #ffd700;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        .project-item-meta {
-            color: #666;
-            font-size: 11px;
-            display: flex;
-            gap: 16px;
-        }
-
-        .project-item-meta span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .project-item-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .project-item-btn {
-            background: transparent;
-            border: 1px solid #444;
-            color: #888;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .project-item-btn:hover {
-            border-color: #ffd700;
-            color: #ffd700;
-        }
-
-        .project-item-btn.delete:hover {
-            border-color: #ff4444;
-            color: #ff4444;
-        }
+        /* Project Item - extends card-base */
+        .project-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+        .project-item:hover { transform: none; box-shadow: none; }
+        .project-item-checkbox { width: 18px; height: 18px; accent-color: #ffd700; }
+        .project-item-info { flex: 1; }
+        .project-item-name { color: #ffd700; font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+        .project-item-meta { color: #666; font-size: 11px; display: flex; gap: 16px; }
+        .project-item-meta span { display: flex; align-items: center; gap: 4px; }
+        .project-item-actions { display: flex; gap: 8px; }
+        .project-item-btn { background: transparent; border: 1px solid #444; color: #888; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+        .project-item-btn:hover { border-color: #ffd700; color: #ffd700; }
+        .project-item-btn.delete:hover { border-color: #ff4444; color: #ff4444; }
 
         .projects-empty {
             text-align: center;
@@ -1888,19 +1900,10 @@
             margin-bottom: 20px;
         }
 
-        .insight-card {
-            background: rgba(26, 26, 0, 0.5);
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 16px;
-        }
-
-        .insight-card-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
+        /* Insight Card - variant of card-base with transparent background */
+        .insight-card { background: rgba(26, 26, 0, 0.5); border-color: #444; }
+        .insight-card:hover { transform: none; box-shadow: none; }
+        .insight-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 
         .insight-icon {
             font-size: 16px;
@@ -2408,53 +2411,12 @@
             opacity: 1 !important;
         }
 
-        /* Add Element Modal */
-        .wbs-add-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1004;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s;
-        }
-
-        .wbs-add-modal.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .wbs-add-modal-content {
-            background: #0d0d0d;
-            border: 2px solid #ffd700;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 400px;
-            overflow: hidden;
-        }
-
-        .wbs-add-modal-header {
-            background: #ffd700;
-            color: #000;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .wbs-add-modal-header h3 {
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .wbs-add-modal-body {
-            padding: 20px;
-        }
-
-        .wbs-add-modal-body label {
+        /* Add Element Modal - extends modal-base */
+        .wbs-add-modal { z-index: 1004; background: rgba(0,0,0,0.8); }
+        .wbs-add-modal .modal-base-content { max-width: 400px; }
+        .wbs-add-modal .modal-base-header { padding: 12px 16px; }
+        .wbs-add-modal .modal-base-header h3 { font-size: 14px; }
+        .wbs-add-modal .modal-base-body label {
             display: block;
             color: #888;
             font-size: 11px;
@@ -2551,57 +2513,11 @@
             margin-bottom: 12px;
         }
 
-        /* RFP Wizard Modal Styles */
-        .rfp-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .rfp-modal.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .rfp-modal-content {
-            background: #0d0d0d;
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            width: 95%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            transform: scale(0.9);
-            transition: transform 0.3s;
-        }
-
-        .rfp-modal.open .rfp-modal-content {
-            transform: scale(1);
-        }
-
-        .rfp-modal-header {
-            background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
-            color: #000;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 10px 10px 0 0;
-        }
-
-        .rfp-modal-header h2 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 700;
-        }
-
+        /* RFP Wizard Modal Styles - extends modal-base */
+        .rfp-modal { z-index: 2000; }
+        .rfp-modal .modal-base-content { max-width: 800px; max-height: 90vh; width: 95%; overflow-y: auto; }
+        .rfp-modal .modal-base-header { background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); border-radius: 10px 10px 0 0; }
+        .rfp-modal .modal-base-header h2 { margin: 0; font-size: 16px; font-weight: 700; }
         .rfp-modal-close {
             background: rgba(0, 0, 0, 0.2);
             border: none;
@@ -3307,7 +3223,84 @@
                     <div class="section-title">DISCIPLINE BUDGETS</div>
                     <div class="section-desc">Enter total budget per discipline (distributed by claiming %)</div>
 
-                    <!-- CALCULATOR SECTION -->
+                    <!-- MH BENCHMARK ESTIMATOR -->
+                    <div id="mh-estimator" class="mh-estimator">
+                        <div class="mh-estimator-header" onclick="toggleMHEstimator()">
+                            <h3>⚡ MH BENCHMARK ESTIMATOR</h3>
+                            <span id="mh-estimator-status" style="color: #888; font-size: 11px;">Configure project parameters</span>
+                        </div>
+
+                        <div id="mh-estimator-body" class="mh-estimator-body">
+                            <!-- Input Parameters -->
+                            <div class="mh-input-grid">
+                                <div class="mh-input-group">
+                                    <label>Project Cost ($)</label>
+                                    <input type="text" id="mh-project-cost" placeholder="500,000,000" inputmode="numeric" onchange="updateMHProjectCost()">
+                                </div>
+                                <div class="mh-input-group">
+                                    <label>Design Duration (Months)</label>
+                                    <input type="number" id="mh-design-duration" value="20" min="6" max="48" onchange="updateMHInputs()">
+                                </div>
+                                <div class="mh-input-group">
+                                    <label>Project Type</label>
+                                    <select id="mh-project-type" onchange="updateMHInputs()">
+                                        <option value="highway" selected>Highway/Interstate</option>
+                                        <option value="transit">Transit/Rail</option>
+                                        <option value="bridge">Bridge</option>
+                                        <option value="utility">Utility</option>
+                                    </select>
+                                </div>
+                                <div class="mh-input-group">
+                                    <label>Complexity</label>
+                                    <select id="mh-complexity" onchange="updateMHInputs()">
+                                        <option value="Low">Low</option>
+                                        <option value="Low-Med">Low-Medium</option>
+                                        <option value="Med" selected>Medium</option>
+                                        <option value="Med-High">Medium-High</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Discipline Quantities Table -->
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="mh-estimate-table" id="mh-estimate-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30px;"></th>
+                                            <th>Discipline</th>
+                                            <th>Account Code</th>
+                                            <th class="numeric">Quantity</th>
+                                            <th>Unit</th>
+                                            <th class="numeric">Rate</th>
+                                            <th class="numeric">Est. MH</th>
+                                            <th>Projects Used</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mh-estimate-tbody">
+                                        <!-- Populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Summary Bar -->
+                            <div class="mh-summary-bar">
+                                <div>
+                                    <span class="total-label">TOTAL ESTIMATED MAN-HOURS</span>
+                                </div>
+                                <div class="total-mh" id="mh-total-display">0</div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mh-actions">
+                                <button class="btn btn-sm" onclick="resetMHEstimate()">Reset</button>
+                                <button class="btn btn-sm" onclick="showBenchmarkSelection()">Select Benchmarks</button>
+                                <button class="btn-mh" onclick="applyMHEstimate()">Apply to Budget</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LEGACY CALCULATOR SECTION (collapsible) -->
                     <div id="budget-calculator" class="budget-calculator">
                         <div class="calculator-header" onclick="toggleCalculator()">
                             <span>▼ COST ESTIMATOR</span>
@@ -3510,7 +3503,7 @@
                 <div id="insights-body" class="insights-body hidden">
                     <div class="insights-grid">
                         <!-- Risk Score -->
-                        <div class="insight-card">
+                        <div class="card-base insight-card">
                             <div class="insight-card-header">
                                 <span class="insight-icon">⚠️</span>
                                 <span class="insight-title">Risk Assessment</span>
@@ -3520,7 +3513,7 @@
                         </div>
 
                         <!-- Cost Forecast -->
-                        <div class="insight-card">
+                        <div class="card-base insight-card">
                             <div class="insight-card-header">
                                 <span class="insight-icon">💰</span>
                                 <span class="insight-title">Cost Forecast</span>
@@ -3530,7 +3523,7 @@
                         </div>
 
                         <!-- Schedule Forecast -->
-                        <div class="insight-card">
+                        <div class="card-base insight-card">
                             <div class="insight-card-header">
                                 <span class="insight-icon">📅</span>
                                 <span class="insight-title">Schedule Forecast</span>
@@ -3540,7 +3533,7 @@
                         </div>
 
                         <!-- Budget Health -->
-                        <div class="insight-card">
+                        <div class="card-base insight-card">
                             <div class="insight-card-header">
                                 <span class="insight-icon">📊</span>
                                 <span class="insight-title">Budget Distribution</span>
@@ -3896,7 +3889,7 @@
                 </div>
                 <div class="recovery-preview-item">
                     <span class="recovery-preview-label">Total Budget:</span>
-                    <span class="recovery-preview-value">${totalBudget > 0 ? formatCurrencySimple(totalBudget) : 'Not set'}</span>
+                    <span class="recovery-preview-value">${totalBudget > 0 ? formatCurrency(totalBudget) : 'Not set'}</span>
                 </div>
                 ${pd.projectScope ? `
                 <div class="recovery-preview-item">
@@ -4181,14 +4174,14 @@
             }
             
             list.innerHTML = projects.map(project => `
-                <div class="project-item" data-id="${project.id}">
+                <div class="card-base project-item" data-id="${project.id}">
                     <input type="checkbox" class="project-item-checkbox" onchange="updateCompareView()">
                     <div class="project-item-info">
                         <div class="project-item-name">${escapeHtml(project.name)}</div>
                         <div class="project-item-meta">
                             <span>📅 ${formatTimestamp(project.savedAt)}</span>
                             <span>📊 ${project.summary.disciplines} disciplines</span>
-                            <span>💰 ${formatCurrencySimple(project.summary.totalBudget)}</span>
+                            <span>💰 ${formatCurrency(project.summary.totalBudget)}</span>
                         </div>
                     </div>
                     <div class="project-item-actions">
@@ -4310,7 +4303,7 @@
                     <div class="compare-card-title">${escapeHtml(project.name)}</div>
                     <div class="compare-stat">
                         <span class="compare-stat-label">Total Budget</span>
-                        <span class="compare-stat-value">${formatCurrencySimple(project.summary.totalBudget)}</span>
+                        <span class="compare-stat-value">${formatCurrency(project.summary.totalBudget)}</span>
                     </div>
                     <div class="compare-stat">
                         <span class="compare-stat-label">Phases</span>
@@ -4528,10 +4521,10 @@
             const grid = document.getElementById('template-grid');
             
             grid.innerHTML = Object.values(projectTemplates).map(template => `
-                <div class="template-card" onclick="applyTemplate('${template.id}')">
-                    <div class="template-card-icon">${template.icon}</div>
-                    <div class="template-card-title">${template.name}</div>
-                    <div class="template-card-desc">${template.description}</div>
+                <div class="card-base template-card" onclick="applyTemplate('${template.id}')">
+                    <div class="card-base-icon template-card-icon">${template.icon}</div>
+                    <div class="card-base-title">${template.name}</div>
+                    <div class="card-base-desc">${template.description}</div>
                     <div class="template-card-stats">
                         <div class="template-card-stat">
                             <span>${template.phases.length}</span> phases
@@ -4764,9 +4757,1321 @@
             }
         };
 
+        // ============================================
+        // MH BENCHMARK COST ESTIMATOR CONFIGURATION
+        // ============================================
+        
+        // Discipline configuration with account codes and units of measure
+        const DISCIPLINE_CONFIG = {
+            digitalDelivery: {
+                id: 'digitalDelivery',
+                name: 'Digital Delivery',
+                accountCode: '88.40.26',
+                unit: 'K$',
+                quantityDescription: 'Anticipated Contract Amount',
+                calculationType: 'matrix' // Uses complexity/duration matrix
+            },
+            drainage: {
+                id: 'drainage',
+                name: 'Drainage',
+                accountCode: '88.40.27',
+                unit: 'AC',
+                quantityDescription: 'Project Area (Acres)',
+                calculationType: 'benchmark'
+            },
+            environmental: {
+                id: 'environmental',
+                name: 'Environmental',
+                accountCode: '88.40.39',
+                unit: 'EA',
+                quantityDescription: 'Permit Count',
+                calculationType: 'benchmark'
+            },
+            mot: {
+                id: 'mot',
+                name: 'MOT',
+                accountCode: '88.40.37',
+                unit: 'LF',
+                quantityDescription: 'Roadway Alignment Length',
+                calculationType: 'benchmark'
+            },
+            roadway: {
+                id: 'roadway',
+                name: 'Roadway',
+                accountCode: '88.40.47, 88.40.39',
+                unit: 'LF',
+                quantityDescription: 'Roadway Alignment Length',
+                calculationType: 'benchmark'
+            },
+            traffic: {
+                id: 'traffic',
+                name: 'Traffic',
+                accountCode: '88.40.65',
+                unit: 'LF',
+                quantityDescription: 'Roadway Alignment Length',
+                calculationType: 'benchmark'
+            },
+            utilities: {
+                id: 'utilities',
+                name: 'Utilities',
+                accountCode: '88.40.67',
+                unit: 'EA',
+                quantityDescription: 'Self-Perform Design Relocations',
+                calculationType: 'benchmark'
+            },
+            retainingWalls: {
+                id: 'retainingWalls',
+                name: 'Retaining Walls',
+                accountCode: '88.40.69',
+                unit: 'SF',
+                quantityDescription: 'Retaining Wall Area',
+                calculationType: 'benchmark'
+            },
+            noiseWalls: {
+                id: 'noiseWalls',
+                name: 'Noise Walls',
+                accountCode: '88.40.69',
+                unit: 'SF',
+                quantityDescription: 'Noise Wall Area',
+                calculationType: 'benchmark'
+            },
+            bridgesPCGirder: {
+                id: 'bridgesPCGirder',
+                name: 'Bridges (PC Girder)',
+                accountCode: '88.45.81',
+                unit: 'SF',
+                quantityDescription: 'Bridge Deck Area',
+                calculationType: 'benchmark',
+                bridgeType: 'PC Girder'
+            },
+            bridgesSteel: {
+                id: 'bridgesSteel',
+                name: 'Bridges (Steel)',
+                accountCode: '88.45.81',
+                unit: 'SF',
+                quantityDescription: 'Bridge Deck Area',
+                calculationType: 'benchmark',
+                bridgeType: 'Steel'
+            },
+            bridgesRehab: {
+                id: 'bridgesRehab',
+                name: 'Bridges (Rehabilitation)',
+                accountCode: '88.45.81',
+                unit: 'SF',
+                quantityDescription: 'Bridge Deck Area',
+                calculationType: 'benchmark',
+                bridgeType: 'Rehabilitation'
+            },
+            miscStructures: {
+                id: 'miscStructures',
+                name: 'Misc Structures',
+                accountCode: '88.45.81.036',
+                unit: 'MHR',
+                quantityDescription: 'RDWY, DRN and TRF MHR',
+                calculationType: 'percentage' // % of Roadway + Drainage + Traffic MH
+            },
+            geotechnical: {
+                id: 'geotechnical',
+                name: 'Geotechnical',
+                accountCode: '88.50',
+                unit: 'EA',
+                quantityDescription: 'Transportation Structure Count',
+                calculationType: 'benchmark'
+            },
+            systems: {
+                id: 'systems',
+                name: 'Systems',
+                accountCode: '88.35',
+                unit: 'TF',
+                quantityDescription: 'Track Alignment Length',
+                calculationType: 'benchmark'
+            },
+            track: {
+                id: 'track',
+                name: 'Track',
+                accountCode: '88.40.63',
+                unit: 'TF',
+                quantityDescription: 'Track Alignment Length',
+                calculationType: 'benchmark'
+            },
+            esdc: {
+                id: 'esdc',
+                name: 'ESDC',
+                accountCode: '',
+                unit: 'K$',
+                quantityDescription: 'Anticipated Project Cost',
+                calculationType: 'percentage' // % of project cost
+            },
+            tscd: {
+                id: 'tscd',
+                name: 'TSCD',
+                accountCode: '',
+                unit: 'K$',
+                quantityDescription: 'Anticipated Project Cost',
+                calculationType: 'percentage' // % of project cost
+            }
+        };
+
+        // Historical project benchmark data
+        const HISTORICAL_BENCHMARKS = {
+            drainage: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 141161, quantity: 872, unit: 'AC', rate: 161.88, type: 'highway', complexity: 'high', applicable: true },
+                    { id: 'bch1', name: 'BC Highway 1', mh: 2209, quantity: 3, unit: 'AC', rate: 669.39, type: 'highway', complexity: 'medium', applicable: false },
+                    { id: 'bch5', name: 'BC Highway 5', mh: 4948, quantity: 16, unit: 'AC', rate: 309.25, type: 'highway', complexity: 'medium', applicable: false },
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 122527, quantity: 104, unit: 'AC', rate: 1178.14, type: 'transit', complexity: 'high', applicable: false },
+                    { id: 'fp2a', name: 'Foothill Phase 2A LRT', mh: 7420, quantity: 133, unit: 'AC', rate: 55.79, type: 'transit', complexity: 'low', applicable: false },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 72738, quantity: 119, unit: 'AC', rate: 611.24, type: 'transit', complexity: 'high', applicable: false },
+                    { id: 'i15', name: 'I-15 Tropicana', mh: 14493, quantity: 194, unit: 'AC', rate: 74.71, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'i17', name: 'I-17 Anthem', mh: 47947, quantity: 2171, unit: 'AC', rate: 22.09, type: 'highway', complexity: 'low', applicable: true },
+                    { id: 'ottawa', name: 'Ottawa LRT', mh: 11503, quantity: 560, unit: 'AC', rate: 20.54, type: 'transit', complexity: 'low', applicable: false },
+                    { id: 'us97', name: 'US 97', mh: 7787, quantity: 33, unit: 'AC', rate: 235.97, type: 'highway', complexity: 'high', applicable: true },
+                    { id: '264th', name: '264th Street Interchange', mh: 11783, quantity: 193, unit: 'AC', rate: 61.05, type: 'highway', complexity: 'medium', applicable: true }
+                ],
+                defaultRate: 92.62,
+                customRate: 81.42
+            },
+            mot: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 170668, quantity: 550674, unit: 'LF', rate: 0.310, type: 'highway', complexity: 'high', applicable: true },
+                    { id: 'bch1', name: 'BC Highway 1', mh: 3645, quantity: 1120, unit: 'LF', rate: 3.254, type: 'highway', complexity: 'medium', applicable: false },
+                    { id: 'bch5', name: 'BC Highway 5', mh: 1050, quantity: 2300, unit: 'LF', rate: 0.457, type: 'highway', complexity: 'medium', applicable: false },
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 32305, quantity: 83559, unit: 'LF', rate: 0.387, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'fp2a', name: 'Foothill Phase 2A LRT', mh: 3500, quantity: 25667, unit: 'LF', rate: 0.136, type: 'transit', complexity: 'low', applicable: false },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 7873, quantity: 17105, unit: 'LF', rate: 0.460, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'i15', name: 'I-15 Tropicana', mh: 11263, quantity: 48206, unit: 'LF', rate: 0.234, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'i17', name: 'I-17 Anthem', mh: 13867, quantity: 325987, unit: 'LF', rate: 0.043, type: 'highway', complexity: 'low', applicable: true },
+                    { id: 'ottawa', name: 'Ottawa LRT', mh: 72414, quantity: 547047, unit: 'LF', rate: 0.132, type: 'transit', complexity: 'low', applicable: false },
+                    { id: 'us97', name: 'US 97', mh: 7364, quantity: 107830, unit: 'LF', rate: 0.068, type: 'highway', complexity: 'low', applicable: true },
+                    { id: '264th', name: '264th Street Interchange', mh: 25407, quantity: 51920, unit: 'LF', rate: 0.489, type: 'highway', complexity: 'high', applicable: true }
+                ],
+                defaultRate: 0.208,
+                customRate: 0.184
+            },
+            roadway: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 133332, quantity: 550674, unit: 'LF', rate: 0.242, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'bch1', name: 'BC Highway 1', mh: 4556, quantity: 1120, unit: 'LF', rate: 4.068, type: 'highway', complexity: 'high', applicable: false },
+                    { id: 'bch5', name: 'BC Highway 5', mh: 6097, quantity: 2300, unit: 'LF', rate: 2.651, type: 'highway', complexity: 'high', applicable: false },
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 74720, quantity: 165248, unit: 'LF', rate: 0.452, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'fp2a', name: 'Foothill Phase 2A LRT', mh: 13279, quantity: 180566, unit: 'LF', rate: 0.074, type: 'transit', complexity: 'low', applicable: false },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 58164, quantity: 120338, unit: 'LF', rate: 0.483, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'i15', name: 'I-15 Tropicana', mh: 24245, quantity: 48206, unit: 'LF', rate: 0.503, type: 'highway', complexity: 'high', applicable: true },
+                    { id: 'i17', name: 'I-17 Anthem', mh: 53211, quantity: 325987, unit: 'LF', rate: 0.163, type: 'highway', complexity: 'low', applicable: true },
+                    { id: 'ottawa', name: 'Ottawa LRT', mh: 192084, quantity: 556235, unit: 'LF', rate: 0.345, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'tijuana', name: 'Tijuana River Barrier', mh: 547, quantity: 2807, unit: 'LF', rate: 0.195, type: 'highway', complexity: 'medium', applicable: false },
+                    { id: '30crossing', name: '30 Crossing', mh: 40907, quantity: 57768, unit: 'LF', rate: 0.708, type: 'highway', complexity: 'high', applicable: true },
+                    { id: 'chpe', name: 'CHPE Transmission', mh: 3410, quantity: 23450, unit: 'LF', rate: 0.145, type: 'utility', complexity: 'medium', applicable: false },
+                    { id: 'us97', name: 'US 97', mh: 21330, quantity: 102183, unit: 'LF', rate: 0.209, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: '264th', name: '264th Street Interchange', mh: 26964, quantity: 51920, unit: 'LF', rate: 0.519, type: 'highway', complexity: 'high', applicable: true }
+                ],
+                defaultRate: 0.336,
+                customRate: 0.390
+            },
+            traffic: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 43833, quantity: 550674, unit: 'LF', rate: 0.080, type: 'highway', complexity: 'low', applicable: true },
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 42037, quantity: 83559, unit: 'LF', rate: 0.503, type: 'transit', complexity: 'high', applicable: false },
+                    { id: 'fp2a', name: 'Foothill Phase 2A LRT', mh: 4284, quantity: 25667, unit: 'LF', rate: 0.167, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 12410, quantity: 17105, unit: 'LF', rate: 0.726, type: 'transit', complexity: 'high', applicable: false },
+                    { id: 'i15', name: 'I-15 Tropicana', mh: 27602, quantity: 48206, unit: 'LF', rate: 0.573, type: 'highway', complexity: 'high', applicable: true },
+                    { id: 'i17', name: 'I-17 Anthem', mh: 12223, quantity: 325987, unit: 'LF', rate: 0.037, type: 'highway', complexity: 'low', applicable: true },
+                    { id: '30crossing', name: '30 Crossing', mh: 18882, quantity: 57768, unit: 'LF', rate: 0.327, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'us97', name: 'US 97', mh: 1803, quantity: 102183, unit: 'LF', rate: 0.018, type: 'highway', complexity: 'low', applicable: true },
+                    { id: '264th', name: '264th Street Interchange', mh: 5649, quantity: 51920, unit: 'LF', rate: 0.109, type: 'highway', complexity: 'medium', applicable: true }
+                ],
+                defaultRate: 0.147,
+                customRate: 0.124
+            },
+            utilities: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 108899, quantity: 384, unit: 'EA', rate: 283.591, type: 'highway', complexity: 'high', applicable: true },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 18896, quantity: 70, unit: 'EA', rate: 269.943, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'i15', name: 'I-15 Tropicana', mh: 6374, quantity: 48, unit: 'EA', rate: 132.792, type: 'highway', complexity: 'low', applicable: true },
+                    { id: 'us97', name: 'US 97', mh: 3336, quantity: 11, unit: 'EA', rate: 303.273, type: 'highway', complexity: 'high', applicable: true },
+                    { id: '264th', name: '264th Street Interchange', mh: 1465, quantity: 5, unit: 'EA', rate: 293.000, type: 'highway', complexity: 'high', applicable: true }
+                ],
+                defaultRate: 270.727,
+                customRate: 269.208
+            },
+            retainingWalls: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 48960, quantity: 1169432, unit: 'SF', rate: 0.042, type: 'highway', complexity: 'low', applicable: true },
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 54751, quantity: 434037, unit: 'SF', rate: 0.126, type: 'transit', complexity: 'high', applicable: false },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 18592, quantity: 377619, unit: 'SF', rate: 0.049, type: 'transit', complexity: 'low', applicable: false },
+                    { id: 'i15', name: 'I-15 Tropicana', mh: 4724, quantity: 95796, unit: 'SF', rate: 0.049, type: 'highway', complexity: 'low', applicable: true },
+                    { id: '30crossing', name: '30 Crossing', mh: 3905, quantity: 42336, unit: 'SF', rate: 0.092, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'us97', name: 'US 97', mh: 696, quantity: 30039, unit: 'SF', rate: 0.023, type: 'highway', complexity: 'low', applicable: true }
+                ],
+                defaultRate: 0.062,
+                customRate: 0.046
+            },
+            noiseWalls: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 10909, quantity: 190048, unit: 'SF', rate: 0.057, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 5339, quantity: 241020, unit: 'SF', rate: 0.022, type: 'transit', complexity: 'low', applicable: true }
+                ],
+                defaultRate: 0.040,
+                customRate: 0.040
+            },
+            bridgesPCGirder: {
+                projects: [
+                    { id: 'b201', name: 'Bridge B201 (429 Ramp B1)', mh: 2415, quantity: 18100, unit: 'SF', rate: 0.1334, type: 'highway', complexity: 'medium', spans: 3, applicable: true },
+                    { id: 'b203', name: 'Bridge B203 (429 Ramp A2)', mh: 2438, quantity: 19630, unit: 'SF', rate: 0.1242, type: 'highway', complexity: 'medium', spans: 4, applicable: true },
+                    { id: 'b221', name: 'Bridge B221 (429 Ramp D2)', mh: 2487, quantity: 22888, unit: 'SF', rate: 0.1087, type: 'highway', complexity: 'medium', spans: 5, applicable: true },
+                    { id: 'b222', name: 'Bridge B222 (SR 538 NB)', mh: 3006, quantity: 57246, unit: 'SF', rate: 0.0525, type: 'highway', complexity: 'low', spans: 10, applicable: true },
+                    { id: 'b207', name: 'Bridge B207 (Old Lake Wilson SB)', mh: 2510, quantity: 24431, unit: 'SF', rate: 0.1028, type: 'highway', complexity: 'medium', spans: 4, applicable: true },
+                    { id: 'b209', name: 'Bridge B209 (429 Ramp D2)', mh: 2827, quantity: 45408, unit: 'SF', rate: 0.0623, type: 'highway', complexity: 'low', spans: 6, applicable: true },
+                    { id: 'b210', name: 'Bridge B210 (SR 538 NB)', mh: 2424, quantity: 18692, unit: 'SF', rate: 0.1297, type: 'highway', complexity: 'medium', spans: 4, applicable: true },
+                    { id: 'b212', name: 'Bridge B212 (429 Ramp D3)', mh: 2465, quantity: 21451, unit: 'SF', rate: 0.1149, type: 'highway', complexity: 'medium', spans: 5, applicable: true },
+                    { id: 'b213', name: 'Bridge B213 (I-4 ML WB)', mh: 2577, quantity: 28872, unit: 'SF', rate: 0.0893, type: 'highway', complexity: 'medium', spans: 3, applicable: true },
+                    { id: 'b214', name: 'Bridge B214 (I-4 ML EB)', mh: 2580, quantity: 29063, unit: 'SF', rate: 0.0888, type: 'highway', complexity: 'medium', spans: 3, applicable: true }
+                ],
+                defaultRate: 0.090,
+                customRate: 0.090
+            },
+            bridgesSteel: {
+                projects: [
+                    { id: 'frt', name: 'FRT San Dimas Wash', mh: 2093, quantity: 1901, unit: 'SF', rate: 1.1013, type: 'transit', complexity: 'high', spans: 1, applicable: false },
+                    { id: 'd12', name: 'I-15 Tropicana D12', mh: 5094, quantity: 13562, unit: 'SF', rate: 0.3756, type: 'highway', complexity: 'high', spans: 'multi', applicable: true },
+                    { id: 'b221s', name: 'Bridge B221 Steel (429 Ramp D2)', mh: 4064, quantity: 10820, unit: 'SF', rate: 0.3756, type: 'highway', complexity: 'high', spans: 1, applicable: true },
+                    { id: 'b222s', name: 'Bridge B222 Steel (SR 538 NB)', mh: 4141, quantity: 11025, unit: 'SF', rate: 0.3756, type: 'highway', complexity: 'high', spans: 1, applicable: true }
+                ],
+                defaultRate: 0.376,
+                customRate: 0.376
+            },
+            bridgesRehab: {
+                projects: [
+                    { id: 'b208', name: 'Bridge B208 (Old Lake Wilson NB Rehab)', mh: 4692, quantity: 30000, unit: 'SF', rate: 0.1564, type: 'highway', complexity: 'medium', applicable: true }
+                ],
+                defaultRate: 0.156,
+                customRate: 0.156
+            },
+            miscStructures: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 19110, quantity: 378295, unit: 'MHR', rate: 0.051, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'bch1', name: 'BC Highway 1', mh: 738, quantity: 6765, unit: 'MHR', rate: 0.109, type: 'highway', complexity: 'high', applicable: false },
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 9945, quantity: 294035, unit: 'MHR', rate: 0.034, type: 'transit', complexity: 'low', applicable: false },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 12927, quantity: 166681, unit: 'MHR', rate: 0.078, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'i15', name: 'I-15 Tropicana', mh: 4145, quantity: 71064, unit: 'MHR', rate: 0.058, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'i17', name: 'I-17 Anthem', mh: 5004, quantity: 113381, unit: 'MHR', rate: 0.044, type: 'highway', complexity: 'low', applicable: true },
+                    { id: '264th', name: '264th Street Interchange', mh: 1945, quantity: 44396, unit: 'MHR', rate: 0.044, type: 'highway', complexity: 'low', applicable: true }
+                ],
+                defaultRate: 0.058,
+                customRate: 0.048
+            },
+            geotechnical: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 47629, quantity: 274, unit: 'EA', rate: 173.828, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'bch1', name: 'BC Highway 1', mh: 1255, quantity: 2, unit: 'EA', rate: 627.500, type: 'highway', complexity: 'high', applicable: false },
+                    { id: 'bch5', name: 'BC Highway 5', mh: 4735, quantity: 8, unit: 'EA', rate: 591.875, type: 'highway', complexity: 'high', applicable: false },
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 33353, quantity: 127, unit: 'EA', rate: 262.622, type: 'transit', complexity: 'medium', applicable: false },
+                    { id: 'fp2a', name: 'Foothill Phase 2A LRT', mh: 6797, quantity: 19, unit: 'EA', rate: 357.737, type: 'transit', complexity: 'high', applicable: false },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 98819, quantity: 99, unit: 'EA', rate: 998.172, type: 'transit', complexity: 'high', applicable: false },
+                    { id: 'i15', name: 'I-15 Tropicana', mh: 9508, quantity: 33, unit: 'EA', rate: 288.121, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'i17', name: 'I-17 Anthem', mh: 23572, quantity: 110, unit: 'EA', rate: 214.291, type: 'highway', complexity: 'medium', applicable: true },
+                    { id: 'tijuana', name: 'Tijuana River Barrier', mh: 951, quantity: 1, unit: 'EA', rate: 951.000, type: 'highway', complexity: 'high', applicable: false },
+                    { id: 'us97', name: 'US 97', mh: 2900, quantity: 19, unit: 'EA', rate: 152.632, type: 'highway', complexity: 'low', applicable: true },
+                    { id: '264th', name: '264th Street Interchange', mh: 7478, quantity: 6, unit: 'EA', rate: 1246.333, type: 'highway', complexity: 'high', applicable: false }
+                ],
+                defaultRate: 327.683,
+                customRate: 201.730
+            },
+            systems: {
+                projects: [
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 153825, quantity: 81688, unit: 'TF', rate: 1.883, type: 'transit', complexity: 'high', applicable: true },
+                    { id: 'fp2a', name: 'Foothill Phase 2A LRT', mh: 39239, quantity: 154899, unit: 'TF', rate: 0.253, type: 'transit', complexity: 'low', applicable: true },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 88715, quantity: 103233, unit: 'TF', rate: 0.859, type: 'transit', complexity: 'medium', applicable: true },
+                    { id: 'ottawa', name: 'Ottawa LRT', mh: 135270, quantity: 167537, unit: 'TF', rate: 0.807, type: 'transit', complexity: 'medium', applicable: false }
+                ],
+                defaultRate: 0.998,
+                customRate: 0.998
+            },
+            track: {
+                projects: [
+                    { id: 'fwle', name: 'Federal Way Link Extension', mh: 55340, quantity: 81688, unit: 'TF', rate: 0.677, type: 'transit', complexity: 'high', applicable: true },
+                    { id: 'fp2a', name: 'Foothill Phase 2A LRT', mh: 8757, quantity: 154899, unit: 'TF', rate: 0.057, type: 'transit', complexity: 'low', applicable: true },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', mh: 6838, quantity: 103233, unit: 'TF', rate: 0.066, type: 'transit', complexity: 'low', applicable: true },
+                    { id: 'ottawa', name: 'Ottawa LRT', mh: 82275, quantity: 167537, unit: 'TF', rate: 0.491, type: 'transit', complexity: 'medium', applicable: false }
+                ],
+                defaultRate: 0.267,
+                customRate: 0.267
+            },
+            esdc: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', cost: 23053.57, projectCost: 1938485.07, unit: 'K$', rate: 0.0119, market: 'Transportation, Highway', applicable: true },
+                    { id: 'fwle', name: 'Federal Way Link Extension', cost: 21188.27, projectCost: 1376998.17, unit: 'K$', rate: 0.0154, market: 'Transit, Light Rail', applicable: false },
+                    { id: 'fp2a', name: 'Foothill Phase 2A LRT', cost: 6232.00, projectCost: 470813.24, unit: 'K$', rate: 0.0132, market: 'Transit, Light Rail', applicable: false },
+                    { id: 'fp2b1', name: 'Foothill Phase 2B1 LRT', cost: 8894.15, projectCost: 836559.23, unit: 'K$', rate: 0.0106, market: 'Transit, Light Rail', applicable: false },
+                    { id: 'ottawa', name: 'Ottawa LRT', cost: 52312.47, projectCost: 3691276.90, unit: 'K$', rate: 0.0142, market: 'Transit, Light Rail', applicable: false },
+                    { id: 'c70', name: 'C-70', cost: 15995.50, projectCost: 1386636.60, unit: 'K$', rate: 0.0115, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i25trex', name: 'I-25 T-REX', cost: 9702.70, projectCost: 1144655.05, unit: 'K$', rate: 0.0085, market: 'Transportation, Highway', applicable: true },
+                    { id: 'geneva', name: 'Geneva Road', cost: 347.60, projectCost: 41533.16, unit: 'K$', rate: 0.0084, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i15corr', name: 'I-15 Corridor Reconstruction', cost: 10453.15, projectCost: 1261222.85, unit: 'K$', rate: 0.0083, market: 'Transportation, Highway', applicable: true },
+                    { id: 'sr202', name: 'SR-202', cost: 1276.02, projectCost: 155588.42, unit: 'K$', rate: 0.0082, market: 'Transportation, Highway', applicable: true },
+                    { id: 'dfw', name: 'DFW Connector', cost: 6439.08, projectCost: 798052.80, unit: 'K$', rate: 0.0081, market: 'Transportation, Highway', applicable: true },
+                    { id: 'neon', name: 'Project Neon', cost: 5539.52, projectCost: 611670.06, unit: 'K$', rate: 0.0091, market: 'Transportation, Highway', applicable: true },
+                    { id: 'mvc', name: 'Mountain View Corridor', cost: 2199.24, projectCost: 229878.60, unit: 'K$', rate: 0.0096, market: 'Transportation, Highway', applicable: true },
+                    { id: 'e360', name: 'E-360 Bellevue to Redmond', cost: 2290.37, projectCost: 236570.04, unit: 'K$', rate: 0.0097, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i17', name: 'I-17 Anthem', cost: 3210.57, projectCost: 320071.89, unit: 'K$', rate: 0.0100, market: 'Transportation, Highway', applicable: true },
+                    { id: 'henday', name: 'Anthony Henday-Stony Plain', cost: 1905.94, projectCost: 187397.98, unit: 'K$', rate: 0.0102, market: 'Transportation, Highway', applicable: true },
+                    { id: 'sh183', name: 'SH-183 Midtown Express', cost: 9424.17, projectCost: 885258.97, unit: 'K$', rate: 0.0106, market: 'Transportation, Highway', applicable: true },
+                    { id: 'iccb', name: 'ICC-B', cost: 5009.29, projectCost: 454376.58, unit: 'K$', rate: 0.0110, market: 'Transportation, Highway', applicable: true },
+                    { id: 'pioneer', name: 'Pioneer Crossing', cost: 2102.32, projectCost: 177230.46, unit: 'K$', rate: 0.0119, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i225', name: 'I-225', cost: 5263.24, projectCost: 424701.71, unit: 'K$', rate: 0.0124, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i405rb', name: 'I-405 Renton to Bellevue', cost: 8305.85, projectCost: 615922.00, unit: 'K$', rate: 0.0135, market: 'Transportation, Highway', applicable: true },
+                    { id: 'nwpkwy', name: 'Northwest Parkway', cost: 2059.46, projectCost: 152435.75, unit: 'K$', rate: 0.0135, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i15trop', name: 'I-15 Tropicana', cost: 4650.13, projectCost: 328887.12, unit: 'K$', rate: 0.0141, market: 'Transportation, Highway', applicable: true },
+                    { id: 'turcot', name: 'Turcot', cost: 24752.38, projectCost: 1703515.46, unit: 'K$', rate: 0.0145, market: 'Transportation, Highway', applicable: true },
+                    { id: 'selmon', name: 'Selmon Expressway Extension', cost: 4154.99, projectCost: 253154.83, unit: 'K$', rate: 0.0164, market: 'Transportation, Highway', applicable: true },
+                    { id: 'swcalgary', name: 'Southwest Calgary Ring Road', cost: 23281.64, projectCost: 1325890.67, unit: 'K$', rate: 0.0176, market: 'Transportation, Highway', applicable: true },
+                    { id: 'sea2sky', name: 'Sea-to-Sky Highway', cost: 3379.41, projectCost: 590638.34, unit: 'K$', rate: 0.0057, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i405k', name: 'I-405 Kirkland', cost: 247.45, projectCost: 42990.54, unit: 'K$', rate: 0.0058, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i440', name: 'I-440 Nashville Connector', cost: 520.87, projectCost: 146656.02, unit: 'K$', rate: 0.0036, market: 'Transportation, Highway', applicable: true }
+                ],
+                defaultRate: 0.0099,
+                customRate: 0.0103
+            },
+            tscd: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', cost: 7812.04, projectCost: 2006033.03, unit: 'K$', rate: 0.0039, market: 'Transportation, Highway', applicable: true },
+                    { id: 'connect4', name: 'Connect 4', cost: 1491.45, projectCost: 268033.92, unit: 'K$', rate: 0.0056, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i15trop', name: 'I-15 Tropicana', cost: 830.59, projectCost: 368187.07, unit: 'K$', rate: 0.0023, market: 'Transportation, Highway', applicable: true },
+                    { id: 'c70', name: 'C-70', cost: 7441.71, projectCost: 1290640.68, unit: 'K$', rate: 0.0058, market: 'Transportation, Highway', applicable: true },
+                    { id: 'turcot', name: 'Turcot', cost: 9542.25, projectCost: 1784779.80, unit: 'K$', rate: 0.0053, market: 'Transportation, Highway', applicable: true },
+                    { id: 'swcalgary', name: 'Southwest Calgary Ring Road', cost: 2905.56, projectCost: 1310255.12, unit: 'K$', rate: 0.0022, market: 'Transportation, Highway', applicable: true },
+                    { id: 'goethals', name: 'Goethals Bridge Replacement', cost: 1935.06, projectCost: 1091231.60, unit: 'K$', rate: 0.0018, market: 'Transportation, Bridges', applicable: true },
+                    { id: 'midtown', name: 'Midtown Express', cost: 1552.51, projectCost: 914940.51, unit: 'K$', rate: 0.0017, market: 'Transportation, Highway', applicable: true },
+                    { id: 'bwe', name: 'Border West Expressway', cost: 1858.64, projectCost: 691683.83, unit: 'K$', rate: 0.0027, market: 'Transportation, Highway', applicable: true },
+                    { id: 'neon', name: 'Project Neon', cost: 931.75, projectCost: 628296.99, unit: 'K$', rate: 0.0015, market: 'Transportation, Highway', applicable: true },
+                    { id: '30crossing', name: '30 Crossing', cost: 1551.47, projectCost: 497061.58, unit: 'K$', rate: 0.0031, market: 'Transportation, Bridges', applicable: true },
+                    { id: 'selmon', name: 'Selmon Expressway Extension', cost: 1955.92, projectCost: 262650.00, unit: 'K$', rate: 0.0074, market: 'Transportation, Highway', applicable: true },
+                    { id: 'flyway470', name: 'Flyway 470', cost: 898.39, projectCost: 256515.18, unit: 'K$', rate: 0.0035, market: 'Transportation, Highway', applicable: true },
+                    { id: 'mvc', name: 'MVC 4100 South to SR-201', cost: 131.57, projectCost: 229983.74, unit: 'K$', rate: 0.0006, market: 'Transportation, Highway', applicable: true },
+                    { id: 'tlicho', name: 'Tlicho All-Season Road', cost: 216.41, projectCost: 183706.28, unit: 'K$', rate: 0.0012, market: 'Transportation, Highway', applicable: true },
+                    { id: 'i10cap', name: 'I-10 Capital Corridor', cost: 1776.12, projectCost: 159847.91, unit: 'K$', rate: 0.0111, market: 'Transportation, Highway', applicable: true },
+                    { id: 'nashville', name: 'Nashville Connector', cost: 361.46, projectCost: 148878.92, unit: 'K$', rate: 0.0024, market: 'Transportation, Bridges', applicable: true },
+                    { id: 'moosejaw', name: 'Moosejaw', cost: 759.58, projectCost: 148722.83, unit: 'K$', rate: 0.0051, market: 'Transportation, Highway', applicable: true },
+                    { id: 'bigthompson', name: 'Big Thompson', cost: 235.58, projectCost: 146038.94, unit: 'K$', rate: 0.0016, market: 'Transportation, Highway', applicable: true },
+                    { id: 'kingston', name: 'Kingston Third Crossing', cost: 1140.54, projectCost: 144336.50, unit: 'K$', rate: 0.0079, market: 'Transportation, Bridges', applicable: true },
+                    { id: 'porter', name: 'Porter Road', cost: 770.65, projectCost: 112340.79, unit: 'K$', rate: 0.0069, market: 'Transportation, Highway', applicable: true }
+                ],
+                defaultRate: 0.0026,
+                customRate: 0.0031
+            },
+            environmental: {
+                projects: [
+                    { id: 'sec820', name: 'IH 820 Southeast Connector', mh: 1050, quantity: 3, unit: 'EA', rate: 350.000, type: 'highway', complexity: 'medium', applicable: true }
+                ],
+                defaultRate: 350.000,
+                customRate: 350.000
+            }
+        };
+
+        // Digital Delivery complexity matrix (MH by complexity score and duration)
+        const DIGITAL_DELIVERY_MATRIX = {
+            // Design Duration (months) -> PRA Score ranges -> MH
+            durations: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+            complexityScores: {
+                1: [260, 303, 348, 389, 433, 476, 519, 562, 606, 649, 692, 735, 779, 822, 865, 908, 952, 995, 1038],
+                2: [519, 606, 692, 779, 865, 952, 1038, 1125, 1211, 1298, 1384, 1471, 1557, 1644, 1730, 1817, 1903, 1990, 2076],
+                4: [1308, 1211, 1384, 1557, 1730, 1903, 2076, 2249, 2422, 2595, 2768, 2941, 3114, 3287, 3460, 3633, 3806, 3979, 4152],
+                8: [1661, 1938, 2214, 2491, 2768, 3045, 3322, 3598, 3875, 4152, 4429, 4706, 4982, 5259, 5536, 5813, 6090, 6366, 6643],
+                16: [1817, 2119, 2422, 2725, 3028, 3330, 3633, 3936, 4239, 4541, 4844, 5147, 5450, 5752, 6055, 6358, 6661, 6963, 7266],
+                24: [2076, 2422, 2768, 3114, 3460, 3806, 4152, 4498, 4844, 5190, 5536, 5882, 6228, 6574, 6920, 7266, 7612, 7958, 8304]
+            },
+            // Size-based complexity scoring
+            sizeScores: {
+                '<$100M': 1,
+                '$100M-$200M': 2,
+                '$200M-$400M': 3,
+                '$400M-$700M': 6,
+                '$700M-$1B': 10,
+                '>$1B': 12
+            },
+            // Complexity multipliers
+            complexityMultipliers: {
+                'Low': { 1: 1, 2: 2, 3: 3, 6: 6, 10: 10, 12: 12 },
+                'Low-Med': { 1: 2, 2: 4, 3: 6, 6: 12, 10: 20, 12: 24 },
+                'Med': { 1: 4, 2: 8, 3: 12, 6: 24, 10: 40, 12: 48 },
+                'Med-High': { 1: 8, 2: 16, 3: 24, 6: 48, 10: 80, 12: 96 },
+                'High': { 1: 16, 2: 32, 3: 48, 6: 96, 10: 160, 12: 192 }
+            }
+        };
+
+        // MH Estimate state
+        let mhEstimateState = {
+            projectCost: 0,
+            designDuration: 20,
+            complexity: 'Med',
+            disciplines: {},
+            selectedProjects: {},
+            customRates: {}
+        };
+
+        // ============================================
+        // MH ESTIMATION FUNCTIONS
+        // ============================================
+
+        /**
+         * Get applicable projects for a discipline based on project type and complexity
+         * @param {string} disciplineId - The discipline ID from DISCIPLINE_CONFIG
+         * @param {string} projectType - 'highway', 'transit', 'utility', etc.
+         * @param {string} complexity - 'low', 'medium', 'high'
+         * @returns {Array} Array of applicable project objects
+         */
+        function getApplicableProjects(disciplineId, projectType = 'highway', complexity = null) {
+            const benchmarks = HISTORICAL_BENCHMARKS[disciplineId];
+            if (!benchmarks || !benchmarks.projects) return [];
+            
+            return benchmarks.projects.filter(project => {
+                // If project has explicit applicable flag, use that first
+                if (project.applicable !== undefined) {
+                    return project.applicable;
+                }
+                // Otherwise filter by project type
+                if (projectType && project.type && project.type !== projectType) {
+                    return false;
+                }
+                // Filter by complexity if specified
+                if (complexity && project.complexity && project.complexity !== complexity) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        /**
+         * Calculate weighted production rate from selected projects
+         * @param {Array} projects - Array of project objects with mh, quantity, rate
+         * @param {string} method - 'average', 'weighted', 'median'
+         * @returns {number} Calculated production rate
+         */
+        function calculateWeightedRate(projects, method = 'weighted') {
+            if (!projects || projects.length === 0) return 0;
+            
+            if (method === 'average') {
+                const sum = projects.reduce((acc, p) => acc + p.rate, 0);
+                return sum / projects.length;
+            }
+            
+            if (method === 'median') {
+                const sorted = [...projects].sort((a, b) => a.rate - b.rate);
+                const mid = Math.floor(sorted.length / 2);
+                return sorted.length % 2 ? sorted[mid].rate : (sorted[mid - 1].rate + sorted[mid].rate) / 2;
+            }
+            
+            // Weighted by quantity (default)
+            const totalQuantity = projects.reduce((acc, p) => acc + p.quantity, 0);
+            const totalMH = projects.reduce((acc, p) => acc + p.mh, 0);
+            return totalQuantity > 0 ? totalMH / totalQuantity : 0;
+        }
+
+        /**
+         * Estimate MH for a discipline based on quantity and benchmark rate
+         * @param {string} disciplineId - The discipline ID
+         * @param {number} quantity - The quantity in the discipline's UOM
+         * @param {Array} selectedProjects - Optional specific projects to use for rate
+         * @returns {Object} { mh: number, rate: number, projects: Array }
+         */
+        function estimateMH(disciplineId, quantity, selectedProjects = null) {
+            const config = DISCIPLINE_CONFIG[disciplineId];
+            const benchmarks = HISTORICAL_BENCHMARKS[disciplineId];
+            
+            if (!config || !benchmarks) {
+                return { mh: 0, rate: 0, projects: [], error: 'Unknown discipline' };
+            }
+            
+            // Get projects to use for rate calculation
+            const projects = selectedProjects || getApplicableProjects(disciplineId);
+            
+            // Calculate rate
+            const rate = projects.length > 0 ? calculateWeightedRate(projects) : benchmarks.customRate || benchmarks.defaultRate;
+            
+            // Calculate MH
+            const mh = quantity * rate;
+            
+            return {
+                mh: Math.round(mh),
+                rate: rate,
+                projects: projects,
+                quantity: quantity,
+                unit: config.unit
+            };
+        }
+
+        /**
+         * Calculate Digital Delivery MH using the complexity matrix
+         * @param {number} projectCostK - Project cost in thousands (K$)
+         * @param {number} durationMonths - Design duration in months
+         * @param {string} complexityGroup - 'Low', 'Low-Med', 'Med', 'Med-High', 'High'
+         * @returns {Object} { mh: number, complexityScore: number }
+         */
+        function calculateDigitalDeliveryMH(projectCostK, durationMonths, complexityGroup = 'Med') {
+            const matrix = DIGITAL_DELIVERY_MATRIX;
+            
+            // Determine size score
+            let sizeScore = 1;
+            if (projectCostK >= 1000000) sizeScore = 12;
+            else if (projectCostK >= 700000) sizeScore = 10;
+            else if (projectCostK >= 400000) sizeScore = 6;
+            else if (projectCostK >= 200000) sizeScore = 3;
+            else if (projectCostK >= 100000) sizeScore = 2;
+            else sizeScore = 1;
+            
+            // Get complexity multiplier
+            const multipliers = matrix.complexityMultipliers[complexityGroup] || matrix.complexityMultipliers['Med'];
+            const complexityScore = multipliers[sizeScore] || sizeScore;
+            
+            // Find duration index
+            const durationIdx = matrix.durations.indexOf(durationMonths);
+            const actualDurationIdx = durationIdx >= 0 ? durationIdx : 
+                matrix.durations.findIndex(d => d >= durationMonths) || matrix.durations.length - 1;
+            
+            // Find closest complexity score column
+            const scoreKeys = Object.keys(matrix.complexityScores).map(Number).sort((a, b) => a - b);
+            let scoreKey = scoreKeys[0];
+            for (const key of scoreKeys) {
+                if (complexityScore >= key) scoreKey = key;
+            }
+            
+            const mhValues = matrix.complexityScores[scoreKey];
+            const mh = mhValues[actualDurationIdx] || mhValues[mhValues.length - 1];
+            
+            return {
+                mh: mh,
+                complexityScore: complexityScore,
+                sizeScore: sizeScore,
+                durationMonths: durationMonths
+            };
+        }
+
+        /**
+         * Calculate ESDC or TSCD MH based on project cost percentage
+         * @param {string} disciplineId - 'esdc' or 'tscd'
+         * @param {number} projectCostK - Project cost in thousands (K$)
+         * @param {Array} selectedProjects - Optional specific projects for rate
+         * @returns {Object} { mh: number, rate: number, costK: number }
+         */
+        function calculateServicesMH(disciplineId, projectCostK, selectedProjects = null) {
+            const benchmarks = HISTORICAL_BENCHMARKS[disciplineId];
+            if (!benchmarks) return { mh: 0, rate: 0, costK: 0 };
+            
+            const projects = selectedProjects || getApplicableProjects(disciplineId);
+            const rate = projects.length > 0 ? calculateWeightedRate(projects, 'average') : benchmarks.customRate;
+            
+            // For ESDC/TSCD, rate is a percentage, so MH = projectCost * rate
+            // But actually the "cost" column is in K$, so we need to calculate appropriately
+            const costK = projectCostK * rate;
+            
+            // Convert cost to MH using average cost per MH (estimate ~$150/hr)
+            const mh = Math.round(costK * 1000 / 150);
+            
+            return {
+                mh: mh,
+                rate: rate,
+                costK: costK,
+                projects: projects
+            };
+        }
+
+        /**
+         * Calculate Misc Structures MH as percentage of Roadway + Drainage + Traffic
+         * @param {number} roadwayMH - Roadway discipline MH
+         * @param {number} drainageMH - Drainage discipline MH
+         * @param {number} trafficMH - Traffic discipline MH
+         * @param {Array} selectedProjects - Optional specific projects for rate
+         * @returns {Object} { mh: number, rate: number, baseMH: number }
+         */
+        function calculateMiscStructuresMH(roadwayMH, drainageMH, trafficMH, selectedProjects = null) {
+            const benchmarks = HISTORICAL_BENCHMARKS.miscStructures;
+            if (!benchmarks) return { mh: 0, rate: 0, baseMH: 0 };
+            
+            const baseMH = roadwayMH + drainageMH + trafficMH;
+            const projects = selectedProjects || getApplicableProjects('miscStructures');
+            const rate = projects.length > 0 ? calculateWeightedRate(projects) : benchmarks.customRate;
+            
+            return {
+                mh: Math.round(baseMH * rate),
+                rate: rate,
+                baseMH: baseMH,
+                projects: projects
+            };
+        }
+
+        /**
+         * Generate full MH estimate for all applicable disciplines
+         * @param {Object} quantities - Object with disciplineId: quantity pairs
+         * @param {Object} options - { projectCostK, durationMonths, complexity, projectType }
+         * @returns {Object} Full estimate with per-discipline breakdown and totals
+         */
+        function generateFullMHEstimate(quantities, options = {}) {
+            const { 
+                projectCostK = 0, 
+                durationMonths = 20, 
+                complexity = 'Med',
+                projectType = 'highway'
+            } = options;
+            
+            const estimate = {
+                disciplines: {},
+                totalMH: 0,
+                projectCostK: projectCostK,
+                generatedAt: new Date().toISOString()
+            };
+            
+            // Calculate standard benchmark disciplines
+            const standardDisciplines = ['drainage', 'mot', 'roadway', 'traffic', 'utilities', 
+                'retainingWalls', 'noiseWalls', 'bridgesPCGirder', 'bridgesSteel', 'bridgesRehab',
+                'geotechnical', 'systems', 'track', 'environmental'];
+            
+            for (const discId of standardDisciplines) {
+                const qty = quantities[discId] || 0;
+                if (qty > 0) {
+                    const result = estimateMH(discId, qty);
+                    estimate.disciplines[discId] = {
+                        ...result,
+                        config: DISCIPLINE_CONFIG[discId]
+                    };
+                    estimate.totalMH += result.mh;
+                }
+            }
+            
+            // Calculate Digital Delivery
+            if (projectCostK > 0) {
+                const ddResult = calculateDigitalDeliveryMH(projectCostK, durationMonths, complexity);
+                estimate.disciplines.digitalDelivery = {
+                    ...ddResult,
+                    config: DISCIPLINE_CONFIG.digitalDelivery,
+                    quantity: projectCostK,
+                    unit: 'K$'
+                };
+                estimate.totalMH += ddResult.mh;
+            }
+            
+            // Calculate Misc Structures (after roadway, drainage, traffic are calculated)
+            const roadwayMH = estimate.disciplines.roadway?.mh || 0;
+            const drainageMH = estimate.disciplines.drainage?.mh || 0;
+            const trafficMH = estimate.disciplines.traffic?.mh || 0;
+            
+            if (roadwayMH + drainageMH + trafficMH > 0) {
+                const msResult = calculateMiscStructuresMH(roadwayMH, drainageMH, trafficMH);
+                estimate.disciplines.miscStructures = {
+                    ...msResult,
+                    config: DISCIPLINE_CONFIG.miscStructures,
+                    quantity: msResult.baseMH,
+                    unit: 'MHR'
+                };
+                estimate.totalMH += msResult.mh;
+            }
+            
+            // Calculate ESDC and TSCD
+            if (projectCostK > 0) {
+                const esdcResult = calculateServicesMH('esdc', projectCostK);
+                estimate.disciplines.esdc = {
+                    ...esdcResult,
+                    config: DISCIPLINE_CONFIG.esdc,
+                    quantity: projectCostK,
+                    unit: 'K$'
+                };
+                estimate.totalMH += esdcResult.mh;
+                
+                const tscdResult = calculateServicesMH('tscd', projectCostK);
+                estimate.disciplines.tscd = {
+                    ...tscdResult,
+                    config: DISCIPLINE_CONFIG.tscd,
+                    quantity: projectCostK,
+                    unit: 'K$'
+                };
+                estimate.totalMH += tscdResult.mh;
+            }
+            
+            return estimate;
+        }
+
+        /**
+         * Format MH number with thousands separator
+         * @param {number} mh - Man-hours value
+         * @returns {string} Formatted string
+         */
+        function formatMH(mh) {
+            return mh.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        }
+
+        /**
+         * Format production rate based on discipline unit
+         * @param {number} rate - Production rate
+         * @param {string} unit - Unit of measure
+         * @returns {string} Formatted rate string
+         */
+        function formatRate(rate, unit) {
+            if (unit === 'K$' || unit === 'MHR') {
+                return (rate * 100).toFixed(2) + '%';
+            }
+            return rate.toFixed(3);
+        }
+
+        // ============================================
+        // MH ESTIMATOR UI FUNCTIONS
+        // ============================================
+
+        /**
+         * Toggle MH Estimator panel visibility
+         */
+        function toggleMHEstimator() {
+            const body = document.getElementById('mh-estimator-body');
+            const header = document.querySelector('.mh-estimator-header h3');
+            
+            if (body.classList.contains('collapsed')) {
+                body.classList.remove('collapsed');
+                header.innerHTML = '⚡ MH BENCHMARK ESTIMATOR';
+            } else {
+                body.classList.add('collapsed');
+                header.innerHTML = '► MH BENCHMARK ESTIMATOR';
+            }
+        }
+
+        /**
+         * Initialize MH Estimator table with all disciplines
+         */
+        function initMHEstimator() {
+            const tbody = document.getElementById('mh-estimate-tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // Define display order for disciplines
+            const disciplineOrder = [
+                'roadway', 'drainage', 'mot', 'traffic', 'utilities',
+                'retainingWalls', 'noiseWalls', 
+                'bridgesPCGirder', 'bridgesSteel', 'bridgesRehab',
+                'miscStructures', 'geotechnical',
+                'systems', 'track', 'environmental',
+                'digitalDelivery', 'esdc', 'tscd'
+            ];
+            
+            for (const discId of disciplineOrder) {
+                const config = DISCIPLINE_CONFIG[discId];
+                if (!config) continue;
+                
+                const benchmarks = HISTORICAL_BENCHMARKS[discId];
+                const defaultRate = benchmarks ? (benchmarks.customRate || benchmarks.defaultRate) : 0;
+                
+                // Initialize state
+                mhEstimateState.disciplines[discId] = {
+                    active: false,
+                    quantity: 0,
+                    rate: defaultRate,
+                    mh: 0
+                };
+                
+                const row = document.createElement('tr');
+                row.id = `mh-row-${discId}`;
+                row.className = 'discipline-row-inactive';
+                
+                row.innerHTML = `
+                    <td>
+                        <button class="discipline-toggle" onclick="toggleMHDiscipline('${discId}')" title="Toggle discipline">+</button>
+                    </td>
+                    <td>
+                        <div class="discipline-name">
+                            <span>${config.name}</span>
+                        </div>
+                    </td>
+                    <td><span class="discipline-code">${config.accountCode || '—'}</span></td>
+                    <td class="numeric">
+                        <input type="text" class="qty-input" id="mh-qty-${discId}" 
+                               value="0" inputmode="numeric"
+                               onchange="updateMHQuantity('${discId}')" 
+                               disabled>
+                    </td>
+                    <td>${config.unit}</td>
+                    <td class="numeric">
+                        <span class="rate-display" id="mh-rate-${discId}">${formatRate(defaultRate, config.unit)}</span>
+                    </td>
+                    <td class="numeric">
+                        <span class="mh-value" id="mh-value-${discId}">0</span>
+                    </td>
+                    <td>
+                        <span class="projects-used" id="mh-projects-${discId}" title="Click to expand">—</span>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            }
+        }
+
+        /**
+         * Toggle a discipline on/off in the estimate
+         */
+        function toggleMHDiscipline(discId) {
+            const state = mhEstimateState.disciplines[discId];
+            const row = document.getElementById(`mh-row-${discId}`);
+            const toggle = row.querySelector('.discipline-toggle');
+            const qtyInput = document.getElementById(`mh-qty-${discId}`);
+            
+            state.active = !state.active;
+            
+            if (state.active) {
+                row.classList.remove('discipline-row-inactive');
+                toggle.classList.add('active');
+                toggle.textContent = '✓';
+                qtyInput.disabled = false;
+                qtyInput.focus();
+            } else {
+                row.classList.add('discipline-row-inactive');
+                toggle.classList.remove('active');
+                toggle.textContent = '+';
+                qtyInput.disabled = true;
+                state.quantity = 0;
+                state.mh = 0;
+                qtyInput.value = '0';
+                document.getElementById(`mh-value-${discId}`).textContent = '0';
+                document.getElementById(`mh-projects-${discId}`).textContent = '—';
+            }
+            
+            recalculateTotalMH();
+        }
+
+        /**
+         * Update project cost and recalculate special disciplines
+         */
+        function updateMHProjectCost() {
+            const input = document.getElementById('mh-project-cost');
+            const value = parseFloat(input.value.replace(/[,$]/g, '')) || 0;
+            mhEstimateState.projectCost = value;
+            
+            // Format the input with commas
+            if (value > 0) {
+                input.value = value.toLocaleString('en-US');
+            }
+            
+            // Auto-activate and calculate Digital Delivery, ESDC, TSCD if cost entered
+            if (value > 0) {
+                const costK = value / 1000;
+                
+                // Digital Delivery
+                const ddState = mhEstimateState.disciplines.digitalDelivery;
+                if (ddState) {
+                    ddState.active = true;
+                    ddState.quantity = costK;
+                    const ddResult = calculateDigitalDeliveryMH(
+                        costK, 
+                        parseInt(document.getElementById('mh-design-duration').value) || 20,
+                        document.getElementById('mh-complexity').value || 'Med'
+                    );
+                    ddState.mh = ddResult.mh;
+                    ddState.rate = ddResult.mh / costK;
+                    updateMHRowDisplay('digitalDelivery', ddState);
+                }
+                
+                // ESDC
+                const esdcState = mhEstimateState.disciplines.esdc;
+                if (esdcState) {
+                    esdcState.active = true;
+                    esdcState.quantity = costK;
+                    const esdcResult = calculateServicesMH('esdc', costK);
+                    esdcState.mh = esdcResult.mh;
+                    esdcState.rate = HISTORICAL_BENCHMARKS.esdc.customRate;
+                    updateMHRowDisplay('esdc', esdcState);
+                }
+                
+                // TSCD
+                const tscdState = mhEstimateState.disciplines.tscd;
+                if (tscdState) {
+                    tscdState.active = true;
+                    tscdState.quantity = costK;
+                    const tscdResult = calculateServicesMH('tscd', costK);
+                    tscdState.mh = tscdResult.mh;
+                    tscdState.rate = HISTORICAL_BENCHMARKS.tscd.customRate;
+                    updateMHRowDisplay('tscd', tscdState);
+                }
+            }
+            
+            recalculateTotalMH();
+        }
+
+        /**
+         * Update display for a single discipline row
+         */
+        function updateMHRowDisplay(discId, state) {
+            const row = document.getElementById(`mh-row-${discId}`);
+            const toggle = row.querySelector('.discipline-toggle');
+            const qtyInput = document.getElementById(`mh-qty-${discId}`);
+            const config = DISCIPLINE_CONFIG[discId];
+            
+            if (state.active) {
+                row.classList.remove('discipline-row-inactive');
+                toggle.classList.add('active');
+                toggle.textContent = '✓';
+                qtyInput.disabled = false;
+            }
+            
+            qtyInput.value = state.quantity.toLocaleString('en-US');
+            document.getElementById(`mh-rate-${discId}`).textContent = formatRate(state.rate, config.unit);
+            document.getElementById(`mh-value-${discId}`).textContent = formatMH(state.mh);
+            
+            // Show projects used
+            const benchmarks = HISTORICAL_BENCHMARKS[discId];
+            if (benchmarks) {
+                const applicableProjects = getApplicableProjects(discId);
+                const projectNames = applicableProjects.slice(0, 3).map(p => p.name.split(' ')[0]).join(', ');
+                const suffix = applicableProjects.length > 3 ? ` +${applicableProjects.length - 3}` : '';
+                document.getElementById(`mh-projects-${discId}`).textContent = projectNames + suffix || '—';
+            }
+        }
+
+        /**
+         * Update quantity for a discipline and recalculate MH
+         */
+        function updateMHQuantity(discId) {
+            const input = document.getElementById(`mh-qty-${discId}`);
+            const value = parseFloat(input.value.replace(/[,$]/g, '')) || 0;
+            const state = mhEstimateState.disciplines[discId];
+            const config = DISCIPLINE_CONFIG[discId];
+            
+            state.quantity = value;
+            
+            // Format input with commas
+            if (value > 0) {
+                input.value = value.toLocaleString('en-US');
+            }
+            
+            // Calculate MH based on discipline type
+            if (config.calculationType === 'percentage' && discId === 'miscStructures') {
+                // Misc Structures needs roadway + drainage + traffic MH
+                const rdwyMH = mhEstimateState.disciplines.roadway?.mh || 0;
+                const drnMH = mhEstimateState.disciplines.drainage?.mh || 0;
+                const trfMH = mhEstimateState.disciplines.traffic?.mh || 0;
+                const result = calculateMiscStructuresMH(rdwyMH, drnMH, trfMH);
+                state.mh = result.mh;
+                state.rate = result.rate;
+            } else if (config.calculationType === 'benchmark') {
+                const result = estimateMH(discId, value);
+                state.mh = result.mh;
+                state.rate = result.rate;
+            }
+            
+            updateMHRowDisplay(discId, state);
+            recalculateTotalMH();
+        }
+
+        /**
+         * Update inputs (duration, type, complexity) and recalculate
+         */
+        function updateMHInputs() {
+            mhEstimateState.designDuration = parseInt(document.getElementById('mh-design-duration').value) || 20;
+            mhEstimateState.complexity = document.getElementById('mh-complexity').value || 'Med';
+            
+            // Recalculate Digital Delivery if active
+            const ddState = mhEstimateState.disciplines.digitalDelivery;
+            if (ddState && ddState.active && mhEstimateState.projectCost > 0) {
+                const costK = mhEstimateState.projectCost / 1000;
+                const ddResult = calculateDigitalDeliveryMH(costK, mhEstimateState.designDuration, mhEstimateState.complexity);
+                ddState.mh = ddResult.mh;
+                ddState.rate = ddResult.mh / costK;
+                updateMHRowDisplay('digitalDelivery', ddState);
+                recalculateTotalMH();
+            }
+        }
+
+        /**
+         * Recalculate total MH from all active disciplines
+         */
+        function recalculateTotalMH() {
+            let total = 0;
+            
+            for (const discId of Object.keys(mhEstimateState.disciplines)) {
+                const state = mhEstimateState.disciplines[discId];
+                if (state.active) {
+                    total += state.mh || 0;
+                }
+            }
+            
+            // Recalculate Misc Structures if active
+            const msState = mhEstimateState.disciplines.miscStructures;
+            if (msState && msState.active) {
+                const rdwyMH = mhEstimateState.disciplines.roadway?.mh || 0;
+                const drnMH = mhEstimateState.disciplines.drainage?.mh || 0;
+                const trfMH = mhEstimateState.disciplines.traffic?.mh || 0;
+                const baseMH = rdwyMH + drnMH + trfMH;
+                
+                if (baseMH > 0) {
+                    const result = calculateMiscStructuresMH(rdwyMH, drnMH, trfMH);
+                    msState.mh = result.mh;
+                    msState.quantity = baseMH;
+                    msState.rate = result.rate;
+                    updateMHRowDisplay('miscStructures', msState);
+                }
+            }
+            
+            document.getElementById('mh-total-display').textContent = formatMH(total);
+            document.getElementById('mh-estimator-status').textContent = 
+                total > 0 ? `${formatMH(total)} MH estimated` : 'Configure project parameters';
+        }
+
+        /**
+         * Reset MH estimate to initial state
+         */
+        function resetMHEstimate() {
+            mhEstimateState.projectCost = 0;
+            mhEstimateState.designDuration = 20;
+            mhEstimateState.complexity = 'Med';
+            
+            document.getElementById('mh-project-cost').value = '';
+            document.getElementById('mh-design-duration').value = '20';
+            document.getElementById('mh-complexity').value = 'Med';
+            
+            // Reset all discipline states
+            for (const discId of Object.keys(mhEstimateState.disciplines)) {
+                const state = mhEstimateState.disciplines[discId];
+                state.active = false;
+                state.quantity = 0;
+                state.mh = 0;
+                
+                const row = document.getElementById(`mh-row-${discId}`);
+                if (row) {
+                    row.classList.add('discipline-row-inactive');
+                    const toggle = row.querySelector('.discipline-toggle');
+                    toggle.classList.remove('active');
+                    toggle.textContent = '+';
+                    
+                    const qtyInput = document.getElementById(`mh-qty-${discId}`);
+                    qtyInput.value = '0';
+                    qtyInput.disabled = true;
+                    
+                    document.getElementById(`mh-value-${discId}`).textContent = '0';
+                    document.getElementById(`mh-projects-${discId}`).textContent = '—';
+                }
+            }
+            
+            recalculateTotalMH();
+        }
+
+        /**
+         * Show benchmark project selection modal
+         */
+        function showBenchmarkSelection() {
+            // Build modal content
+            let html = `
+                <div class="benchmark-modal-content">
+                    <div class="benchmark-modal-header">
+                        <h3>📊 Select Benchmark Projects</h3>
+                        <p>Choose which historical projects to include in rate calculations</p>
+                    </div>
+                    <div class="benchmark-disciplines">
+            `;
+            
+            // Get active disciplines
+            const activeDisciplines = Object.entries(mhEstimateState.disciplines)
+                .filter(([_, state]) => state.active)
+                .map(([id, _]) => id);
+            
+            if (activeDisciplines.length === 0) {
+                html += `<p style="color: #888; padding: 20px;">No disciplines are active. Enable disciplines in the MH Estimator first.</p>`;
+            } else {
+                for (const discId of activeDisciplines) {
+                    const config = DISCIPLINE_CONFIG[discId];
+                    const benchmarks = HISTORICAL_BENCHMARKS[discId];
+                    
+                    if (!config || !benchmarks || !benchmarks.projects) continue;
+                    
+                    html += `
+                        <div class="benchmark-discipline-section">
+                            <div class="benchmark-discipline-header" onclick="toggleBenchmarkSection('${discId}')">
+                                <span>▶ ${config.name}</span>
+                                <span class="benchmark-count" id="benchmark-count-${discId}">${benchmarks.projects.filter(p => p.applicable).length}/${benchmarks.projects.length} selected</span>
+                            </div>
+                            <div class="benchmark-projects hidden" id="benchmark-projects-${discId}">
+                    `;
+                    
+                    for (const project of benchmarks.projects) {
+                        const checked = project.applicable ? 'checked' : '';
+                        html += `
+                            <label class="benchmark-project-item">
+                                <input type="checkbox" ${checked} onchange="toggleBenchmarkProject('${discId}', '${project.id}')">
+                                <div class="benchmark-project-info">
+                                    <span class="project-name">${project.name}</span>
+                                    <span class="project-stats">${formatMH(project.mh || project.cost || 0)} MH | ${(project.quantity || project.projectCost || 0).toLocaleString()} ${config.unit} | Rate: ${formatRate(project.rate, config.unit)}</span>
+                                </div>
+                            </label>
+                        `;
+                    }
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += `
+                    </div>
+                    <div class="benchmark-modal-actions">
+                        <button class="btn btn-sm" onclick="closeBenchmarkModal()">Cancel</button>
+                        <button class="btn-mh" onclick="applyBenchmarkSelection()">Apply Selection</button>
+                    </div>
+                </div>
+            `;
+            
+            // Create and show modal
+            let modal = document.getElementById('benchmark-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'benchmark-modal';
+                modal.className = 'modal-base';
+                modal.innerHTML = `<div class="modal-content benchmark-modal-wrapper">${html}</div>`;
+                document.body.appendChild(modal);
+            } else {
+                modal.querySelector('.modal-content').innerHTML = html;
+            }
+            
+            modal.classList.add('open');
+        }
+
+        /**
+         * Toggle benchmark section visibility
+         */
+        function toggleBenchmarkSection(discId) {
+            const section = document.getElementById(`benchmark-projects-${discId}`);
+            const header = section.previousElementSibling;
+            const arrow = header.querySelector('span:first-child');
+            
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                arrow.textContent = `▼ ${DISCIPLINE_CONFIG[discId].name}`;
+            } else {
+                section.classList.add('hidden');
+                arrow.textContent = `▶ ${DISCIPLINE_CONFIG[discId].name}`;
+            }
+        }
+
+        /**
+         * Toggle a specific benchmark project on/off
+         */
+        function toggleBenchmarkProject(discId, projectId) {
+            const benchmarks = HISTORICAL_BENCHMARKS[discId];
+            if (!benchmarks) return;
+            
+            const project = benchmarks.projects.find(p => p.id === projectId);
+            if (project) {
+                project.applicable = !project.applicable;
+                
+                // Update count display
+                const count = benchmarks.projects.filter(p => p.applicable).length;
+                const countEl = document.getElementById(`benchmark-count-${discId}`);
+                if (countEl) {
+                    countEl.textContent = `${count}/${benchmarks.projects.length} selected`;
+                }
+            }
+        }
+
+        /**
+         * Close benchmark modal
+         */
+        function closeBenchmarkModal() {
+            const modal = document.getElementById('benchmark-modal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
+        }
+
+        /**
+         * Apply benchmark selection and recalculate
+         */
+        function applyBenchmarkSelection() {
+            // Recalculate all active disciplines with new project selections
+            for (const [discId, state] of Object.entries(mhEstimateState.disciplines)) {
+                if (state.active && state.quantity > 0) {
+                    const config = DISCIPLINE_CONFIG[discId];
+                    
+                    if (config.calculationType === 'benchmark') {
+                        const applicableProjects = getApplicableProjects(discId);
+                        const rate = applicableProjects.length > 0 ? calculateWeightedRate(applicableProjects) : HISTORICAL_BENCHMARKS[discId]?.customRate || 0;
+                        
+                        state.rate = rate;
+                        state.mh = Math.round(state.quantity * rate);
+                        
+                        updateMHRowDisplay(discId, state);
+                    }
+                }
+            }
+            
+            recalculateTotalMH();
+            closeBenchmarkModal();
+            
+            // Show confirmation
+            const updatedCount = Object.values(mhEstimateState.disciplines).filter(d => d.active).length;
+            document.getElementById('mh-estimator-status').textContent = `Benchmarks updated for ${updatedCount} disciplines`;
+        }
+
+        /**
+         * Apply MH estimate to budget table
+         */
+        function applyMHEstimate() {
+            // Convert MH to dollars using an assumed hourly rate
+            const hourlyRate = 150; // Default $150/hr - could be configurable
+            
+            let totalBudget = 0;
+            
+            for (const discId of Object.keys(mhEstimateState.disciplines)) {
+                const state = mhEstimateState.disciplines[discId];
+                if (state.active && state.mh > 0) {
+                    const budget = state.mh * hourlyRate;
+                    totalBudget += budget;
+                    
+                    // Map MH discipline to WBS discipline
+                    const wbsName = mapMHDisciplineToWBS(discId);
+                    if (wbsName && projectData.budgets[wbsName] !== undefined) {
+                        projectData.budgets[wbsName] = budget;
+                    }
+                }
+            }
+            
+            // Update calculator state
+            projectData.calculator.totalDesignFee = totalBudget;
+            projectData.calculator.isCalculated = true;
+            
+            // Update budget table display
+            updateBudgetTable();
+            
+            // Update status
+            document.getElementById('mh-estimator-status').textContent = `Applied ${formatMH(Object.values(mhEstimateState.disciplines).reduce((sum, d) => sum + (d.active ? d.mh : 0), 0))} MH → ${formatCurrency(totalBudget)}`;
+            
+            alert(`✅ MH Estimate Applied!\n\nTotal MH: ${formatMH(Object.values(mhEstimateState.disciplines).reduce((sum, d) => sum + (d.active ? d.mh : 0), 0))}\nTotal Budget: ${formatCurrency(totalBudget)}\n\n(Using $150/hr rate)`);
+        }
+
+        /**
+         * Map MH discipline ID to WBS discipline name
+         */
+        function mapMHDisciplineToWBS(discId) {
+            const mapping = {
+                'roadway': 'Roadway',
+                'drainage': 'Drainage',
+                'mot': 'MOT',
+                'traffic': 'Traffic',
+                'utilities': 'Utilities',
+                'retainingWalls': 'Structures',
+                'noiseWalls': 'Structures',
+                'bridgesPCGirder': 'Bridges',
+                'bridgesSteel': 'Bridges',
+                'bridgesRehab': 'Bridges',
+                'miscStructures': 'Structures',
+                'geotechnical': 'Geotechnical',
+                'systems': 'Systems',
+                'track': 'Track',
+                'environmental': 'Environmental',
+                'digitalDelivery': 'Digital Delivery',
+                'esdc': 'ESDC',
+                'tscd': 'TSCD'
+            };
+            return mapping[discId] || null;
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             initDisciplines();
+            initMHEstimator();
             updateStatus('READY');
             
             // Check for saved data after a brief delay to let UI initialize
@@ -9915,7 +11220,7 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
                 success: true,
                 kpis: {
                     totalBudget: totalBudget,
-                    formattedBudget: formatCurrencySimple(totalBudget),
+                    formattedBudget: formatCurrency(totalBudget),
                     wbsElementCount: wbsCount,
                     phaseCount: projectData.phases.length,
                     disciplineCount: projectData.disciplines.length,
@@ -10048,9 +11353,9 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
             // Cost Forecast (simple projection with contingency)
             const contingencyRate = riskScore > 65 ? 0.15 : riskScore > 35 ? 0.10 : 0.05;
             const projectedCost = totalBudget * (1 + contingencyRate);
-            document.getElementById('insight-cost-forecast').textContent = formatCurrencySimple(projectedCost);
+            document.getElementById('insight-cost-forecast').textContent = formatCurrency(projectedCost);
             document.getElementById('insight-cost-details').textContent = 
-                `Includes ${(contingencyRate * 100).toFixed(0)}% risk contingency (${formatCurrencySimple(totalBudget * contingencyRate)})`;
+                `Includes ${(contingencyRate * 100).toFixed(0)}% risk contingency (${formatCurrency(totalBudget * contingencyRate)})`;
             
             // Schedule Forecast
             if (minDate && maxDate) {
@@ -10568,6 +11873,25 @@ Return ONLY the JSON, no markdown formatting.`;
             originalLength: 0,
             analyzedLength: 0,
             chunkCount: 1,
+            // Extracted quantities for MH estimation
+            quantities: {
+                roadwayLengthLF: 0,
+                projectAreaAC: 0,
+                wallAreaSF: 0,
+                noiseWallAreaSF: 0,
+                bridgeDeckAreaSF: 0,
+                bridgeCount: 0,
+                structureCount: 0,
+                utilityRelocations: 0,
+                permitCount: 0,
+                trackLengthTF: 0
+            },
+            projectInfo: {
+                projectCostM: 0,
+                designDurationMonths: 20,
+                projectType: 'highway',
+                complexity: 'Medium'
+            },
             usageStats: {
                 totalPromptTokens: 0,
                 totalCompletionTokens: 0,
@@ -10869,18 +12193,30 @@ Return ONLY the JSON, no markdown formatting.`;
          * Analyzes a single text chunk with OpenAI
          */
         async function analyzeChunk(apiKey, chunkText, chunkIndex, totalChunks) {
-            const systemPrompt = `Extract WBS info and RISKS from engineering RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
-{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","risks":[],"confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low"},"notes":""}
+            const systemPrompt = `Extract WBS info, RISKS, and QUANTITY ESTIMATES from engineering RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
+{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","risks":[],"quantities":{},"projectInfo":{},"confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low","quantities":"high/medium/low"},"notes":""}
 
 **PHASES**: Project stages (e.g. Base Design, ESDC, TSCD, Preliminary, Final, As-Builts, Closeout, Phase 1/2/3)
-**DISCIPLINES**: Use EXACT names: Structures, Design PM, Civil, Drainage, Electrical, Environmental, Traffic, ITS, Mechanical, Geotechnical, Survey, Landscape, Utilities, Lighting, Pavement, Bridges, H&H, Communications, Architecture, Systems
+**DISCIPLINES**: Use EXACT names: Roadway, Drainage, MOT, Traffic, Utilities, Retaining Walls, Noise Walls, Bridge Structures, Misc Structures, Geotechnical, Systems, Track, Environmental, Digital Delivery, ESDC, TSCD
 **DISCIPLINE SCOPES**: {"Discipline":"scope description"} - Extract specific tasks/deliverables per discipline
 **PACKAGES**: Milestones (e.g. Preliminary, Interim, Final, RFC, As-Built, 30%, 60%, 90%)
 **SCOPE**: Project location, type, major work elements, requirements
-**SCHEDULE**: Timeline info, durations, milestones, deadlines
+**SCHEDULE**: Timeline info, durations, milestones, deadlines. Extract design duration in months if mentioned.
 **RISKS**: Array of risk objects: [{"category":"Schedule|Budget|Technical|Scope|Coordination","severity":"High|Medium|Low","description":"specific risk","mitigation":"suggested mitigation"}]
+**QUANTITIES**: Estimate key quantities for MH estimation. Extract or estimate:
+- roadwayLengthLF: Roadway alignment length in linear feet
+- projectAreaAC: Total project area in acres
+- wallAreaSF: Retaining wall area in square feet (height x length)
+- noiseWallAreaSF: Noise wall area in square feet
+- bridgeDeckAreaSF: Bridge deck area in square feet (count x avg deck area)
+- bridgeCount: Number of bridges
+- structureCount: Total transportation structures (bridges, walls, culverts)
+- utilityRelocations: Count of utility relocations
+- permitCount: Environmental/other permit count
+- trackLengthTF: Track alignment in track feet (if transit)
+**PROJECT INFO**: {"projectCostM": estimated cost in millions, "designDurationMonths": duration, "projectType": "highway|transit|bridge|utility", "complexity": "Low|Medium|High"}
 - Look for: tight deadlines, complex requirements, undefined scope, multi-agency coordination, environmental constraints, utility conflicts, ROW issues, phased construction, regulatory requirements
-Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
+Confidence: "high"=explicit, "medium"=inferred, "low"=guessed/estimated`;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -10965,7 +12301,25 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
                 disciplines: [],
                 packages: [],
                 budgets: {},
-                risks: []
+                risks: [],
+                quantities: {
+                    roadwayLengthLF: 0,
+                    projectAreaAC: 0,
+                    wallAreaSF: 0,
+                    noiseWallAreaSF: 0,
+                    bridgeDeckAreaSF: 0,
+                    bridgeCount: 0,
+                    structureCount: 0,
+                    utilityRelocations: 0,
+                    permitCount: 0,
+                    trackLengthTF: 0
+                },
+                projectInfo: {
+                    projectCostM: 0,
+                    designDurationMonths: 20,
+                    projectType: 'highway',
+                    complexity: 'Medium'
+                }
             };
 
             // Merge phases - deduplicate and preserve order
@@ -11022,6 +12376,38 @@ Confidence: "high"=explicit, "medium"=inferred, "low"=guessed`;
                             merged.risks.push(risk);
                         }
                     });
+                }
+            });
+
+            // Merge quantities - take maximum values found across chunks
+            chunkResults.forEach(resultObj => {
+                const result = resultObj.data || resultObj;
+                if (result.quantities) {
+                    for (const key of Object.keys(merged.quantities)) {
+                        const val = parseFloat(result.quantities[key]) || 0;
+                        if (val > merged.quantities[key]) {
+                            merged.quantities[key] = val;
+                        }
+                    }
+                }
+            });
+
+            // Merge projectInfo - take first non-zero/non-default values
+            chunkResults.forEach(resultObj => {
+                const result = resultObj.data || resultObj;
+                if (result.projectInfo) {
+                    if (result.projectInfo.projectCostM && result.projectInfo.projectCostM > merged.projectInfo.projectCostM) {
+                        merged.projectInfo.projectCostM = result.projectInfo.projectCostM;
+                    }
+                    if (result.projectInfo.designDurationMonths && result.projectInfo.designDurationMonths !== 20) {
+                        merged.projectInfo.designDurationMonths = result.projectInfo.designDurationMonths;
+                    }
+                    if (result.projectInfo.projectType && result.projectInfo.projectType !== 'highway') {
+                        merged.projectInfo.projectType = result.projectInfo.projectType;
+                    }
+                    if (result.projectInfo.complexity && result.projectInfo.complexity !== 'Medium') {
+                        merged.projectInfo.complexity = result.projectInfo.complexity;
+                    }
                 }
             });
 
@@ -11671,6 +13057,9 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             
             updateSelectedCount();
             
+            // Apply extracted quantities to MH Estimator
+            applyRfpQuantitiesToEstimator();
+            
             // Trigger autosave with RFP data
             triggerAutosave();
             
@@ -11681,8 +13070,117 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             currentStep = 1;
             showStep(1);
             
+            // Build success message including quantity info
+            let quantityInfo = '';
+            if (rfpState.quantities) {
+                const qtyCount = Object.values(rfpState.quantities).filter(v => v > 0).length;
+                if (qtyCount > 0) {
+                    quantityInfo = `\n• ${qtyCount} quantity estimates extracted`;
+                }
+            }
+            
             // Show success message
-            alert(`RFP data imported successfully!\n\n• ${projectData.phases.length} phases\n• ${projectData.disciplines.length} disciplines\n• ${projectData.packages.length} packages\n\nReview and adjust the data in each step.`);
+            alert(`RFP data imported successfully!\n\n• ${projectData.phases.length} phases\n• ${projectData.disciplines.length} disciplines\n• ${projectData.packages.length} packages${quantityInfo}\n\nReview and adjust the data in each step.\nCheck the MH Benchmark Estimator in Step 4 for quantity estimates.`);
+        }
+
+        /**
+         * Apply RFP-extracted quantities to the MH Estimator
+         */
+        function applyRfpQuantitiesToEstimator() {
+            if (!rfpState.extractedData) return;
+            
+            const quantities = rfpState.extractedData.quantities || rfpState.quantities || {};
+            const projectInfo = rfpState.extractedData.projectInfo || rfpState.projectInfo || {};
+            
+            // Store in rfpState for reference
+            rfpState.quantities = quantities;
+            rfpState.projectInfo = projectInfo;
+            
+            // Apply project cost
+            if (projectInfo.projectCostM && projectInfo.projectCostM > 0) {
+                const costInput = document.getElementById('mh-project-cost');
+                if (costInput) {
+                    const costValue = projectInfo.projectCostM * 1000000; // Convert M to $
+                    costInput.value = costValue.toLocaleString('en-US');
+                    mhEstimateState.projectCost = costValue;
+                }
+            }
+            
+            // Apply design duration
+            if (projectInfo.designDurationMonths) {
+                const durationInput = document.getElementById('mh-design-duration');
+                if (durationInput) {
+                    durationInput.value = projectInfo.designDurationMonths;
+                    mhEstimateState.designDuration = projectInfo.designDurationMonths;
+                }
+            }
+            
+            // Apply project type
+            if (projectInfo.projectType) {
+                const typeInput = document.getElementById('mh-project-type');
+                if (typeInput) {
+                    typeInput.value = projectInfo.projectType;
+                }
+            }
+            
+            // Apply complexity
+            if (projectInfo.complexity) {
+                const complexityMap = {
+                    'Low': 'Low',
+                    'Medium': 'Med',
+                    'High': 'High'
+                };
+                const complexityInput = document.getElementById('mh-complexity');
+                if (complexityInput) {
+                    complexityInput.value = complexityMap[projectInfo.complexity] || 'Med';
+                    mhEstimateState.complexity = complexityInput.value;
+                }
+            }
+            
+            // Map RFP quantities to MH estimator disciplines
+            const quantityMapping = {
+                'roadway': quantities.roadwayLengthLF || 0,
+                'drainage': quantities.projectAreaAC || 0,
+                'mot': quantities.roadwayLengthLF || 0, // Same as roadway
+                'traffic': quantities.roadwayLengthLF || 0, // Same as roadway
+                'utilities': quantities.utilityRelocations || 0,
+                'retainingWalls': quantities.wallAreaSF || 0,
+                'noiseWalls': quantities.noiseWallAreaSF || 0,
+                'bridgesPCGirder': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.7), // Assume 70% PC
+                'bridgesSteel': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.2), // Assume 20% Steel
+                'bridgesRehab': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.1), // Assume 10% Rehab
+                'geotechnical': quantities.structureCount || quantities.bridgeCount || 0,
+                'systems': quantities.trackLengthTF || 0,
+                'track': quantities.trackLengthTF || 0,
+                'environmental': quantities.permitCount || 0
+            };
+            
+            // Apply quantities to each discipline
+            for (const [discId, qty] of Object.entries(quantityMapping)) {
+                if (qty > 0 && mhEstimateState.disciplines[discId]) {
+                    const state = mhEstimateState.disciplines[discId];
+                    state.active = true;
+                    state.quantity = qty;
+                    
+                    // Calculate MH
+                    const result = estimateMH(discId, qty);
+                    state.mh = result.mh;
+                    state.rate = result.rate;
+                    
+                    // Update UI
+                    updateMHRowDisplay(discId, state);
+                }
+            }
+            
+            // Recalculate project cost-based disciplines
+            if (mhEstimateState.projectCost > 0) {
+                updateMHProjectCost();
+            }
+            
+            // Recalculate totals
+            recalculateTotalMH();
+            
+            console.log('Applied RFP quantities to MH Estimator:', quantityMapping);
         }
 
         /**
@@ -11998,13 +13496,13 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </script>
 
     <!-- RFP Wizard Modal -->
-    <div id="rfp-modal" class="rfp-modal" onclick="if(event.target===this)closeRfpWizard()">
-        <div class="rfp-modal-content">
-            <div class="rfp-modal-header">
+    <div id="rfp-modal" class="modal-base rfp-modal" onclick="if(event.target===this)closeRfpWizard()">
+        <div class="modal-base-content">
+            <div class="modal-base-header">
                 <h2>📄 RFP Wizard - Extract Project Data</h2>
-                <button class="rfp-modal-close" onclick="closeRfpWizard()">×</button>
+                <button class="modal-base-close" onclick="closeRfpWizard()">×</button>
             </div>
-            <div class="rfp-modal-body">
+            <div class="modal-base-body">
                 <!-- Stage Indicator -->
                 <div class="rfp-stage-indicator">
                     <div class="rfp-stage active" data-stage="1">1. Upload PDF</div>
@@ -12261,13 +13759,13 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 
     <!-- WBS Add Discipline Modal -->
-    <div id="wbs-add-discipline-modal" class="wbs-add-modal" onclick="if(event.target===this)closeAddModal('discipline')">
-        <div class="wbs-add-modal-content">
-            <div class="wbs-add-modal-header">
+    <div id="wbs-add-discipline-modal" class="modal-base wbs-add-modal" onclick="if(event.target===this)closeAddModal('discipline')">
+        <div class="modal-base-content">
+            <div class="modal-base-header">
                 <h3>Add New Discipline</h3>
-                <button onclick="closeAddModal('discipline')" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+                <button class="modal-base-close" onclick="closeAddModal('discipline')">✕</button>
             </div>
-            <div class="wbs-add-modal-body">
+            <div class="modal-base-body">
                 <label>Discipline Name</label>
                 <input type="text" id="add-discipline-name" placeholder="e.g., Environmental">
                 <label>Initial Budget ($)</label>
@@ -12281,13 +13779,13 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 
     <!-- WBS Add Package Modal -->
-    <div id="wbs-add-package-modal" class="wbs-add-modal" onclick="if(event.target===this)closeAddModal('package')">
-        <div class="wbs-add-modal-content">
-            <div class="wbs-add-modal-header">
+    <div id="wbs-add-package-modal" class="modal-base wbs-add-modal" onclick="if(event.target===this)closeAddModal('package')">
+        <div class="modal-base-content">
+            <div class="modal-base-header">
                 <h3>Add New Package</h3>
-                <button onclick="closeAddModal('package')" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+                <button class="modal-base-close" onclick="closeAddModal('package')">✕</button>
             </div>
-            <div class="wbs-add-modal-body">
+            <div class="modal-base-body">
                 <label>Package Name</label>
                 <input type="text" id="add-package-name" placeholder="e.g., Quality Assurance">
                 <label>Default Claim % (distributed from existing)</label>
@@ -12301,13 +13799,13 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 
     <!-- WBS Add Phase Modal -->
-    <div id="wbs-add-phase-modal" class="wbs-add-modal" onclick="if(event.target===this)closeAddModal('phase')">
-        <div class="wbs-add-modal-content">
-            <div class="wbs-add-modal-header">
+    <div id="wbs-add-phase-modal" class="modal-base wbs-add-modal" onclick="if(event.target===this)closeAddModal('phase')">
+        <div class="modal-base-content">
+            <div class="modal-base-header">
                 <h3>Add New Phase</h3>
-                <button onclick="closeAddModal('phase')" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+                <button class="modal-base-close" onclick="closeAddModal('phase')">✕</button>
             </div>
-            <div class="wbs-add-modal-body">
+            <div class="modal-base-body">
                 <label>Phase Name</label>
                 <input type="text" id="add-phase-name" placeholder="e.g., Construction Support">
                 <div class="wbs-add-modal-actions">
@@ -12319,30 +13817,30 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 
     <!-- Reports Panel Modal -->
-    <div id="reports-modal" class="reports-modal" onclick="if(event.target===this)closeReportsPanel()">
-        <div class="reports-modal-content">
-            <div class="reports-modal-header">
+    <div id="reports-modal" class="modal-base reports-modal" onclick="if(event.target===this)closeReportsPanel()">
+        <div class="modal-base-content">
+            <div class="modal-base-header">
                 <h3>📊 Reports & Exports</h3>
-                <button class="reports-close-btn" onclick="closeReportsPanel()">✕</button>
+                <button class="modal-base-close" onclick="closeReportsPanel()">✕</button>
             </div>
             
-            <div class="reports-modal-body">
+            <div class="modal-base-body">
                 <!-- PDF Reports Section -->
                 <div class="reports-section">
                     <div class="reports-section-title">📄 PDF Reports</div>
                     <div class="reports-grid">
-                        <div class="report-card" onclick="closeReportsPanel(); printReport();">
-                            <div class="report-card-icon">📋</div>
+                        <div class="card-base report-card" onclick="closeReportsPanel(); printReport();">
+                            <div class="card-base-icon">📋</div>
                             <div class="report-card-info">
-                                <div class="report-card-title">Full Project Report</div>
-                                <div class="report-card-desc">Complete WBS with budget breakdown, charts, Gantt schedule, and cost assumptions</div>
+                                <div class="card-base-title">Full Project Report</div>
+                                <div class="card-base-desc">Complete WBS with budget breakdown, charts, Gantt schedule, and cost assumptions</div>
                             </div>
                         </div>
-                        <div class="report-card" onclick="closeReportsPanel(); exportProjectSummary();">
-                            <div class="report-card-icon">📝</div>
+                        <div class="card-base report-card" onclick="closeReportsPanel(); exportProjectSummary();">
+                            <div class="card-base-icon">📝</div>
                             <div class="report-card-info">
-                                <div class="report-card-title">Executive Summary</div>
-                                <div class="report-card-desc">High-level overview with KPIs, discipline scopes, and package details</div>
+                                <div class="card-base-title">Executive Summary</div>
+                                <div class="card-base-desc">High-level overview with KPIs, discipline scopes, and package details</div>
                             </div>
                         </div>
                     </div>
@@ -12352,11 +13850,11 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 <div id="reports-rfp-section" class="reports-section hidden">
                     <div class="reports-section-title">📄 RFP Analysis</div>
                     <div class="reports-grid">
-                        <div class="report-card" onclick="closeReportsPanel(); openRfpWizard(); setTimeout(exportRfpData, 100);">
-                            <div class="report-card-icon">📑</div>
+                        <div class="card-base report-card" onclick="closeReportsPanel(); openRfpWizard(); setTimeout(exportRfpData, 100);">
+                            <div class="card-base-icon">📑</div>
                             <div class="report-card-info">
-                                <div class="report-card-title">RFP Analysis Report</div>
-                                <div class="report-card-desc">AI-extracted project scope, disciplines, and requirements from RFP</div>
+                                <div class="card-base-title">RFP Analysis Report</div>
+                                <div class="card-base-desc">AI-extracted project scope, disciplines, and requirements from RFP</div>
                             </div>
                         </div>
                     </div>
@@ -12366,18 +13864,18 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 <div class="reports-section">
                     <div class="reports-section-title">📊 Data Exports</div>
                     <div class="reports-grid">
-                        <div class="report-card" onclick="closeReportsPanel(); exportCSV();">
-                            <div class="report-card-icon">📁</div>
+                        <div class="card-base report-card" onclick="closeReportsPanel(); exportCSV();">
+                            <div class="card-base-icon">📁</div>
                             <div class="report-card-info">
-                                <div class="report-card-title">WBS Table (CSV)</div>
-                                <div class="report-card-desc">Complete WBS structure with budgets and dates</div>
+                                <div class="card-base-title">WBS Table (CSV)</div>
+                                <div class="card-base-desc">Complete WBS structure with budgets and dates</div>
                             </div>
                         </div>
-                        <div class="report-card" onclick="closeReportsPanel(); exportAllDataCSV();">
-                            <div class="report-card-icon">💾</div>
+                        <div class="card-base report-card" onclick="closeReportsPanel(); exportAllDataCSV();">
+                            <div class="card-base-icon">💾</div>
                             <div class="report-card-info">
-                                <div class="report-card-title">Full Data Export (JSON)</div>
-                                <div class="report-card-desc">All project data for backup or import</div>
+                                <div class="card-base-title">Full Data Export (JSON)</div>
+                                <div class="card-base-desc">All project data for backup or import</div>
                             </div>
                         </div>
                     </div>
@@ -12396,14 +13894,14 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 
     <!-- Projects Manager Modal -->
-    <div id="projects-modal" class="projects-modal" onclick="if(event.target===this)closeProjectManager()">
-        <div class="projects-modal-content">
-            <div class="projects-modal-header">
+    <div id="projects-modal" class="modal-base projects-modal" onclick="if(event.target===this)closeProjectManager()">
+        <div class="modal-base-content">
+            <div class="modal-base-header">
                 <h3>📁 Project Manager</h3>
-                <button class="projects-close-btn" onclick="closeProjectManager()">✕</button>
+                <button class="modal-base-close" onclick="closeProjectManager()">✕</button>
             </div>
             
-            <div class="projects-modal-body">
+            <div class="modal-base-body">
                 <!-- Save Current Project -->
                 <div class="projects-section">
                     <div class="projects-section-title">Save Current Project</div>
@@ -12433,8 +13931,8 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 
     <!-- Recovery Modal -->
-    <div id="recovery-modal" class="recovery-modal" onclick="if(event.target===this)dismissRecovery()">
-        <div class="recovery-modal-content">
+    <div id="recovery-modal" class="modal-base recovery-modal" onclick="if(event.target===this)dismissRecovery()">
+        <div class="modal-base-content">
             <h3>💾 Recover Previous Session?</h3>
             <p>We found unsaved work from a previous session. Would you like to restore it?</p>
             <div class="recovery-preview" id="recovery-preview">
@@ -12454,8 +13952,8 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 
     <!-- API Key Modal -->
-    <div id="chat-api-modal" class="chat-api-modal" onclick="if(event.target===this)hideApiKeyModal()">
-        <div class="chat-api-modal-content">
+    <div id="chat-api-modal" class="modal-base chat-api-modal" onclick="if(event.target===this)hideApiKeyModal()">
+        <div class="modal-base-content">
             <h3>🔑 OpenAI API Key Required</h3>
             <p>Enter your OpenAI API key to enable the AI assistant. Your key is stored locally in your browser and never sent anywhere except OpenAI.</p>
             <input 
