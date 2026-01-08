@@ -2295,6 +2295,194 @@
             }
         }
 
+        /* WBS Edit Toolbar */
+        .wbs-edit-toolbar {
+            background: linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 100%);
+            border-top: 1px solid #2a4a2a;
+            border-bottom: 1px solid #2a4a2a;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .wbs-edit-toolbar.hidden {
+            display: none;
+        }
+
+        .wbs-edit-toolbar-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wbs-edit-toolbar .toolbar-label {
+            color: #888;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .wbs-edit-toolbar .toolbar-btn {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #ffd700;
+            padding: 6px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .wbs-edit-toolbar .toolbar-btn:hover {
+            background: #2a2a2a;
+            border-color: #ffd700;
+        }
+
+        .wbs-edit-toolbar .toolbar-btn.danger {
+            color: #ff6b6b;
+            border-color: #663333;
+        }
+
+        .wbs-edit-toolbar .toolbar-btn.danger:hover {
+            background: #3a1a1a;
+            border-color: #ff6b6b;
+        }
+
+        .wbs-edit-toolbar-tip {
+            margin-left: auto;
+            color: #888;
+            font-size: 11px;
+        }
+
+        /* Inline Editing Styles */
+        .wbs-editable {
+            cursor: pointer;
+            position: relative;
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        .wbs-editable:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .wbs-editable.editing {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        .wbs-inline-input {
+            background: #1a1a1a;
+            border: 1px solid #ffd700;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-family: inherit;
+            width: 100%;
+            min-width: 80px;
+        }
+
+        .wbs-inline-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3);
+        }
+
+        .wbs-delete-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        tr:hover .wbs-delete-btn {
+            opacity: 0.6;
+        }
+
+        .wbs-delete-btn:hover {
+            opacity: 1 !important;
+        }
+
+        /* Add Element Modal */
+        .wbs-add-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1004;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .wbs-add-modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .wbs-add-modal-content {
+            background: #0d0d0d;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            overflow: hidden;
+        }
+
+        .wbs-add-modal-header {
+            background: #ffd700;
+            color: #000;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wbs-add-modal-header h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .wbs-add-modal-body {
+            padding: 20px;
+        }
+
+        .wbs-add-modal-body label {
+            display: block;
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .wbs-add-modal-body input {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .wbs-add-modal-body input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .wbs-add-modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
         /* Collapsible WBS Table Styles */
         .wbs-discipline-row {
             background: #1a1a1a;
@@ -3388,9 +3576,29 @@
                         <button class="btn btn-sm" onclick="collapseAllWBS()" style="margin-left: 8px;">COLLAPSE ALL</button>
                         <span style="margin: 0 12px; color: #666;">|</span>
                         <button class="btn btn-sm" onclick="importData()">IMPORT</button>
-                        <button class="btn btn-sm" onclick="editWBS()" style="margin-left: 8px;">EDIT</button>
+                        <button id="wbs-edit-toggle" class="btn btn-sm" onclick="toggleWBSEditMode()" style="margin-left: 8px;">✏️ EDIT MODE</button>
+                        <button class="btn btn-sm" onclick="editWBS()" style="margin-left: 8px;">⚙️ WIZARD</button>
                     </div>
                 </div>
+                
+                <!-- WBS Edit Toolbar (shown in edit mode) -->
+                <div id="wbs-edit-toolbar" class="wbs-edit-toolbar hidden">
+                    <div class="wbs-edit-toolbar-section">
+                        <span class="toolbar-label">ADD:</span>
+                        <button class="toolbar-btn" onclick="showAddDisciplineModal()">+ Discipline</button>
+                        <button class="toolbar-btn" onclick="showAddPackageModal()">+ Package</button>
+                        <button class="toolbar-btn" onclick="showAddPhaseModal()">+ Phase</button>
+                    </div>
+                    <div class="wbs-edit-toolbar-section">
+                        <span class="toolbar-label">ACTIONS:</span>
+                        <button class="toolbar-btn" onclick="recalculateBudgets()">🔄 Recalculate</button>
+                        <button class="toolbar-btn danger" onclick="confirmClearWBS()">🗑️ Clear All</button>
+                    </div>
+                    <div class="wbs-edit-toolbar-tip">
+                        💡 Click any value in the table to edit directly
+                    </div>
+                </div>
+                
                 <div class="terminal-body">
                     <div class="results-table">
                         <table id="wbs-table"></table>
@@ -3647,9 +3855,9 @@
         }
 
         /**
-         * Formats currency for recovery modal (local version)
+         * Formats currency amount as a US dollar string
          */
-        function formatCurrencySimple(amount) {
+        function formatCurrency(amount) {
             return '$' + Math.round(amount || 0).toLocaleString('en-US');
         }
 
@@ -6357,8 +6565,572 @@
             currentStep = 1;
             showStep(1);
             
-            // Hide the reports button
+            // Hide the reports button and exit edit mode
             updateReportsButtonVisibility();
+            if (wbsEditMode) toggleWBSEditMode();
+        }
+
+        // ============================================
+        // WBS INLINE EDITING SYSTEM
+        // ============================================
+        
+        let wbsEditMode = false;
+
+        /**
+         * Toggles WBS edit mode
+         */
+        function toggleWBSEditMode() {
+            wbsEditMode = !wbsEditMode;
+            const toolbar = document.getElementById('wbs-edit-toolbar');
+            const toggleBtn = document.getElementById('wbs-edit-toggle');
+            
+            if (wbsEditMode) {
+                toolbar.classList.remove('hidden');
+                toggleBtn.classList.add('btn-primary');
+                toggleBtn.innerHTML = '✓ EDITING';
+                // Rebuild table with editable cells
+                buildWBSTableEditable();
+            } else {
+                toolbar.classList.add('hidden');
+                toggleBtn.classList.remove('btn-primary');
+                toggleBtn.innerHTML = '✏️ EDIT MODE';
+                // Rebuild regular table
+                buildWBSTable();
+            }
+        }
+
+        /**
+         * Builds WBS table with inline editable fields
+         */
+        function buildWBSTableEditable() {
+            const table = document.getElementById('wbs-table');
+            let grandTotal = 0;
+            let html = `
+                <thead>
+                    <tr>
+                        <th style="width: 30px;"></th>
+                        <th>WBS#</th>
+                        <th>PHASE</th>
+                        <th>DISCIPLINE</th>
+                        <th>PACKAGE</th>
+                        <th style="text-align: right;">BUDGET</th>
+                        <th style="text-align: center;">CLAIM %</th>
+                        <th>START</th>
+                        <th>END</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+            
+            projectData.phases.forEach((phase, phaseIndex) => {
+                projectData.disciplines.forEach((discipline, disciplineIndex) => {
+                    const disciplineBudget = projectData.budgets[discipline] || 0;
+                    const wbsPrefix = `${phaseIndex + 1}.${disciplineIndex + 1}`;
+                    const rowId = `wbs-disc-${phaseIndex}-${disciplineIndex}`;
+                    
+                    // Calculate discipline date range
+                    let minStart = null, maxEnd = null;
+                    projectData.packages.forEach(pkg => {
+                        const key = `${discipline}-${pkg}`;
+                        const dates = projectData.dates[key];
+                        if (dates) {
+                            if (dates.start && (!minStart || dates.start < minStart)) minStart = dates.start;
+                            if (dates.end && (!maxEnd || dates.end > maxEnd)) maxEnd = dates.end;
+                        }
+                    });
+                    
+                    // Discipline summary row with edit controls
+                    html += `
+                        <tr class="wbs-discipline-row" data-row-id="${rowId}">
+                            <td>
+                                <button class="wbs-delete-btn" onclick="event.stopPropagation(); confirmDeleteDiscipline('${discipline}')" title="Delete discipline">✕</button>
+                            </td>
+                            <td onclick="toggleWBSDiscipline('${rowId}')">
+                                <span class="wbs-expand-icon ${wbsTableState.expandedDisciplines.has(rowId) ? 'expanded' : ''}">▶</span> ${wbsPrefix}
+                            </td>
+                            <td>${phase}</td>
+                            <td style="font-weight: 600; color: #ffd700;">${discipline}</td>
+                            <td style="color: #888;">${projectData.packages.length} packages</td>
+                            <td style="text-align: right;">
+                                <span class="wbs-editable" onclick="event.stopPropagation(); editDisciplineBudget('${discipline}', this)">
+                                    $${Math.round(disciplineBudget).toLocaleString()}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">100%</td>
+                            <td>${minStart || '-'}</td>
+                            <td>${maxEnd || '-'}</td>
+                        </tr>
+                    `;
+                    
+                    grandTotal += disciplineBudget;
+                    
+                    // Package rows
+                    projectData.packages.forEach((packageName, packageIndex) => {
+                        const key = `${discipline}-${packageName}`;
+                        const claimPct = projectData.claiming[key] || 0;
+                        const packageBudget = disciplineBudget * (claimPct / 100);
+                        const dates = projectData.dates[key] || { start: '', end: '' };
+                        const wbsNumber = `${wbsPrefix}.${packageIndex + 1}`;
+                        const isExpanded = wbsTableState.expandedDisciplines.has(rowId);
+                        
+                        html += `
+                            <tr class="wbs-package-row ${isExpanded ? '' : 'hidden'}" data-parent="${rowId}">
+                                <td>
+                                    <button class="wbs-delete-btn" onclick="confirmDeletePackage('${packageName}')" title="Delete package">✕</button>
+                                </td>
+                                <td style="color: #888;">${wbsNumber}</td>
+                                <td style="color: #666;">${phase}</td>
+                                <td style="color: #666;">${discipline}</td>
+                                <td style="color: #ffd700;">${packageName}</td>
+                                <td style="text-align: right;">$${Math.round(packageBudget).toLocaleString()}</td>
+                                <td style="text-align: center;">
+                                    <span class="wbs-editable" onclick="editClaimPercent('${key}', this)">${claimPct}%</span>
+                                </td>
+                                <td>
+                                    <input type="date" class="wbs-inline-input" value="${dates.start || ''}" 
+                                           onchange="updateWBSDate('${key}', 'start', this.value)" style="width: 110px;">
+                                </td>
+                                <td>
+                                    <input type="date" class="wbs-inline-input" value="${dates.end || ''}" 
+                                           onchange="updateWBSDate('${key}', 'end', this.value)" style="width: 110px;">
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+            });
+            
+            html += `
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td></td>
+                        <td colspan="4">GRAND TOTAL</td>
+                        <td style="text-align: right;">$${Math.round(grandTotal).toLocaleString()}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tfoot>
+            `;
+            
+            table.innerHTML = html;
+        }
+
+        /**
+         * Inline edit discipline budget
+         */
+        function editDisciplineBudget(discipline, element) {
+            const currentValue = projectData.budgets[discipline] || 0;
+            element.classList.add('editing');
+            
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'wbs-inline-input';
+            input.value = Math.round(currentValue);
+            input.style.width = '100px';
+            input.min = '0';
+            
+            element.innerHTML = '';
+            element.appendChild(input);
+            input.focus();
+            input.select();
+            
+            const save = () => {
+                const newValue = parseFloat(input.value) || 0;
+                if (!validateBudget(newValue, 'Discipline budget')) {
+                    input.focus();
+                    return;
+                }
+                projectData.budgets[discipline] = newValue;
+                projectData.calculator.manualEdits[discipline] = true;
+                triggerAutosave();
+                buildWBSTableEditable();
+                updateKPIs();
+                createChart();
+            };
+            
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); save(); }
+                if (e.key === 'Escape') buildWBSTableEditable();
+            });
+        }
+
+        /**
+         * Inline edit claim percentage
+         */
+        function editClaimPercent(key, element) {
+            const currentValue = projectData.claiming[key] || 0;
+            element.classList.add('editing');
+            
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'wbs-inline-input';
+            input.value = currentValue;
+            input.min = '0';
+            input.max = '100';
+            input.step = '1';
+            input.style.width = '60px';
+            
+            element.innerHTML = '';
+            element.appendChild(input);
+            input.focus();
+            input.select();
+            
+            const save = () => {
+                let newValue = parseFloat(input.value) || 0;
+                if (!validatePercentage(newValue, 'Claim percentage')) {
+                    newValue = Math.max(0, Math.min(100, newValue));
+                }
+                projectData.claiming[key] = Math.round(newValue);
+                triggerAutosave();
+                buildWBSTableEditable();
+            };
+            
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); save(); }
+                if (e.key === 'Escape') buildWBSTableEditable();
+            });
+        }
+
+        /**
+         * Update WBS date with validation
+         */
+        function updateWBSDate(key, field, value) {
+            if (!projectData.dates[key]) {
+                projectData.dates[key] = { start: '', end: '' };
+            }
+            
+            const otherField = field === 'start' ? 'end' : 'start';
+            const otherValue = projectData.dates[key][otherField];
+            
+            // Validate date order
+            if (value && otherValue) {
+                const newDate = new Date(value);
+                const otherDate = new Date(otherValue);
+                
+                if (field === 'start' && newDate > otherDate) {
+                    alert('Start date cannot be after end date. Adjusting end date.');
+                    projectData.dates[key].end = value;
+                }
+                if (field === 'end' && newDate < otherDate) {
+                    alert('End date cannot be before start date. Adjusting start date.');
+                    projectData.dates[key].start = value;
+                }
+            }
+            
+            projectData.dates[key][field] = value;
+            triggerAutosave();
+            buildGanttChart();
+            updateKPIs();
+        }
+
+        /**
+         * Validates budget input
+         * @returns {boolean} True if valid
+         */
+        function validateBudget(value, fieldName = 'Budget') {
+            if (isNaN(value)) {
+                alert(`${fieldName} must be a number`);
+                return false;
+            }
+            if (value < 0) {
+                alert(`${fieldName} cannot be negative`);
+                return false;
+            }
+            if (value > 999999999999) {
+                alert(`${fieldName} exceeds maximum allowed value`);
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * Validates percentage input
+         * @returns {boolean} True if valid
+         */
+        function validatePercentage(value, fieldName = 'Percentage') {
+            if (isNaN(value)) {
+                alert(`${fieldName} must be a number`);
+                return false;
+            }
+            if (value < 0 || value > 100) {
+                alert(`${fieldName} must be between 0 and 100`);
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * Modal functions for adding elements
+         */
+        function showAddDisciplineModal() {
+            document.getElementById('add-discipline-name').value = '';
+            document.getElementById('add-discipline-budget').value = '0';
+            document.getElementById('wbs-add-discipline-modal').classList.add('open');
+            document.getElementById('add-discipline-name').focus();
+        }
+
+        function showAddPackageModal() {
+            document.getElementById('add-package-name').value = '';
+            document.getElementById('add-package-claim').value = '0';
+            document.getElementById('wbs-add-package-modal').classList.add('open');
+            document.getElementById('add-package-name').focus();
+        }
+
+        function showAddPhaseModal() {
+            document.getElementById('add-phase-name').value = '';
+            document.getElementById('wbs-add-phase-modal').classList.add('open');
+            document.getElementById('add-phase-name').focus();
+        }
+
+        function closeAddModal(type) {
+            document.getElementById(`wbs-add-${type}-modal`).classList.remove('open');
+        }
+
+        function confirmAddDiscipline() {
+            const name = document.getElementById('add-discipline-name').value.trim();
+            const budget = parseFloat(document.getElementById('add-discipline-budget').value) || 0;
+            
+            if (!name) {
+                alert('Please enter a discipline name');
+                return;
+            }
+            
+            if (projectData.disciplines.includes(name)) {
+                alert('This discipline already exists');
+                return;
+            }
+            
+            // Add discipline
+            projectData.disciplines.push(name);
+            projectData.budgets[name] = budget;
+            
+            // Initialize claiming for new discipline
+            projectData.packages.forEach(pkg => {
+                const key = `${name}-${pkg}`;
+                projectData.claiming[key] = Math.floor(100 / projectData.packages.length);
+            });
+            
+            // Initialize dates
+            const today = new Date();
+            projectData.packages.forEach((pkg, i) => {
+                const key = `${name}-${pkg}`;
+                const startDate = new Date(today);
+                startDate.setDate(startDate.getDate() + i * 30);
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 28);
+                projectData.dates[key] = {
+                    start: startDate.toISOString().split('T')[0],
+                    end: endDate.toISOString().split('T')[0]
+                };
+            });
+            
+            closeAddModal('discipline');
+            triggerAutosave();
+            buildWBSTableEditable();
+            updateKPIs();
+            createChart();
+            buildGanttChart();
+        }
+
+        function confirmAddPackage() {
+            const name = document.getElementById('add-package-name').value.trim();
+            const claim = parseFloat(document.getElementById('add-package-claim').value) || 0;
+            
+            if (!name) {
+                alert('Please enter a package name');
+                return;
+            }
+            
+            if (projectData.packages.includes(name)) {
+                alert('This package already exists');
+                return;
+            }
+            
+            // Add package
+            projectData.packages.push(name);
+            
+            // Initialize claiming and dates for new package
+            const today = new Date();
+            projectData.disciplines.forEach(disc => {
+                const key = `${disc}-${name}`;
+                projectData.claiming[key] = claim;
+                
+                const startDate = new Date(today);
+                startDate.setDate(startDate.getDate() + projectData.packages.length * 30);
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 28);
+                projectData.dates[key] = {
+                    start: startDate.toISOString().split('T')[0],
+                    end: endDate.toISOString().split('T')[0]
+                };
+            });
+            
+            closeAddModal('package');
+            triggerAutosave();
+            buildWBSTableEditable();
+            updateKPIs();
+            createChart();
+            buildGanttChart();
+        }
+
+        function confirmAddPhase() {
+            const name = document.getElementById('add-phase-name').value.trim();
+            
+            if (!name) {
+                alert('Please enter a phase name');
+                return;
+            }
+            
+            if (projectData.phases.includes(name)) {
+                alert('This phase already exists');
+                return;
+            }
+            
+            projectData.phases.push(name);
+            
+            closeAddModal('phase');
+            triggerAutosave();
+            buildWBSTableEditable();
+            updateKPIs();
+        }
+
+        /**
+         * Delete functions with confirmation
+         */
+        function confirmDeleteDiscipline(discipline) {
+            const budget = projectData.budgets[discipline] || 0;
+            if (!confirm(`Delete discipline "${discipline}"?\n\nThis will remove $${budget.toLocaleString()} from the budget.\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            const idx = projectData.disciplines.indexOf(discipline);
+            if (idx > -1) {
+                projectData.disciplines.splice(idx, 1);
+                delete projectData.budgets[discipline];
+                
+                // Remove claiming and dates entries
+                Object.keys(projectData.claiming).forEach(key => {
+                    if (key.startsWith(`${discipline}-`)) {
+                        delete projectData.claiming[key];
+                    }
+                });
+                Object.keys(projectData.dates).forEach(key => {
+                    if (key.startsWith(`${discipline}-`)) {
+                        delete projectData.dates[key];
+                    }
+                });
+            }
+            
+            triggerAutosave();
+            buildWBSTableEditable();
+            updateKPIs();
+            createChart();
+            buildGanttChart();
+        }
+
+        function confirmDeletePackage(packageName) {
+            if (!confirm(`Delete package "${packageName}"?\n\nThis will affect all disciplines.\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            const idx = projectData.packages.indexOf(packageName);
+            if (idx > -1) {
+                projectData.packages.splice(idx, 1);
+                
+                // Remove claiming and dates entries
+                Object.keys(projectData.claiming).forEach(key => {
+                    if (key.endsWith(`-${packageName}`)) {
+                        delete projectData.claiming[key];
+                    }
+                });
+                Object.keys(projectData.dates).forEach(key => {
+                    if (key.endsWith(`-${packageName}`)) {
+                        delete projectData.dates[key];
+                    }
+                });
+            }
+            
+            triggerAutosave();
+            buildWBSTableEditable();
+            updateKPIs();
+            createChart();
+            buildGanttChart();
+        }
+
+        /**
+         * Recalculate budgets from calculator settings
+         */
+        function recalculateBudgets() {
+            if (!projectData.calculator.isCalculated) {
+                alert('No calculator settings found. Use the Wizard to set up budget calculations.');
+                return;
+            }
+            
+            if (!confirm('Recalculate all budgets from calculator settings?\n\nThis will override any manual budget edits.')) {
+                return;
+            }
+            
+            // Clear manual edits flag
+            projectData.calculator.manualEdits = {};
+            
+            // Recalculate (uses same logic as calculator)
+            const totalFee = projectData.calculator.totalDesignFee;
+            const projectType = projectData.calculator.projectType;
+            
+            projectData.disciplines.forEach(disc => {
+                const basePct = getIndustryPercent(disc, projectType);
+                const complexity = projectData.calculator.complexityOverrides[disc] || 'Medium';
+                const multiplier = complexity === 'Low' ? 0.85 : complexity === 'High' ? 1.15 : 1;
+                projectData.budgets[disc] = Math.round(totalFee * (basePct / 100) * multiplier);
+            });
+            
+            triggerAutosave();
+            buildWBSTableEditable();
+            updateKPIs();
+            createChart();
+        }
+
+        /**
+         * Gets industry standard percentage for a discipline
+         */
+        function getIndustryPercent(discipline, projectType) {
+            const distributions = {
+                'Highway/Roadway': { 'Roadway': 25, 'Structures': 15, 'Drainage': 12, 'Traffic': 10, 'Environmental': 10, 'Geotechnical': 8, 'Survey': 8, 'ROW': 5, 'Utilities': 7 },
+                'Bridge': { 'Structures': 35, 'Roadway': 15, 'Geotechnical': 12, 'Environmental': 10, 'Traffic': 8, 'Drainage': 8, 'Survey': 7, 'Utilities': 5 },
+                'Transit': { 'Transit Planning': 25, 'Structures': 15, 'Civil': 15, 'Systems': 15, 'Environmental': 10, 'Traffic': 10, 'Survey': 5, 'Utilities': 5 },
+                'Water/Wastewater': { 'Process': 30, 'Civil': 20, 'Structural': 15, 'Mechanical': 12, 'Electrical': 10, 'I&C': 8, 'Environmental': 5 }
+            };
+            
+            const dist = distributions[projectType] || distributions['Highway/Roadway'];
+            return dist[discipline] || 5;
+        }
+
+        /**
+         * Clear entire WBS with confirmation
+         */
+        function confirmClearWBS() {
+            if (!confirm('⚠️ DANGER: Clear entire WBS?\n\nThis will remove ALL phases, disciplines, packages, budgets, and schedule data.\n\nThis action cannot be undone!')) {
+                return;
+            }
+            
+            if (!confirm('Are you absolutely sure? Type OK in the next prompt to confirm.')) {
+                return;
+            }
+            
+            projectData.phases = [];
+            projectData.disciplines = [];
+            projectData.packages = [];
+            projectData.budgets = {};
+            projectData.claiming = {};
+            projectData.dates = {};
+            
+            triggerAutosave();
+            buildWBSTableEditable();
+            updateKPIs();
+            createChart();
+            buildGanttChart();
         }
 
         /**
@@ -7710,17 +8482,7 @@
          * @param {number} amount - Amount to format
          * @returns {string} Formatted currency string
          */
-        /**
-         * Formats currency value with commas and no decimal places
-         * @param {number} amount - Currency value to format
-         * @returns {string} Formatted currency string (e.g., "$1,234,567")
-         */
-        function formatCurrency(amount) {
-            return '$' + Math.round(amount || 0).toLocaleString('en-US', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            });
-        }
+        // formatCurrency is defined earlier in the file
 
         // ============================================
         // GANTT CHART
@@ -11495,6 +12257,64 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
             </button>
+        </div>
+    </div>
+
+    <!-- WBS Add Discipline Modal -->
+    <div id="wbs-add-discipline-modal" class="wbs-add-modal" onclick="if(event.target===this)closeAddModal('discipline')">
+        <div class="wbs-add-modal-content">
+            <div class="wbs-add-modal-header">
+                <h3>Add New Discipline</h3>
+                <button onclick="closeAddModal('discipline')" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+            </div>
+            <div class="wbs-add-modal-body">
+                <label>Discipline Name</label>
+                <input type="text" id="add-discipline-name" placeholder="e.g., Environmental">
+                <label>Initial Budget ($)</label>
+                <input type="number" id="add-discipline-budget" placeholder="0" value="0">
+                <div class="wbs-add-modal-actions">
+                    <button class="btn btn-sm" onclick="closeAddModal('discipline')">Cancel</button>
+                    <button class="btn btn-sm btn-primary" onclick="confirmAddDiscipline()">Add Discipline</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WBS Add Package Modal -->
+    <div id="wbs-add-package-modal" class="wbs-add-modal" onclick="if(event.target===this)closeAddModal('package')">
+        <div class="wbs-add-modal-content">
+            <div class="wbs-add-modal-header">
+                <h3>Add New Package</h3>
+                <button onclick="closeAddModal('package')" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+            </div>
+            <div class="wbs-add-modal-body">
+                <label>Package Name</label>
+                <input type="text" id="add-package-name" placeholder="e.g., Quality Assurance">
+                <label>Default Claim % (distributed from existing)</label>
+                <input type="number" id="add-package-claim" placeholder="0" value="0" min="0" max="100">
+                <div class="wbs-add-modal-actions">
+                    <button class="btn btn-sm" onclick="closeAddModal('package')">Cancel</button>
+                    <button class="btn btn-sm btn-primary" onclick="confirmAddPackage()">Add Package</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WBS Add Phase Modal -->
+    <div id="wbs-add-phase-modal" class="wbs-add-modal" onclick="if(event.target===this)closeAddModal('phase')">
+        <div class="wbs-add-modal-content">
+            <div class="wbs-add-modal-header">
+                <h3>Add New Phase</h3>
+                <button onclick="closeAddModal('phase')" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+            </div>
+            <div class="wbs-add-modal-body">
+                <label>Phase Name</label>
+                <input type="text" id="add-phase-name" placeholder="e.g., Construction Support">
+                <div class="wbs-add-modal-actions">
+                    <button class="btn btn-sm" onclick="closeAddModal('phase')">Cancel</button>
+                    <button class="btn btn-sm btn-primary" onclick="confirmAddPhase()">Add Phase</button>
+                </div>
+            </div>
         </div>
     </div>
 
