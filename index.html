@@ -6280,6 +6280,769 @@
         }
 
         /**
+         * Generates a comprehensive professional project report combining all project data
+         */
+        function generateComprehensiveReport() {
+            const today = new Date().toLocaleDateString();
+            const todayFull = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const assumptions = getCostEstimateAssumptions();
+            const totalBudget = calculateTotalBudget();
+            
+            // Capture the Performance Chart as an image
+            let performanceChartImg = '';
+            const chartCanvas = document.getElementById('performance-chart');
+            if (chartCanvas && chart) {
+                try {
+                    performanceChartImg = chartCanvas.toDataURL('image/png');
+                } catch (e) {
+                    console.error('Could not capture chart:', e);
+                }
+            }
+            
+            // Capture the Gantt chart HTML
+            const ganttContainer = document.getElementById('gantt-container');
+            let ganttHtml = '';
+            if (ganttContainer) {
+                ganttHtml = ganttContainer.innerHTML;
+            }
+            
+            // Calculate date range
+            let minDate = null, maxDate = null;
+            Object.values(projectData.dates).forEach(d => {
+                if (d.start && (!minDate || d.start < minDate)) minDate = d.start;
+                if (d.end && (!maxDate || d.end > maxDate)) maxDate = d.end;
+            });
+            
+            let durationMonths = 0;
+            let durationDays = 0;
+            if (minDate && maxDate) {
+                durationDays = Math.ceil((new Date(maxDate) - new Date(minDate)) / (1000 * 60 * 60 * 24));
+                durationMonths = Math.ceil(durationDays / 30);
+            }
+            
+            // Calculate WBS element count
+            const wbsCount = projectData.phases.length * projectData.disciplines.length * projectData.packages.length;
+            
+            let html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Comprehensive Project Report</title>
+    <style>
+        @media print {
+            @page { margin: 0.5in; size: letter; }
+            .page-break { page-break-before: always; }
+            .no-break { page-break-inside: avoid; }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            color: #333;
+            background: #fff;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+        
+        /* Cover Page Styles */
+        .cover-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
+            color: #fff;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .cover-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #ffd700, #ffed4a, #ffd700);
+        }
+        .cover-page::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #ffd700, #ffed4a, #ffd700);
+        }
+        .cover-logo {
+            font-size: 48pt;
+            margin-bottom: 20px;
+        }
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 300;
+            color: #ffd700;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .cover-subtitle {
+            font-size: 14pt;
+            color: #ccc;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+        .cover-meta {
+            display: flex;
+            gap: 60px;
+            margin-top: 40px;
+        }
+        .cover-meta-item {
+            text-align: center;
+        }
+        .cover-meta-label {
+            font-size: 9pt;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .cover-meta-value {
+            font-size: 18pt;
+            font-weight: 600;
+            color: #ffd700;
+        }
+        .cover-date {
+            position: absolute;
+            bottom: 40px;
+            font-size: 11pt;
+            color: #666;
+        }
+        
+        /* Content Styles */
+        .page { padding: 40px; max-width: 8.5in; }
+        .header {
+            background: linear-gradient(135deg, #1a1a00 0%, #0d0d0d 100%);
+            color: #ffd700;
+            padding: 25px 40px;
+            margin: -40px -40px 25px -40px;
+            border-bottom: 4px solid #ffd700;
+        }
+        .header h1 {
+            font-size: 22pt;
+            font-weight: 400;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            color: #ffd700;
+        }
+        .header .subtitle { font-size: 10pt; opacity: 0.7; color: #ccc; }
+        
+        h2 {
+            color: #333;
+            font-size: 14pt;
+            font-weight: 600;
+            margin: 25px 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #ffd700;
+        }
+        h3 {
+            color: #444;
+            font-size: 11pt;
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+        }
+        
+        .executive-summary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #ffd700;
+            padding: 18px 22px;
+            margin: 18px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .executive-summary h3 { color: #333; margin-top: 0; font-size: 12pt; }
+        .executive-summary p { color: #444; margin: 8px 0 0 0; line-height: 1.7; }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin: 18px 0;
+        }
+        .kpi-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 14px 10px;
+            text-align: center;
+        }
+        .kpi-card .value {
+            font-size: 18pt;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .kpi-card .label {
+            font-size: 7pt;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kpi-card.highlight {
+            background: linear-gradient(135deg, #fffef0 0%, #fff9e6 100%);
+            border-color: #e6d9a8;
+        }
+        .kpi-card.highlight .value { color: #856404; }
+        
+        .assumptions-box {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%);
+            border: 1px solid #e6d9a8;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .assumptions-box h3 { color: #856404; margin-top: 0; font-size: 10pt; }
+        .assumptions-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .assumption-item {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 4px;
+            font-size: 9pt;
+        }
+        .assumption-label { color: #666; font-size: 8pt; margin-bottom: 2px; }
+        .assumption-value { font-weight: 600; color: #333; font-size: 11pt; }
+        
+        .scope-box {
+            background: #fffef0;
+            border: 1px solid #e6d9a8;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .scope-box h3 { color: #856404; margin-top: 0; font-size: 10pt; }
+        .scope-text { color: #444; line-height: 1.7; font-size: 9pt; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 9pt;
+        }
+        thead th {
+            background: #333;
+            color: #ffd700;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tbody td {
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        tbody tr:nth-child(even) { background: #f8f9fa; }
+        tbody tr:hover { background: #f0f4f8; }
+        tfoot th {
+            background: #f8f9fa;
+            padding: 10px 8px;
+            font-weight: 600;
+            border-top: 2px solid #ffd700;
+        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        
+        .complexity-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: 500;
+        }
+        .complexity-low { background: #d4edda; color: #155724; }
+        .complexity-medium { background: #fff3cd; color: #856404; }
+        .complexity-high { background: #f8d7da; color: #721c24; }
+        
+        .discipline-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 14px;
+            margin: 10px 0;
+            page-break-inside: avoid;
+        }
+        .discipline-card h4 {
+            margin: 0 0 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10pt;
+        }
+        .discipline-card .budget-tag {
+            font-size: 11pt;
+            color: #333;
+            font-weight: 700;
+        }
+        .discipline-scope {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 8px 0;
+            font-size: 9pt;
+            color: #555;
+            line-height: 1.5;
+        }
+        .discipline-meta {
+            font-size: 8pt;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .chart-section {
+            margin: 20px 0;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        .chart-section h3 { margin-top: 0; font-size: 11pt; }
+        .chart-section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .chart-legend {
+            display: flex;
+            gap: 25px;
+            margin-top: 12px;
+            font-size: 9pt;
+            color: #666;
+        }
+        
+        /* Gantt chart print styles */
+        .gantt-header { display: flex; background: #333; color: #ffd700; font-size: 8pt; border-radius: 4px 4px 0 0; }
+        .gantt-header-label { width: 140px; padding: 6px 10px; font-weight: 500; }
+        .gantt-header-months { display: flex; flex: 1; }
+        .gantt-month { flex: 1; padding: 6px 3px; text-align: center; border-left: 1px solid rgba(255,255,255,0.2); font-size: 7pt; }
+        .gantt-row { display: flex; background: #fff; border-bottom: 1px solid #e0e0e0; min-height: 24px; }
+        .gantt-row-label { width: 140px; padding: 5px 10px; font-weight: 500; background: #f8f9fa; border-right: 1px solid #e0e0e0; font-size: 9pt; }
+        .gantt-row-timeline { display: flex; flex: 1; position: relative; align-items: center; }
+        .gantt-bar { height: 14px; border-radius: 3px; position: absolute; }
+        .gantt-bar.discipline { background: linear-gradient(90deg, #4a90d9, #357abd); }
+        .gantt-bar.package { background: linear-gradient(90deg, #ffd700, #e6c200); height: 8px; }
+        .gantt-packages { display: none; }
+        .gantt-package-row { display: flex; background: #fafafa; border-bottom: 1px solid #eee; min-height: 20px; }
+        .gantt-package-label { width: 140px; padding: 3px 10px 3px 20px; font-size: 8pt; background: #fafafa; border-right: 1px solid #e0e0e0; }
+        .gantt-no-data { padding: 25px; text-align: center; color: #888; font-style: italic; }
+        .gantt-legend { display: flex; gap: 25px; margin-top: 12px; font-size: 9pt; }
+        .gantt-legend-item { display: flex; align-items: center; gap: 6px; }
+        .gantt-legend-color { width: 20px; height: 10px; border-radius: 3px; }
+        .gantt-legend-color.discipline { background: linear-gradient(90deg, #4a90d9, #357abd); }
+        .gantt-legend-color.package { background: linear-gradient(90deg, #ffd700, #e6c200); }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .list-section { margin: 12px 0; }
+        .list-section ul { margin: 0; padding-left: 18px; }
+        .list-section li { margin: 4px 0; font-size: 9pt; }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 8pt;
+            color: #888;
+            text-align: center;
+        }
+        
+        .page-break { page-break-before: always; }
+        .no-break { page-break-inside: avoid; }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <div class="cover-logo">📊</div>
+        <div class="cover-title">Project Report</div>
+        <div class="cover-subtitle">Comprehensive Work Breakdown Structure Analysis</div>
+        <div class="cover-meta">
+            <div class="cover-meta-item">
+                <div class="cover-meta-label">Total Budget</div>
+                <div class="cover-meta-value">${formatCurrency(totalBudget)}</div>
+            </div>
+            <div class="cover-meta-item">
+                <div class="cover-meta-label">Disciplines</div>
+                <div class="cover-meta-value">${projectData.disciplines.length}</div>
+            </div>
+            <div class="cover-meta-item">
+                <div class="cover-meta-label">Duration</div>
+                <div class="cover-meta-value">${durationMonths > 0 ? durationMonths + ' Months' : 'TBD'}</div>
+            </div>
+            <div class="cover-meta-item">
+                <div class="cover-meta-label">WBS Elements</div>
+                <div class="cover-meta-value">${wbsCount}</div>
+            </div>
+        </div>
+        <div class="cover-date">${todayFull}</div>
+    </div>
+
+    <!-- Executive Summary Page -->
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="header">
+            <h1>Executive Summary</h1>
+            <div class="subtitle">Project Overview & Key Metrics</div>
+        </div>
+        
+        <div class="kpi-grid no-break">
+            <div class="kpi-card highlight">
+                <div class="value">${formatCurrency(totalBudget)}</div>
+                <div class="label">Total Design Fee</div>
+            </div>
+            <div class="kpi-card">
+                <div class="value">${projectData.disciplines.length}</div>
+                <div class="label">Disciplines</div>
+            </div>
+            <div class="kpi-card">
+                <div class="value">${projectData.phases.length}</div>
+                <div class="label">Phases</div>
+            </div>
+            <div class="kpi-card">
+                <div class="value">${projectData.packages.length}</div>
+                <div class="label">Packages</div>
+            </div>
+            <div class="kpi-card">
+                <div class="value">${wbsCount}</div>
+                <div class="label">WBS Elements</div>
+            </div>
+        </div>
+`;
+
+            // Project Scope
+            if (projectData.projectScope) {
+                html += `
+        <div class="executive-summary no-break">
+            <h3>📋 Project Scope</h3>
+            <p>${projectData.projectScope.replace(/\n/g, '<br>')}</p>
+        </div>
+`;
+            }
+
+            // Cost Estimate Assumptions
+            if (assumptions.isCalculated) {
+                html += `
+        <div class="assumptions-box no-break">
+            <h3>💰 Cost Estimate Basis</h3>
+            <div class="assumptions-grid">
+                <div class="assumption-item">
+                    <span class="assumption-label">Construction Cost</span>
+                    <span class="assumption-value">${formatCurrency(assumptions.constructionCost)}</span>
+                </div>
+                <div class="assumption-item">
+                    <span class="assumption-label">Design Fee %</span>
+                    <span class="assumption-value">${assumptions.designFeePercent}%</span>
+                </div>
+                <div class="assumption-item">
+                    <span class="assumption-label">Total Design Fee</span>
+                    <span class="assumption-value">${formatCurrency(assumptions.totalDesignFee)}</span>
+                </div>
+                <div class="assumption-item">
+                    <span class="assumption-label">Project Type</span>
+                    <span class="assumption-value">${assumptions.projectType}</span>
+                </div>
+            </div>
+        </div>
+`;
+            }
+
+            // Project Structure
+            html += `
+        <div class="two-column no-break">
+            <div class="list-section">
+                <h3>Project Phases</h3>
+                <ul>${projectData.phases.map(p => `<li>${p}</li>`).join('')}</ul>
+            </div>
+            <div class="list-section">
+                <h3>Deliverable Packages</h3>
+                <ul>${projectData.packages.map(p => `<li>${p}</li>`).join('')}</ul>
+            </div>
+        </div>
+        
+        <h2>Discipline Budget Summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Discipline</th>
+                    <th class="text-center">Complexity</th>
+                    <th class="text-right">Industry %</th>
+                    <th class="text-right">Actual %</th>
+                    <th class="text-right">Budget</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+            assumptions.disciplines.forEach(disc => {
+                const complexityClass = disc.complexity.toLowerCase();
+                html += `
+                <tr>
+                    <td><strong>${disc.name}</strong></td>
+                    <td class="text-center"><span class="complexity-badge complexity-${complexityClass}">${disc.complexity}</span></td>
+                    <td class="text-right">${disc.industryBasePct}%</td>
+                    <td class="text-right">${disc.percentOfTotal}%</td>
+                    <td class="text-right"><strong>${formatCurrency(disc.budget)}</strong></td>
+                </tr>`;
+            });
+            html += `
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3">Total</th>
+                    <th class="text-right">100%</th>
+                    <th class="text-right">${formatCurrency(totalBudget)}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+`;
+
+            // Discipline Details Page
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="header">
+            <h1>Discipline Details</h1>
+            <div class="subtitle">Scope of Work & Budget Allocation by Discipline</div>
+        </div>
+`;
+            projectData.disciplines.forEach(disc => {
+                const budget = projectData.budgets[disc] || 0;
+                const pct = totalBudget > 0 ? ((budget / totalBudget) * 100).toFixed(1) : 0;
+                const scope = projectData.disciplineScopes && projectData.disciplineScopes[disc] ? projectData.disciplineScopes[disc] : null;
+                const discAssumption = assumptions.disciplines.find(d => d.name === disc);
+                
+                html += `
+        <div class="discipline-card no-break">
+            <h4>
+                <span>📌 ${disc}</span>
+                <span class="budget-tag">${formatCurrency(budget)} (${pct}%)</span>
+            </h4>
+`;
+                if (discAssumption) {
+                    html += `
+            <div class="discipline-meta">
+                Complexity: <span class="complexity-badge complexity-${discAssumption.complexity.toLowerCase()}">${discAssumption.complexity}</span>
+                &nbsp;|&nbsp; Industry Base: ${discAssumption.industryBasePct}%
+                ${discAssumption.hasComplexityOverride ? '&nbsp;|&nbsp; <em>Complexity Override</em>' : ''}
+                ${discAssumption.isManualEdit ? '&nbsp;|&nbsp; <em>Manual Edit</em>' : ''}
+            </div>
+`;
+                }
+                if (scope) {
+                    html += `
+            <div class="discipline-scope">${scope.replace(/\n/g, '<br>')}</div>
+`;
+                }
+                
+                // Package breakdown for this discipline
+                html += `
+            <table style="font-size: 8pt; margin-top: 8px;">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th class="text-center">Claim %</th>
+                        <th class="text-right">Budget</th>
+                        <th>Start</th>
+                        <th>End</th>
+                    </tr>
+                </thead>
+                <tbody>
+`;
+                projectData.packages.forEach(pkg => {
+                    const key = `${disc}-${pkg}`;
+                    const claimPct = projectData.claiming[key] || 0;
+                    const pkgBudget = budget * (claimPct / 100);
+                    const dates = projectData.dates[key] || {};
+                    
+                    html += `
+                    <tr>
+                        <td>${pkg}</td>
+                        <td class="text-center">${claimPct}%</td>
+                        <td class="text-right">${formatCurrency(pkgBudget)}</td>
+                        <td>${dates.start || '—'}</td>
+                        <td>${dates.end || '—'}</td>
+                    </tr>`;
+                });
+                html += `
+                </tbody>
+            </table>
+        </div>
+`;
+            });
+            html += `
+    </div>
+`;
+
+            // Schedule & Charts Page
+            if (performanceChartImg || (ganttHtml && !ganttHtml.includes('No schedule data'))) {
+                html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="header">
+            <h1>Project Schedule & Performance</h1>
+            <div class="subtitle">${minDate && maxDate ? minDate + ' to ' + maxDate + ' (' + durationMonths + ' months)' : 'Schedule Timeline'}</div>
+        </div>
+`;
+                if (performanceChartImg) {
+                    html += `
+        <div class="chart-section no-break">
+            <h3>📈 Budget Distribution Over Time (BCWS)</h3>
+            <img src="${performanceChartImg}" alt="Performance Chart" />
+            <div class="chart-legend">
+                <span>━━ <strong>BCWS</strong> - Budgeted Cost of Work Scheduled (Planned Value)</span>
+            </div>
+        </div>
+`;
+                }
+                
+                if (ganttHtml && !ganttHtml.includes('No schedule data')) {
+                    html += `
+        <div class="chart-section">
+            <h3>📅 Project Schedule (Gantt View)</h3>
+            ${ganttHtml}
+            <div class="gantt-legend">
+                <div class="gantt-legend-item">
+                    <div class="gantt-legend-color discipline"></div>
+                    <span>Discipline Timeline</span>
+                </div>
+                <div class="gantt-legend-item">
+                    <div class="gantt-legend-color package"></div>
+                    <span>Package Deliverable</span>
+                </div>
+            </div>
+        </div>
+`;
+                }
+                html += `
+    </div>
+`;
+            }
+
+            // Complete WBS Page
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="header">
+            <h1>Complete Work Breakdown Structure</h1>
+            <div class="subtitle">${wbsCount} WBS Elements • ${projectData.phases.length} Phases × ${projectData.disciplines.length} Disciplines × ${projectData.packages.length} Packages</div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 55px;">WBS #</th>
+                    <th>Phase</th>
+                    <th>Discipline</th>
+                    <th>Package</th>
+                    <th class="text-right" style="width: 90px;">Budget</th>
+                    <th class="text-center" style="width: 50px;">Claim %</th>
+                    <th style="width: 80px;">Start</th>
+                    <th style="width: 80px;">End</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+            let grandTotal = 0;
+            projectData.phases.forEach((phase, pi) => {
+                projectData.disciplines.forEach((discipline, di) => {
+                    const discBudget = projectData.budgets[discipline] || 0;
+                    projectData.packages.forEach((packageName, ki) => {
+                        const key = `${discipline}-${packageName}`;
+                        const claimPct = projectData.claiming[key] || 0;
+                        const pkgBudget = discBudget * (claimPct / 100);
+                        const dates = projectData.dates[key] || { start: '—', end: '—' };
+                        const wbs = `${pi+1}.${di+1}.${ki+1}`;
+                        grandTotal += pkgBudget;
+                        
+                        html += `
+                <tr>
+                    <td><strong>${wbs}</strong></td>
+                    <td>${phase}</td>
+                    <td>${discipline}</td>
+                    <td>${packageName}</td>
+                    <td class="text-right">${formatCurrency(pkgBudget)}</td>
+                    <td class="text-center">${claimPct}%</td>
+                    <td>${dates.start || '—'}</td>
+                    <td>${dates.end || '—'}</td>
+                </tr>`;
+                    });
+                });
+            });
+            
+            html += `
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="4">Grand Total</th>
+                    <th class="text-right">${formatCurrency(grandTotal)}</th>
+                    <th colspan="3"></th>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="footer">
+            <strong>Comprehensive Project Report</strong> • Generated by WBS Terminal<br>
+            ${todayFull} • Industry-standard cost distributions based on ${assumptions.projectType} project benchmarks
+        </div>
+    </div>
+</body>
+</html>`;
+            
+            // Create a temporary container for PDF generation
+            const container = document.createElement('div');
+            container.innerHTML = html;
+            document.body.appendChild(container);
+            
+            // Configure PDF options
+            const opt = {
+                margin: [0.25, 0.25, 0.25, 0.25],
+                filename: `project_report_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    letterRendering: true
+                },
+                jsPDF: { 
+                    unit: 'in', 
+                    format: 'letter', 
+                    orientation: 'portrait' 
+                },
+                pagebreak: { mode: ['css', 'legacy'] }
+            };
+            
+            // Generate and download PDF
+            html2pdf().set(opt).from(container).save().then(() => {
+                document.body.removeChild(container);
+            }).catch(err => {
+                console.error('PDF generation failed:', err);
+                document.body.removeChild(container);
+                alert('PDF generation failed. Please try again.');
+            });
+        }
+
+        /**
          * Imports project data from CSV file
          */
         function importData() {
@@ -10976,10 +11739,11 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         }
 
         /**
-         * Exports the RFP extracted data as a professional PDF
+         * Exports the RFP extracted data as a comprehensive professional PDF
          */
         function exportRfpData() {
             const today = new Date().toLocaleDateString();
+            const todayFull = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             
             // Get current values from preview fields
             const phasesStr = document.getElementById('rfp-preview-phases').value;
@@ -11008,6 +11772,27 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             const packages = packagesStr.split(',').map(s => s.trim()).filter(s => s);
             const stats = rfpState.usageStats;
             
+            // Get quantities and project info from rfpState
+            const quantities = rfpState.quantities || {};
+            const projectInfo = rfpState.projectInfo || {};
+            const quantityReasoning = rfpState.quantityReasoning || {};
+            const projectInfoReasoning = rfpState.projectInfoReasoning || {};
+            const extractedData = rfpState.extractedData || {};
+            
+            // Quantity labels for display
+            const quantityLabels = {
+                roadwayLengthLF: { label: 'Roadway Length', unit: 'LF' },
+                projectAreaAC: { label: 'Project Area', unit: 'AC' },
+                wallAreaSF: { label: 'Retaining Wall Area', unit: 'SF' },
+                noiseWallAreaSF: { label: 'Noise Wall Area', unit: 'SF' },
+                bridgeDeckAreaSF: { label: 'Bridge Deck Area', unit: 'SF' },
+                bridgeCount: { label: 'Number of Bridges', unit: '' },
+                structureCount: { label: 'Number of Structures', unit: '' },
+                utilityRelocations: { label: 'Utility Relocations', unit: '' },
+                permitCount: { label: 'Permits Required', unit: '' },
+                trackLengthTF: { label: 'Track Length', unit: 'TF' }
+            };
+            
             let html = `
 <!DOCTYPE html>
 <html>
@@ -11015,12 +11800,17 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     <meta charset="UTF-8">
     <title>RFP Analysis Report</title>
     <style>
+        @media print {
+            @page { margin: 0.5in; size: letter; }
+            .page-break { page-break-before: always; }
+            .no-break { page-break-inside: avoid; }
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             color: #333;
             background: #fff;
-            font-size: 11pt;
+            font-size: 10pt;
             line-height: 1.5;
         }
         .page { padding: 40px; max-width: 8.5in; }
@@ -11041,11 +11831,12 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         .header .subtitle { font-size: 11pt; opacity: 0.8; margin-bottom: 20px; color: #ccc; }
         .header-info {
             display: flex;
-            gap: 40px;
+            flex-wrap: wrap;
+            gap: 30px;
             font-size: 10pt;
         }
         .header-info-item { }
-        .header-info-label { opacity: 0.6; font-size: 9pt; text-transform: uppercase; color: #ccc; }
+        .header-info-label { opacity: 0.6; font-size: 8pt; text-transform: uppercase; color: #ccc; letter-spacing: 0.5px; }
         .header-info-value { font-size: 13pt; font-weight: 600; margin-top: 2px; color: #fff; }
         
         h2 {
@@ -11058,10 +11849,57 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         }
         h3 {
             color: #444;
-            font-size: 12pt;
+            font-size: 11pt;
             font-weight: 600;
-            margin: 18px 0 10px 0;
+            margin: 16px 0 10px 0;
         }
+        h4 {
+            color: #555;
+            font-size: 10pt;
+            font-weight: 600;
+            margin: 12px 0 8px 0;
+        }
+        
+        .executive-summary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #ffd700;
+            padding: 20px 24px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .executive-summary h3 { color: #333; margin-top: 0; font-size: 12pt; }
+        .executive-summary p { color: #444; margin: 10px 0 0 0; line-height: 1.7; }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .kpi-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .kpi-card .value {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .kpi-card .label {
+            font-size: 8pt;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kpi-card.highlight {
+            background: linear-gradient(135deg, #fffef0 0%, #fff9e6 100%);
+            border-color: #e6d9a8;
+        }
+        .kpi-card.highlight .value { color: #856404; }
         
         .stats-box {
             background: linear-gradient(135deg, #fffef0 0%, #fff9e6 100%);
@@ -11083,10 +11921,27 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             padding: 6px 10px;
             background: rgba(255,255,255,0.7);
             border-radius: 4px;
-            font-size: 10pt;
+            font-size: 9pt;
         }
         .stat-label { color: #666; }
         .stat-value { font-weight: 600; color: #333; }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .info-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 16px;
+        }
+        .info-card h4 { margin: 0 0 8px 0; color: #333; font-size: 10pt; }
+        .info-card .value { font-size: 18pt; font-weight: 700; color: #333; }
+        .info-card .unit { font-size: 10pt; color: #666; margin-left: 4px; }
+        .info-card .reasoning { font-size: 9pt; color: #666; margin-top: 8px; line-height: 1.5; font-style: italic; }
         
         .scope-box {
             background: #f5f5f5;
@@ -11096,11 +11951,51 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             margin: 18px 0;
         }
         .scope-box h3 { color: #333; margin-top: 0; }
-        .scope-text { color: #444; white-space: pre-wrap; }
+        .scope-text { color: #444; white-space: pre-wrap; line-height: 1.7; }
+        
+        .schedule-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 1px solid #90caf9;
+            border-radius: 6px;
+            padding: 18px;
+            margin: 18px 0;
+        }
+        .schedule-box h3 { color: #1565c0; margin-top: 0; }
+        .schedule-text { color: #333; white-space: pre-wrap; line-height: 1.7; }
         
         .list-section { margin: 15px 0; }
         .list-section ul { margin: 0; padding-left: 20px; }
-        .list-section li { margin: 5px 0; }
+        .list-section li { margin: 5px 0; color: #444; }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 9pt;
+        }
+        thead th {
+            background: #333;
+            color: #ffd700;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tbody td {
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        tbody tr:nth-child(even) { background: #f8f9fa; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
         
         .discipline-card {
             background: #fafafa;
@@ -11110,14 +12005,61 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             margin: 12px 0;
             page-break-inside: avoid;
         }
-        .discipline-card h3 { margin: 0 0 10px 0; color: #333; }
+        .discipline-card h3 { margin: 0 0 10px 0; color: #333; font-size: 11pt; }
         .discipline-scope {
             color: #555;
-            font-size: 10pt;
+            font-size: 9pt;
             line-height: 1.6;
             white-space: pre-wrap;
         }
-        .no-scope { color: #999; font-style: italic; }
+        .no-scope { color: #999; font-style: italic; font-size: 9pt; }
+        
+        .quantities-section {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 1px solid #a5d6a7;
+            border-radius: 6px;
+            padding: 18px;
+            margin: 18px 0;
+        }
+        .quantities-section h3 { color: #2e7d32; margin-top: 0; }
+        .quantity-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .quantity-item {
+            background: rgba(255,255,255,0.8);
+            border-radius: 6px;
+            padding: 12px;
+        }
+        .quantity-item .label { font-size: 9pt; color: #666; margin-bottom: 4px; }
+        .quantity-item .value { font-size: 16pt; font-weight: 700; color: #2e7d32; }
+        .quantity-item .unit { font-size: 9pt; color: #666; margin-left: 4px; }
+        .quantity-item .reasoning { font-size: 8pt; color: #666; margin-top: 6px; font-style: italic; line-height: 1.4; }
+        
+        .project-info-box {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border: 1px solid #ffcc80;
+            border-radius: 6px;
+            padding: 18px;
+            margin: 18px 0;
+        }
+        .project-info-box h3 { color: #e65100; margin-top: 0; }
+        .project-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .project-info-item {
+            background: rgba(255,255,255,0.8);
+            border-radius: 6px;
+            padding: 12px;
+        }
+        .project-info-item .label { font-size: 9pt; color: #666; margin-bottom: 4px; }
+        .project-info-item .value { font-size: 16pt; font-weight: 700; color: #e65100; }
+        .project-info-item .reasoning { font-size: 8pt; color: #666; margin-top: 6px; font-style: italic; line-height: 1.4; }
         
         .notes-box {
             background: #fff8e1;
@@ -11127,24 +12069,52 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             margin: 18px 0;
         }
         .notes-box h3 { color: #f57c00; margin-top: 0; }
+        .notes-text { color: #444; line-height: 1.6; }
+        
+        .confidence-box {
+            background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%);
+            border: 1px solid #9fa8da;
+            border-radius: 6px;
+            padding: 18px;
+            margin: 18px 0;
+        }
+        .confidence-box h3 { color: #3949ab; margin-top: 0; }
+        .confidence-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .confidence-item {
+            background: rgba(255,255,255,0.8);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+        .confidence-item .label { font-size: 9pt; color: #666; margin-bottom: 4px; }
+        .confidence-item .value { font-size: 14pt; font-weight: 700; }
+        .confidence-item .value.high { color: #2e7d32; }
+        .confidence-item .value.medium { color: #f57c00; }
+        .confidence-item .value.low { color: #c62828; }
         
         .footer {
             margin-top: 30px;
             padding-top: 15px;
             border-top: 1px solid #e0e0e0;
-            font-size: 9pt;
+            font-size: 8pt;
             color: #888;
             text-align: center;
         }
         
         .page-break { page-break-before: always; }
+        .no-break { page-break-inside: avoid; }
     </style>
 </head>
 <body>
     <div class="page">
         <div class="header">
             <h1>RFP Analysis Report</h1>
-            <div class="subtitle">AI-Extracted Project Information</div>
+            <div class="subtitle">Comprehensive AI-Extracted Project Information</div>
             <div class="header-info">
                 <div class="header-info-item">
                     <div class="header-info-label">Report Date</div>
@@ -11162,16 +12132,135 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     <div class="header-info-label">Packages</div>
                     <div class="header-info-value">${packages.length}</div>
                 </div>
+                ${projectInfo.projectCostM ? `
+                <div class="header-info-item">
+                    <div class="header-info-label">Est. Project Cost</div>
+                    <div class="header-info-value">$${projectInfo.projectCostM}M</div>
+                </div>` : ''}
+                ${projectInfo.designDurationMonths ? `
+                <div class="header-info-item">
+                    <div class="header-info-label">Design Duration</div>
+                    <div class="header-info-value">${projectInfo.designDurationMonths} months</div>
+                </div>` : ''}
             </div>
         </div>
 `;
+
+            // Executive Summary
+            if (scopeStr) {
+                html += `
+        <div class="executive-summary no-break">
+            <h3>📋 Executive Summary</h3>
+            <p>${scopeStr.replace(/\n/g, '<br>')}</p>
+        </div>
+`;
+            }
+
+            // Key Metrics KPI Grid
+            const activeQuantities = Object.entries(quantities).filter(([k, v]) => v > 0);
+            html += `
+        <div class="kpi-grid no-break">
+            <div class="kpi-card highlight">
+                <div class="value">${disciplines.length}</div>
+                <div class="label">Disciplines</div>
+            </div>
+            <div class="kpi-card">
+                <div class="value">${phases.length}</div>
+                <div class="label">Phases</div>
+            </div>
+            <div class="kpi-card">
+                <div class="value">${packages.length}</div>
+                <div class="label">Packages</div>
+            </div>
+            <div class="kpi-card">
+                <div class="value">${activeQuantities.length}</div>
+                <div class="label">Quantities Identified</div>
+            </div>
+        </div>
+`;
+
+            // Project Information Section
+            if (projectInfo.projectCostM > 0 || projectInfo.designDurationMonths > 0 || projectInfo.projectType || projectInfo.complexity) {
+                html += `
+        <div class="project-info-box no-break">
+            <h3>📊 Project Information (AI Estimated)</h3>
+            <div class="project-info-grid">
+`;
+                if (projectInfo.projectCostM > 0) {
+                    html += `
+                <div class="project-info-item">
+                    <div class="label">Estimated Project Cost</div>
+                    <div class="value">$${projectInfo.projectCostM.toLocaleString()}M</div>
+                    ${projectInfoReasoning.projectCostReasoning ? `<div class="reasoning">${projectInfoReasoning.projectCostReasoning}</div>` : ''}
+                </div>`;
+                }
+                if (projectInfo.designDurationMonths) {
+                    html += `
+                <div class="project-info-item">
+                    <div class="label">Design Duration</div>
+                    <div class="value">${projectInfo.designDurationMonths} <span style="font-size: 10pt; font-weight: normal;">months</span></div>
+                    ${projectInfoReasoning.scheduleReasoning ? `<div class="reasoning">${projectInfoReasoning.scheduleReasoning}</div>` : ''}
+                </div>`;
+                }
+                if (projectInfo.projectType) {
+                    html += `
+                <div class="project-info-item">
+                    <div class="label">Project Type</div>
+                    <div class="value" style="font-size: 12pt;">${projectInfo.projectType.charAt(0).toUpperCase() + projectInfo.projectType.slice(1)}</div>
+                </div>`;
+                }
+                if (projectInfo.complexity) {
+                    html += `
+                <div class="project-info-item">
+                    <div class="label">Complexity Level</div>
+                    <div class="value" style="font-size: 12pt;">${projectInfo.complexity}</div>
+                </div>`;
+                }
+                html += `
+            </div>
+        </div>
+`;
+            }
+
+            // Extracted Quantities Section
+            if (activeQuantities.length > 0) {
+                html += `
+        <div class="quantities-section">
+            <h3>📐 Key Engineering Quantities</h3>
+            <div class="quantity-grid">
+`;
+                activeQuantities.forEach(([key, value]) => {
+                    const info = quantityLabels[key] || { label: key, unit: '' };
+                    const reasoning = quantityReasoning[key] || '';
+                    html += `
+                <div class="quantity-item">
+                    <div class="label">${info.label}</div>
+                    <div class="value">${value.toLocaleString()}<span class="unit">${info.unit}</span></div>
+                    ${reasoning ? `<div class="reasoning">${reasoning}</div>` : ''}
+                </div>`;
+                });
+                html += `
+            </div>
+        </div>
+`;
+            }
+
+            // Schedule Information
+            if (scheduleStr) {
+                html += `
+        <div class="schedule-box no-break">
+            <h3>📅 Schedule Information</h3>
+            <div class="schedule-text">${scheduleStr.replace(/\n/g, '<br>')}</div>
+        </div>
+`;
+            }
 
             // Usage Statistics
             if (stats && stats.totalTokens > 0) {
                 const processingTime = stats.endTime && stats.startTime ? ((stats.endTime - stats.startTime) / 1000).toFixed(1) + 's' : 'N/A';
                 html += `
-        <div class="stats-box">
-            <h3>📊 Analysis Statistics</h3>
+        <div class="stats-box no-break">
+            <h3>🤖 AI Analysis Statistics</h3>
             <div class="stats-grid">
                 <div class="stat-item">
                     <span class="stat-label">API Calls</span>
@@ -11193,71 +12282,149 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     <span class="stat-label">Estimated Cost</span>
                     <span class="stat-value">$${stats.estimatedCost.toFixed(4)}</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-label">Document Pages</span>
+                    <span class="stat-value">${rfpState.pageCount || 'N/A'}</span>
+                </div>
             </div>
         </div>
 `;
             }
 
-            // Project Scope
-            html += `
-        <h2>Project Scope Summary</h2>
-        <div class="scope-box">
-            <div class="scope-text">${scopeStr ? scopeStr.replace(/\n/g, '<br>') : '<em>No scope summary extracted</em>'}</div>
-        </div>
-`;
-
-            // Schedule Information
-            if (scheduleStr) {
+            // Confidence Scores (if available)
+            if (extractedData.confidence && Object.keys(extractedData.confidence).length > 0) {
                 html += `
-        <h2>Schedule Information</h2>
-        <div class="scope-box">
-            <div class="scope-text">${scheduleStr.replace(/\n/g, '<br>')}</div>
+        <div class="confidence-box no-break">
+            <h3>📈 Extraction Confidence Scores</h3>
+            <div class="confidence-grid">
+`;
+                const confidenceLabels = {
+                    scope: 'Scope',
+                    phases: 'Phases',
+                    disciplines: 'Disciplines',
+                    packages: 'Packages',
+                    schedule: 'Schedule',
+                    quantities: 'Quantities'
+                };
+                Object.entries(extractedData.confidence).forEach(([key, value]) => {
+                    const label = confidenceLabels[key] || key;
+                    let confidenceClass = 'medium';
+                    if (value === 'High' || value === 'high') confidenceClass = 'high';
+                    if (value === 'Low' || value === 'low') confidenceClass = 'low';
+                    html += `
+                <div class="confidence-item">
+                    <div class="label">${label}</div>
+                    <div class="value ${confidenceClass}">${value}</div>
+                </div>`;
+                });
+                html += `
+            </div>
         </div>
 `;
             }
 
-            // Phases & Packages
+            // Page Break - Project Structure Section
             html += `
+        <div class="page-break"></div>
         <h2>Project Structure</h2>
-        <div class="list-section">
-            <h3>Phases</h3>
-            ${phases.length > 0 ? '<ul>' + phases.map(p => `<li>${p}</li>`).join('') + '</ul>' : '<p style="color:#999;font-style:italic;">No phases extracted</p>'}
-        </div>
-        <div class="list-section">
-            <h3>Deliverable Packages</h3>
-            ${packages.length > 0 ? '<ul>' + packages.map(p => `<li>${p}</li>`).join('') + '</ul>' : '<p style="color:#999;font-style:italic;">No packages extracted</p>'}
+        <div class="two-column">
+            <div class="list-section">
+                <h3>Project Phases</h3>
+                ${phases.length > 0 ? '<ul>' + phases.map(p => `<li>${p}</li>`).join('') + '</ul>' : '<p style="color:#999;font-style:italic;">No phases extracted</p>'}
+            </div>
+            <div class="list-section">
+                <h3>Deliverable Packages</h3>
+                ${packages.length > 0 ? '<ul>' + packages.map(p => `<li>${p}</li>`).join('') + '</ul>' : '<p style="color:#999;font-style:italic;">No packages extracted</p>'}
+            </div>
         </div>
         
-        <h2>Disciplines & Scope of Work</h2>
+        <h3>Engineering Disciplines</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30px;">#</th>
+                    <th>Discipline</th>
+                    <th>Scope Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+            if (disciplines.length > 0) {
+                disciplines.forEach((disc, idx) => {
+                    const scope = disciplineScopes[disc];
+                    const scopePreview = scope ? (scope.length > 150 ? scope.substring(0, 150) + '...' : scope) : '<em style="color:#999;">No scope extracted</em>';
+                    html += `
+                <tr>
+                    <td class="text-center">${idx + 1}</td>
+                    <td><strong>${disc}</strong></td>
+                    <td style="font-size: 9pt;">${scopePreview.replace(/\n/g, ' ')}</td>
+                </tr>`;
+                });
+            }
+            html += `
+            </tbody>
+        </table>
 `;
 
+            // Detailed Discipline Scopes
+            html += `
+        <div class="page-break"></div>
+        <h2>Discipline Scope of Work Details</h2>
+`;
             if (disciplines.length > 0) {
                 disciplines.forEach(disc => {
                     const scope = disciplineScopes[disc];
                     html += `
-        <div class="discipline-card">
-            <h3>${disc}</h3>
-            ${scope ? `<div class="discipline-scope">${scope.replace(/\n/g, '<br>')}</div>` : '<div class="no-scope">No specific scope extracted for this discipline</div>'}
+        <div class="discipline-card no-break">
+            <h3>📌 ${disc}</h3>
+            ${scope ? `<div class="discipline-scope">${scope.replace(/\n/g, '<br>')}</div>` : '<div class="no-scope">No specific scope of work was extracted for this discipline from the RFP document.</div>'}
         </div>
 `;
                 });
             } else {
-                html += `<p style="color:#999;font-style:italic;">No disciplines extracted</p>`;
+                html += `<p style="color:#999;font-style:italic;">No disciplines were extracted from the RFP document.</p>`;
             }
 
             // AI Notes
             if (notes && notes !== 'Analysis notes will appear here...') {
                 html += `
         <div class="notes-box">
-            <h3>📝 AI Analysis Notes</h3>
-            <div>${notes.replace(/\n/g, '<br>')}</div>
+            <h3>📝 AI Analysis Notes & Observations</h3>
+            <div class="notes-text">${notes.replace(/\n/g, '<br>')}</div>
         </div>
+`;
+            }
+
+            // Risks (if available)
+            if (extractedData.risks && extractedData.risks.length > 0) {
+                html += `
+        <h2>Identified Risks & Considerations</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30px;">#</th>
+                    <th>Risk / Consideration</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+                extractedData.risks.forEach((risk, idx) => {
+                    html += `
+                <tr>
+                    <td class="text-center">${idx + 1}</td>
+                    <td>${typeof risk === 'string' ? risk : (risk.description || risk.name || JSON.stringify(risk))}</td>
+                </tr>`;
+                });
+                html += `
+            </tbody>
+        </table>
 `;
             }
 
             html += `
         <div class="footer">
-            Generated by WBS Terminal RFP Wizard • ${today} • Powered by AI Document Analysis
+            <strong>RFP Analysis Report</strong> • Generated by WBS Terminal RFP Wizard<br>
+            ${todayFull} • Powered by AI Document Analysis
         </div>
     </div>
 </body>
@@ -11659,18 +12826,11 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 <div class="reports-section">
                     <div class="reports-section-title">📄 PDF Reports</div>
                     <div class="reports-grid">
-                        <div class="card-base report-card" onclick="closeReportsPanel(); printReport();">
-                            <div class="card-base-icon">📋</div>
+                        <div class="card-base report-card" onclick="closeReportsPanel(); generateComprehensiveReport();">
+                            <div class="card-base-icon">📊</div>
                             <div class="report-card-info">
-                                <div class="card-base-title">Full Project Report</div>
-                                <div class="card-base-desc">Complete WBS with budget breakdown, charts, Gantt schedule, and cost assumptions</div>
-                            </div>
-                        </div>
-                        <div class="card-base report-card" onclick="closeReportsPanel(); exportProjectSummary();">
-                            <div class="card-base-icon">📝</div>
-                            <div class="report-card-info">
-                                <div class="card-base-title">Executive Summary</div>
-                                <div class="card-base-desc">High-level overview with KPIs, discipline scopes, and package details</div>
+                                <div class="card-base-title">Comprehensive Project Report</div>
+                                <div class="card-base-desc">Professional report with executive summary, KPIs, budgets, discipline details, schedule, charts, and full WBS</div>
                             </div>
                         </div>
                     </div>
