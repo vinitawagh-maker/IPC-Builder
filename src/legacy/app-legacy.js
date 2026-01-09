@@ -1195,6 +1195,80 @@ let projectData = {
         };
 
         /**
+         * Build tooltip content for "All Projects" production rate
+         * @param {string} discId - Discipline ID
+         * @param {number} rate - Production rate (MH per unit)
+         * @param {number} projectCount - Number of projects used
+         * @param {string} unit - Unit of measure
+         * @returns {string} Tooltip text
+         */
+        function buildAllProjectsRateTooltip(discId, rate, projectCount, unit) {
+            if (!rate || rate === 0) {
+                return 'No benchmark data available';
+            }
+            const config = DISCIPLINE_CONFIG[discId];
+            return `ALL PROJECTS RATE: ${rate.toFixed(3)} MH/${unit}
+
+CALCULATION: Average of production rates from ALL ${projectCount} benchmark projects
+
+FORMULA: Sum of all project rates / ${projectCount} projects
+
+USE CASE: Baseline reference rate. Use this when you want a broad industry average without filtering for project similarity.`;
+        }
+
+        /**
+         * Build tooltip content for "Selected Projects" production rate
+         * @param {string} discId - Discipline ID
+         * @param {number} rate - Production rate (MH per unit)
+         * @param {number} projectCount - Number of selected projects
+         * @param {string} unit - Unit of measure
+         * @param {Object} rateStats - Optional statistics object
+         * @returns {string} Tooltip text
+         */
+        function buildSelectedRateTooltip(discId, rate, projectCount, unit, rateStats = null) {
+            if (!rate || rate === 0) {
+                return 'No benchmark data selected';
+            }
+            let tooltip = `SELECTED PROJECTS RATE: ${rate.toFixed(3)} MH/${unit}
+
+CALCULATION: Weighted average of ${projectCount || 'selected'} benchmark projects
+
+FORMULA: Total MH / Total Quantity from selected projects`;
+
+            if (rateStats && rateStats.stdDev > 0) {
+                tooltip += `
+
+STATISTICS:
+  Mean: ${rateStats.mean.toFixed(3)} MH/${unit}
+  Std Dev: ${rateStats.stdDev.toFixed(3)}
+  Range: ${rateStats.lower.toFixed(3)} - ${rateStats.upper.toFixed(3)}`;
+            }
+
+            tooltip += `
+
+USE CASE: More accurate estimate based on similar projects. Click "Select Benchmarks" to choose which projects to include.`;
+            return tooltip;
+        }
+
+        /**
+         * Build tooltip for quantity input showing RFP reasoning
+         * @param {string} discId - Discipline ID
+         * @param {number} quantity - The quantity value
+         * @param {string} reasoning - AI reasoning text
+         * @returns {string} Tooltip text
+         */
+        function buildQuantityReasoningTooltip(discId, quantity, reasoning) {
+            if (!reasoning) {
+                return 'Manual entry - no RFP reasoning available';
+            }
+            const config = DISCIPLINE_CONFIG[discId];
+            return `RFP EXTRACTED QUANTITY: ${quantity.toLocaleString()} ${config?.unit || ''}
+
+AI REASONING:
+${reasoning}`;
+        }
+
+        /**
          * Load benchmark data from JSON files
          * @returns {Promise<Object>} The loaded benchmark data
          */
@@ -2175,6 +2249,10 @@ let projectData = {
                 row.id = `mh-row-${discId}`;
                 row.className = 'discipline-row-inactive';
                 
+                // Calculate "all projects" rate for tooltip
+                const allProjects = benchmarks ? benchmarks.projects || [] : [];
+                const allProjectsRate = allProjects.length > 0 ? BenchmarkStats.calculateRateStats(allProjects).mean : 0;
+
                 row.innerHTML = `
                     <td>
                         <button class="discipline-toggle" onclick="toggleMHDiscipline('${discId}')" title="Toggle discipline">+</button>
@@ -2186,14 +2264,20 @@ let projectData = {
                     </td>
                     <td><span class="discipline-code">${config.accountCode || '—'}</span></td>
                     <td class="numeric">
-                        <input type="text" class="qty-input" id="mh-qty-${discId}" 
-                               value="0" inputmode="numeric"
-                               onchange="updateMHQuantity('${discId}')" 
-                               disabled>
+                        <div class="qty-input-wrapper">
+                            <input type="text" class="qty-input" id="mh-qty-${discId}"
+                                   value="0" inputmode="numeric"
+                                   onchange="updateMHQuantity('${discId}')"
+                                   disabled>
+                            <span class="qty-source-indicator" id="mh-qty-source-${discId}" style="display: none;" title=""></span>
+                        </div>
                     </td>
                     <td>${config.unit}</td>
                     <td class="numeric">
-                        <span class="rate-display" id="mh-rate-${discId}">${formatRate(defaultRate, config.unit)}</span>
+                        <span class="rate-display rate-all-projects" id="mh-rate-all-${discId}" title="${buildAllProjectsRateTooltip(discId, allProjectsRate, allProjects.length, config.unit)}">${formatRate(allProjectsRate, config.unit)}</span>
+                    </td>
+                    <td class="numeric">
+                        <span class="rate-display rate-selected" id="mh-rate-${discId}" title="${buildSelectedRateTooltip(discId, defaultRate, 0, config.unit)}">${formatRate(defaultRate, config.unit)}</span>
                     </td>
                     <td class="numeric">
                         <span class="mh-value" id="mh-value-${discId}">0</span>
@@ -2312,27 +2396,57 @@ let projectData = {
             const toggle = row.querySelector('.discipline-toggle');
             const qtyInput = document.getElementById(`mh-qty-${discId}`);
             const config = DISCIPLINE_CONFIG[discId];
-            
+            const benchmarks = getBenchmarkDataSync(discId);
+
             if (state.active) {
                 row.classList.remove('discipline-row-inactive');
                 toggle.classList.add('active');
                 toggle.textContent = '✓';
                 qtyInput.disabled = false;
             }
-            
+
             qtyInput.value = state.quantity.toLocaleString('en-US');
-            document.getElementById(`mh-rate-${discId}`).textContent = formatRate(state.rate, config.unit);
-            
+
+            // Update "All Projects" rate column
+            const allProjects = benchmarks ? benchmarks.projects || [] : [];
+            const allProjectsRate = allProjects.length > 0 ? BenchmarkStats.calculateRateStats(allProjects).mean : 0;
+            const rateAllEl = document.getElementById(`mh-rate-all-${discId}`);
+            if (rateAllEl) {
+                rateAllEl.textContent = formatRate(allProjectsRate, config.unit);
+                rateAllEl.title = buildAllProjectsRateTooltip(discId, allProjectsRate, allProjects.length, config.unit);
+            }
+
+            // Update "Selected Projects" rate column
+            const applicableProjects = getApplicableProjects(discId);
+            const selectedRateEl = document.getElementById(`mh-rate-${discId}`);
+            if (selectedRateEl) {
+                selectedRateEl.textContent = formatRate(state.rate, config.unit);
+                selectedRateEl.title = buildSelectedRateTooltip(discId, state.rate, applicableProjects.length, config.unit, state.rateStats);
+            }
+
+            // Update quantity input tooltip with RFP reasoning if available
+            const qtySourceEl = document.getElementById(`mh-qty-source-${discId}`);
+            if (qtySourceEl && state.rfpReasoning) {
+                qtySourceEl.style.display = 'inline';
+                qtySourceEl.textContent = 'RFP';
+                qtySourceEl.title = buildQuantityReasoningTooltip(discId, state.quantity, state.rfpReasoning);
+                qtySourceEl.className = 'qty-source-indicator rfp-source';
+                qtyInput.title = buildQuantityReasoningTooltip(discId, state.quantity, state.rfpReasoning);
+            } else if (qtySourceEl) {
+                qtySourceEl.style.display = 'none';
+                qtyInput.title = '';
+            }
+
             // Display MH with statistical range if available
             const mhValueEl = document.getElementById(`mh-value-${discId}`);
             const mhRangeEl = document.getElementById(`mh-range-${discId}`);
-            
+
             if (state.mhBounds && state.mhBounds.lower !== state.mhBounds.upper && state.mh > 0) {
                 // Show estimate with visible range below
                 mhValueEl.textContent = formatMH(state.mh);
                 mhValueEl.title = `Best estimate based on avg rate`;
                 mhValueEl.style.cursor = 'help';
-                
+
                 // Show range directly in the UI
                 if (mhRangeEl) {
                     mhRangeEl.style.display = 'block';
@@ -2346,16 +2460,14 @@ let projectData = {
                     mhRangeEl.style.display = 'none';
                 }
             }
-            
+
             // Show projects used with statistical info
-            const benchmarks = getBenchmarkDataSync(discId);
             if (benchmarks) {
-                const applicableProjects = getApplicableProjects(discId);
                 const projectNames = applicableProjects.slice(0, 3).map(p => p.name.split(' ')[0]).join(', ');
                 const suffix = applicableProjects.length > 3 ? ` +${applicableProjects.length - 3}` : '';
                 const projectsEl = document.getElementById(`mh-projects-${discId}`);
                 projectsEl.textContent = projectNames + suffix || '—';
-                
+
                 // Add tooltip showing rate statistics if available
                 if (state.rateStats && state.rateStats.stdDev > 0) {
                     projectsEl.title = `Rate: ${state.rateStats.mean.toFixed(3)} ± ${state.rateStats.stdDev.toFixed(3)} ${config.unit}/MH (${applicableProjects.length} projects)`;
@@ -11030,38 +11142,49 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 }
             }
             
-            // Map RFP quantities to MH estimator disciplines
+            // Get RFP quantity reasoning
+            const quantityReasoning = rfpState.extractedData?.quantityReasoning || {};
+
+            // Map RFP quantities to MH estimator disciplines with reasoning keys
             const quantityMapping = {
-                'roadway': quantities.roadwayLengthLF || 0,
-                'drainage': quantities.projectAreaAC || 0,
-                'mot': quantities.roadwayLengthLF || 0, // Same as roadway
-                'traffic': quantities.roadwayLengthLF || 0, // Same as roadway
-                'utilities': quantities.utilityRelocations || 0,
-                'retainingWalls': quantities.wallAreaSF || 0,
-                'noiseWalls': quantities.noiseWallAreaSF || 0,
-                'bridgesPCGirder': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.7), // Assume 70% PC
-                'bridgesSteel': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.2), // Assume 20% Steel
-                'bridgesRehab': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.1), // Assume 10% Rehab
-                'geotechnical': quantities.structureCount || quantities.bridgeCount || 0,
-                'systems': quantities.trackLengthTF || 0,
-                'track': quantities.trackLengthTF || 0,
-                'environmental': quantities.permitCount || 0
+                'roadway': { qty: quantities.roadwayLengthLF || 0, reasoningKey: 'roadwayLengthLF' },
+                'drainage': { qty: quantities.projectAreaAC || 0, reasoningKey: 'projectAreaAC' },
+                'mot': { qty: quantities.roadwayLengthLF || 0, reasoningKey: 'roadwayLengthLF', note: 'Same as roadway alignment length' },
+                'traffic': { qty: quantities.roadwayLengthLF || 0, reasoningKey: 'roadwayLengthLF', note: 'Same as roadway alignment length' },
+                'utilities': { qty: quantities.utilityRelocations || 0, reasoningKey: 'utilityRelocations' },
+                'retainingWalls': { qty: quantities.wallAreaSF || 0, reasoningKey: 'wallAreaSF' },
+                'noiseWalls': { qty: quantities.noiseWallAreaSF || 0, reasoningKey: 'noiseWallAreaSF' },
+                'bridgesPCGirder': { qty: Math.round((quantities.bridgeDeckAreaSF || 0) * 0.7), reasoningKey: 'bridgeDeckAreaSF', note: '70% of total bridge deck area assumed as PC Girder' },
+                'bridgesSteel': { qty: Math.round((quantities.bridgeDeckAreaSF || 0) * 0.2), reasoningKey: 'bridgeDeckAreaSF', note: '20% of total bridge deck area assumed as Steel' },
+                'bridgesRehab': { qty: Math.round((quantities.bridgeDeckAreaSF || 0) * 0.1), reasoningKey: 'bridgeDeckAreaSF', note: '10% of total bridge deck area assumed as Rehabilitation' },
+                'geotechnical': { qty: quantities.structureCount || quantities.bridgeCount || 0, reasoningKey: quantities.structureCount ? 'structureCount' : 'bridgeCount' },
+                'systems': { qty: quantities.trackLengthTF || 0, reasoningKey: 'trackLengthTF' },
+                'track': { qty: quantities.trackLengthTF || 0, reasoningKey: 'trackLengthTF' },
+                'environmental': { qty: quantities.permitCount || 0, reasoningKey: 'permitCount' }
             };
-            
+
             console.log('applyRfpQuantitiesToEstimator: quantityMapping:', quantityMapping);
-            
+
             // Count how many disciplines will be updated
             let updatedCount = 0;
-            
+
             // Apply quantities to each discipline
-            for (const [discId, qty] of Object.entries(quantityMapping)) {
+            for (const [discId, mapping] of Object.entries(quantityMapping)) {
+                const qty = mapping.qty;
                 console.log(`Checking discipline ${discId}: qty=${qty}, exists=${!!mhEstimateState.disciplines[discId]}`);
                 if (qty > 0 && mhEstimateState.disciplines[discId]) {
                     updatedCount++;
                     const state = mhEstimateState.disciplines[discId];
                     state.active = true;
                     state.quantity = qty;
-                    
+
+                    // Store RFP reasoning for this discipline
+                    let reasoning = quantityReasoning[mapping.reasoningKey] || '';
+                    if (mapping.note) {
+                        reasoning = reasoning ? `${reasoning}\n\nNOTE: ${mapping.note}` : mapping.note;
+                    }
+                    state.rfpReasoning = reasoning;
+
                     // Calculate MH with bounds and rate stats
                     const result = estimateMH(discId, qty);
                     state.mh = result.mh;
@@ -12056,6 +12179,9 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         window.toggleBenchmarkProject = toggleBenchmarkProject;
         window.closeBenchmarkModal = closeBenchmarkModal;
         window.applyBenchmarkSelection = applyBenchmarkSelection;
+        window.buildAllProjectsRateTooltip = buildAllProjectsRateTooltip;
+        window.buildSelectedRateTooltip = buildSelectedRateTooltip;
+        window.buildQuantityReasoningTooltip = buildQuantityReasoningTooltip;
         
         // Claiming table functions (Step 5)
         window.buildClaimingTable = buildClaimingTable;

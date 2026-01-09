@@ -159,6 +159,47 @@
 .mh-estimate-table .rate-display {
     color: var(--color-text-muted);
     font-size: 11px;
+    cursor: help;
+}
+
+/* All Projects vs Selected Projects rate columns */
+.mh-estimate-table .rate-all-projects {
+    color: #888;
+    font-size: 10px;
+}
+
+.mh-estimate-table .rate-selected {
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.mh-estimate-table th.rate-header {
+    font-size: 9px;
+    white-space: nowrap;
+    cursor: help;
+}
+
+/* Quantity input wrapper for source indicator */
+.qty-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+.qty-source-indicator {
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    cursor: help;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.qty-source-indicator.rfp-source {
+    background: #4da6ff;
+    color: #000;
 }
 
 .mh-estimate-table .mh-value {
