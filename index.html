@@ -3554,7 +3554,13 @@
                 currentStep++;
                 showStep(currentStep);
                 
-                if (currentStep === 4) buildBudgetTable();
+                if (currentStep === 4) {
+                    buildBudgetTable();
+                    // Re-apply RFP quantities to MH Estimator if RFP data was imported
+                    if (rfpState.extractedData && rfpState.quantities) {
+                        reapplyRfpQuantitiesToMHEstimator();
+                    }
+                }
                 if (currentStep === 5) buildClaimingTable();
                 if (currentStep === 6) buildDatesTable();
             }
@@ -9156,11 +9162,18 @@ Return ONLY the JSON, no markdown formatting.`;
                 permitCount: 0,
                 trackLengthTF: 0
             },
+            // AI reasoning for each quantity estimate
+            quantityReasoning: {},
             projectInfo: {
                 projectCostM: 0,
                 designDurationMonths: 20,
                 projectType: 'highway',
                 complexity: 'Medium'
+            },
+            // AI reasoning for project info (cost, schedule)
+            projectInfoReasoning: {
+                projectCostReasoning: '',
+                scheduleReasoning: ''
             },
             usageStats: {
                 totalPromptTokens: 0,
@@ -9464,7 +9477,7 @@ Return ONLY the JSON, no markdown formatting.`;
          */
         async function analyzeChunk(apiKey, chunkText, chunkIndex, totalChunks) {
             const systemPrompt = `You are an expert transportation infrastructure cost estimator. Extract WBS info and ESTIMATE QUANTITIES from this engineering RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
-{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","risks":[],"quantities":{},"projectInfo":{},"confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low","quantities":"high/medium/low"},"notes":""}
+{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","risks":[],"quantities":{},"quantityReasoning":{},"projectInfo":{},"projectInfoReasoning":{},"scheduleReasoning":"","confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low","quantities":"high/medium/low"},"notes":""}
 
 **PHASES**: Project stages (e.g. Base Design, ESDC, TSCD, Preliminary, Final, As-Builts, Closeout, Phase 1/2/3)
 **DISCIPLINES**: Use EXACT names: Roadway, Drainage, MOT, Traffic, Utilities, Retaining Walls, Noise Walls, Bridge Structures, Misc Structures, Geotechnical, Systems, Track, Environmental, Digital Delivery, ESDC, TSCD
@@ -9486,6 +9499,9 @@ Return ONLY the JSON, no markdown formatting.`;
 - permitCount: Estimate 3-10 based on environmental mentions, water crossings, wetlands.
 - trackLengthTF: For transit, convert miles to track feet. Double-track = 2× length.
 
+**QUANTITY REASONING - REQUIRED**: For EACH quantity you estimate, provide a brief explanation in quantityReasoning object with same keys:
+- Example: {"roadwayLengthLF": "RFP mentions 2.5 mile corridor from MP 12.5 to MP 15.0 = 13,200 LF", "bridgeDeckAreaSF": "3 bridges mentioned: 2 overpasses (60ft × 200ft each = 24,000 SF) + 1 underpass (50ft × 150ft = 7,500 SF) = 31,500 SF total"}
+
 **PROJECT INFO - REQUIRED**: You MUST provide estimates:
 - projectCostM: Estimate construction cost in $millions using these benchmarks:
   * Resurfacing: $1-5M/mile | Urban arterial: $10-30M/mile | Highway widening: $20-50M/mile
@@ -9493,6 +9509,10 @@ Return ONLY the JSON, no markdown formatting.`;
 - designDurationMonths: Based on size/complexity (12-48 months typical). Small=12-18, Medium=18-30, Large=30-48.
 - projectType: "highway"|"transit"|"bridge"|"utility"
 - complexity: "Low"|"Medium"|"High" based on urban/rural, coordination, environmental constraints
+
+**PROJECT INFO REASONING - REQUIRED**: Provide reasoning in projectInfoReasoning object:
+- projectCostReasoning: Explain how you calculated the construction cost estimate (e.g., "2.5 miles highway widening @ $35M/mile = $87.5M + 3 bridges @ $15M each = $45M, total ~$130M")
+- scheduleReasoning: Explain design duration estimate (e.g., "Large complex project with multiple bridges and utility conflicts, estimated 36 months for full design")
 
 IMPORTANT: NEVER return 0 for quantities if that discipline applies to the project. Always make your best engineering estimate.
 Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estimated from project type`;
@@ -9593,11 +9613,18 @@ Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estima
                     permitCount: 0,
                     trackLengthTF: 0
                 },
+                // AI reasoning for quantity estimates
+                quantityReasoning: {},
                 projectInfo: {
                     projectCostM: 0,
                     designDurationMonths: 20,
                     projectType: 'highway',
                     complexity: 'Medium'
+                },
+                // AI reasoning for project info
+                projectInfoReasoning: {
+                    projectCostReasoning: '',
+                    scheduleReasoning: ''
                 }
             };
 
@@ -9659,24 +9686,44 @@ Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estima
             });
 
             // Merge quantities - take maximum values found across chunks
-            chunkResults.forEach(resultObj => {
+            // Also track which chunk provided the best quantity for reasoning
+            const quantitySourceChunk = {};
+            chunkResults.forEach((resultObj, chunkIdx) => {
                 const result = resultObj.data || resultObj;
                 if (result.quantities) {
                     for (const key of Object.keys(merged.quantities)) {
                         const val = parseFloat(result.quantities[key]) || 0;
                         if (val > merged.quantities[key]) {
                             merged.quantities[key] = val;
+                            quantitySourceChunk[key] = chunkIdx;
+                        }
+                    }
+                }
+            });
+            
+            // Merge quantityReasoning - take reasoning from the chunk that provided the best quantity
+            chunkResults.forEach((resultObj, chunkIdx) => {
+                const result = resultObj.data || resultObj;
+                if (result.quantityReasoning) {
+                    for (const key of Object.keys(result.quantityReasoning)) {
+                        // Take reasoning if this chunk provided the value or if no reasoning exists yet
+                        if (quantitySourceChunk[key] === chunkIdx || !merged.quantityReasoning[key]) {
+                            if (result.quantityReasoning[key]) {
+                                merged.quantityReasoning[key] = result.quantityReasoning[key];
+                            }
                         }
                     }
                 }
             });
 
             // Merge projectInfo - take first non-zero/non-default values
-            chunkResults.forEach(resultObj => {
+            let projectInfoSourceChunk = -1;
+            chunkResults.forEach((resultObj, chunkIdx) => {
                 const result = resultObj.data || resultObj;
                 if (result.projectInfo) {
                     if (result.projectInfo.projectCostM && result.projectInfo.projectCostM > merged.projectInfo.projectCostM) {
                         merged.projectInfo.projectCostM = result.projectInfo.projectCostM;
+                        projectInfoSourceChunk = chunkIdx;
                     }
                     if (result.projectInfo.designDurationMonths && result.projectInfo.designDurationMonths !== 20) {
                         merged.projectInfo.designDurationMonths = result.projectInfo.designDurationMonths;
@@ -9687,6 +9734,24 @@ Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estima
                     if (result.projectInfo.complexity && result.projectInfo.complexity !== 'Medium') {
                         merged.projectInfo.complexity = result.projectInfo.complexity;
                     }
+                }
+            });
+            
+            // Merge projectInfoReasoning - take from best source chunk or first available
+            chunkResults.forEach((resultObj, chunkIdx) => {
+                const result = resultObj.data || resultObj;
+                if (result.projectInfoReasoning) {
+                    if (result.projectInfoReasoning.projectCostReasoning && 
+                        (projectInfoSourceChunk === chunkIdx || !merged.projectInfoReasoning.projectCostReasoning)) {
+                        merged.projectInfoReasoning.projectCostReasoning = result.projectInfoReasoning.projectCostReasoning;
+                    }
+                    if (result.projectInfoReasoning.scheduleReasoning && !merged.projectInfoReasoning.scheduleReasoning) {
+                        merged.projectInfoReasoning.scheduleReasoning = result.projectInfoReasoning.scheduleReasoning;
+                    }
+                }
+                // Also check for scheduleReasoning at root level (older format)
+                if (result.scheduleReasoning && !merged.projectInfoReasoning.scheduleReasoning) {
+                    merged.projectInfoReasoning.scheduleReasoning = result.scheduleReasoning;
                 }
             });
 
@@ -10274,18 +10339,25 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 }
             }
             
-            // Build quantity inputs
+            // Get reasoning data
+            const reasoning = rfpState.extractedData?.quantityReasoning || {};
+            
+            // Build quantity inputs with reasoning tooltips
             grid.innerHTML = quantityFields.map(field => {
                 const value = qty[field.key] || 0;
                 const hasValue = value > 0;
+                const fieldReasoning = reasoning[field.key] || '';
+                const hasReasoning = fieldReasoning.length > 0;
+                
                 return `
-                    <div class="rfp-quantity-item ${hasValue ? 'has-value' : ''}">
-                        <label>${field.label}</label>
+                    <div class="rfp-quantity-item ${hasValue ? 'has-value' : ''}" ${hasReasoning ? `title="${fieldReasoning.replace(/"/g, '&quot;')}"` : ''}>
+                        <label>${field.label}${hasReasoning ? ' <span class="reasoning-indicator" onclick="showQuantityReasoning(\'${field.key}\', \'${field.label}\')">💡</span>' : ''}</label>
                         <input type="text" id="rfp-qty-${field.key}" 
                                value="${hasValue ? formatNumber(value) : '0'}" 
                                inputmode="numeric"
                                onchange="updateRfpQuantity('${field.key}', this.value)">
                         <div class="qty-unit">${field.unit}</div>
+                        ${hasReasoning ? `<div class="qty-reasoning" id="rfp-reasoning-${field.key}">${fieldReasoning}</div>` : ''}
                     </div>
                 `;
             }).join('');
@@ -10302,6 +10374,53 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             }
             if (info.complexity) {
                 document.getElementById('rfp-qty-complexity').value = info.complexity;
+            }
+            
+            // Display AI reasoning for project cost and schedule
+            displayProjectInfoReasoning();
+        }
+        
+        /**
+         * Display AI reasoning for project cost and schedule estimates
+         */
+        function displayProjectInfoReasoning() {
+            const projectInfoReasoning = rfpState.extractedData?.projectInfoReasoning || {};
+            const scheduleReasoning = rfpState.extractedData?.scheduleReasoning || projectInfoReasoning.scheduleReasoning || '';
+            const costReasoning = projectInfoReasoning.projectCostReasoning || '';
+            
+            // Find or create the reasoning container
+            let reasoningContainer = document.getElementById('rfp-project-reasoning-container');
+            if (!reasoningContainer) {
+                const projectInfoSection = document.getElementById('rfp-project-info-section');
+                if (projectInfoSection) {
+                    reasoningContainer = document.createElement('div');
+                    reasoningContainer.id = 'rfp-project-reasoning-container';
+                    projectInfoSection.appendChild(reasoningContainer);
+                }
+            }
+            
+            if (reasoningContainer) {
+                let html = '';
+                
+                if (costReasoning) {
+                    html += `
+                        <div class="rfp-project-cost-reasoning">
+                            <h5>💰 Construction Cost Reasoning</h5>
+                            ${costReasoning}
+                        </div>
+                    `;
+                }
+                
+                if (scheduleReasoning) {
+                    html += `
+                        <div class="rfp-schedule-reasoning">
+                            <h5>📅 Schedule Duration Reasoning</h5>
+                            ${scheduleReasoning}
+                        </div>
+                    `;
+                }
+                
+                reasoningContainer.innerHTML = html;
             }
         }
 
@@ -10324,6 +10443,14 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             }
         }
 
+        /**
+         * Show quantity reasoning in an alert/popup
+         */
+        function showQuantityReasoning(key, label) {
+            const reasoning = rfpState.extractedData?.quantityReasoning?.[key] || 'No reasoning available for this quantity.';
+            alert(`AI Reasoning for ${label}:\n\n${reasoning}`);
+        }
+        
         /**
          * Sets the confidence indicator styling
          */
@@ -10543,13 +10670,22 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             rfpState.extractedData.quantities = quantities;
             rfpState.extractedData.projectInfo = projectInfo;
             
-            // Apply project cost
+            // Apply project cost to BOTH MH Estimator and Budget Calculator
             if (projectInfo.projectCostM && projectInfo.projectCostM > 0) {
-                const costInput = document.getElementById('mh-project-cost');
-                if (costInput) {
-                    const costValue = projectInfo.projectCostM * 1000000; // Convert M to $
-                    costInput.value = costValue.toLocaleString('en-US');
+                const costValue = projectInfo.projectCostM * 1000000; // Convert M to $
+                
+                // Apply to MH Estimator
+                const mhCostInput = document.getElementById('mh-project-cost');
+                if (mhCostInput) {
+                    mhCostInput.value = costValue.toLocaleString('en-US');
                     mhEstimateState.projectCost = costValue;
+                }
+                
+                // Apply to Budget Calculator (Cost Estimator Module)
+                const calcCostInput = document.getElementById('calc-construction-cost');
+                if (calcCostInput) {
+                    calcCostInput.value = costValue.toLocaleString('en-US');
+                    projectData.calculator.totalConstructionCost = costValue;
                 }
             }
             
@@ -10616,10 +10752,12 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     state.active = true;
                     state.quantity = qty;
                     
-                    // Calculate MH
+                    // Calculate MH with bounds and rate stats
                     const result = estimateMH(discId, qty);
                     state.mh = result.mh;
                     state.rate = result.rate;
+                    state.mhBounds = result.mhBounds;
+                    state.rateStats = result.rateStats;
                     
                     // Update UI
                     updateMHRowDisplay(discId, state);
@@ -10643,6 +10781,99 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 statusEl.textContent = `${updatedCount} disciplines populated from RFP`;
                 statusEl.style.color = '#4da6ff';
             }
+        }
+        
+        /**
+         * Re-applies RFP quantities to MH Estimator UI when navigating to Step 4
+         * This ensures the UI displays correct values even if it wasn't rendered initially
+         */
+        function reapplyRfpQuantitiesToMHEstimator() {
+            const quantities = rfpState.quantities || {};
+            const projectInfo = rfpState.projectInfo || {};
+            
+            console.log('reapplyRfpQuantitiesToMHEstimator: Reapplying quantities:', quantities);
+            
+            // Re-apply project cost to both modules
+            if (projectInfo.projectCostM && projectInfo.projectCostM > 0) {
+                const costValue = projectInfo.projectCostM * 1000000;
+                
+                const mhCostInput = document.getElementById('mh-project-cost');
+                if (mhCostInput && !mhCostInput.value) {
+                    mhCostInput.value = costValue.toLocaleString('en-US');
+                    mhEstimateState.projectCost = costValue;
+                }
+                
+                const calcCostInput = document.getElementById('calc-construction-cost');
+                if (calcCostInput && !calcCostInput.value) {
+                    calcCostInput.value = costValue.toLocaleString('en-US');
+                    projectData.calculator.totalConstructionCost = costValue;
+                }
+            }
+            
+            // Re-apply design duration
+            if (projectInfo.designDurationMonths) {
+                const durationInput = document.getElementById('mh-design-duration');
+                if (durationInput) {
+                    durationInput.value = projectInfo.designDurationMonths;
+                    mhEstimateState.designDuration = projectInfo.designDurationMonths;
+                }
+            }
+            
+            // Map RFP quantities to MH estimator disciplines
+            const quantityMapping = {
+                'roadway': quantities.roadwayLengthLF || 0,
+                'drainage': quantities.projectAreaAC || 0,
+                'mot': quantities.roadwayLengthLF || 0,
+                'traffic': quantities.roadwayLengthLF || 0,
+                'utilities': quantities.utilityRelocations || 0,
+                'retainingWalls': quantities.wallAreaSF || 0,
+                'noiseWalls': quantities.noiseWallAreaSF || 0,
+                'bridgesPCGirder': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.7),
+                'bridgesSteel': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.2),
+                'bridgesRehab': Math.round((quantities.bridgeDeckAreaSF || 0) * 0.1),
+                'geotechnical': quantities.structureCount || quantities.bridgeCount || 0,
+                'systems': quantities.trackLengthTF || 0,
+                'track': quantities.trackLengthTF || 0,
+                'environmental': quantities.permitCount || 0
+            };
+            
+            let updatedCount = 0;
+            
+            for (const [discId, qty] of Object.entries(quantityMapping)) {
+                if (qty > 0 && mhEstimateState.disciplines[discId]) {
+                    updatedCount++;
+                    const state = mhEstimateState.disciplines[discId];
+                    state.active = true;
+                    state.quantity = qty;
+                    
+                    // Calculate MH with bounds
+                    const result = estimateMH(discId, qty);
+                    state.mh = result.mh;
+                    state.rate = result.rate;
+                    state.mhBounds = result.mhBounds;
+                    state.rateStats = result.rateStats;
+                    
+                    // Update UI
+                    updateMHRowDisplay(discId, state);
+                }
+            }
+            
+            // Recalculate project cost-based disciplines
+            if (mhEstimateState.projectCost > 0) {
+                updateMHProjectCost();
+            }
+            
+            // Recalculate totals
+            recalculateTotalMH();
+            
+            // Update status
+            const statusEl = document.getElementById('mh-estimator-status');
+            if (statusEl && updatedCount > 0) {
+                statusEl.textContent = `${updatedCount} disciplines populated from RFP`;
+                statusEl.style.color = '#4da6ff';
+            }
+            
+            console.log(`reapplyRfpQuantitiesToMHEstimator: Updated ${updatedCount} disciplines`);
         }
 
         /**

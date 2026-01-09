@@ -226,10 +226,13 @@ Import project data from RFP documents:
 - **PDF Import** - Drag & drop or file selection
 - **Page Range Selection** - Process specific pages
 - **Text Preview** - Review extracted content
-- **AI Analysis** - Extract quantities and project info using GPT-4
+- **AI Analysis** - Extract quantities and project info using GPT-5.2
 - **Chunked Processing** - Handles large documents efficiently
 - **Quantity Extraction** - Roadway length, bridge area, utilities, etc.
-- **Apply to Estimator** - Transfer quantities to MH estimator
+- **AI Reasoning Commentary** - Each quantity includes AI explanation of how it was derived
+- **Construction Cost Reasoning** - AI explains cost estimation methodology
+- **Schedule Reasoning** - AI explains design duration estimates
+- **Apply to Estimator** - Transfer quantities to MH estimator AND Budget Calculator
 - **Usage Statistics** - Track API token usage and cost
 
 ### Gantt Chart
@@ -408,9 +411,12 @@ Terminal/console theme with gold accents:
 - `openRfpWizard()` - Open RFP import modal
 - `handleRfpUpload(file)` - Process uploaded PDF
 - `extractPdfText(file, pageNumbers)` - Extract text from PDF
-- `analyzeRfpDocument()` - AI analysis of RFP content
+- `analyzeRfpDocument()` - AI analysis of RFP content (with reasoning extraction)
 - `applyRfpData()` - Apply extracted data to project
-- `applyRfpQuantitiesToEstimator()` - Transfer to MH estimator
+- `applyRfpQuantitiesToEstimator()` - Transfer to MH estimator and Budget Calculator
+- `reapplyRfpQuantitiesToMHEstimator()` - Re-apply quantities when navigating to Step 4
+- `displayProjectInfoReasoning()` - Display AI reasoning for cost/schedule estimates
+- `showQuantityReasoning(key, label)` - Show quantity reasoning popup
 
 ### Gantt Chart
 - `buildGanttChart()` - Generate Gantt visualization
