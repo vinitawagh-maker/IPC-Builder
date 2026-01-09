@@ -1,0 +1,144 @@
+{
+  "discipline": "Bridge Design",
+  "eqty_metric": {
+    "name": "Bridge Deck Area",
+    "uom": "SF"
+  },
+  "project_structures": [
+    {
+      "project": "Foothill Phase 2B1 LRT",
+      "structure_name": "FRT San Dimas Wash",
+      "fct_mhrs": 2093,
+      "eqty": 1901,
+      "uom": "SF",
+      "production_mhrs_per_ea": 1.1013
+    },
+    {
+      "project": "I-15 Tropicana",
+      "structure_name": "D12",
+      "fct_mhrs": 5094,
+      "eqty": 13562,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.3756
+    }
+  ],
+  "structures": [
+    {
+      "structure_name": "Bridge B201",
+      "location": "429 Ramp B1",
+      "fct_mhrs": 2415,
+      "eqty": 18100,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.1334,
+      "notes": "FIB 84, 3 span"
+    },
+    {
+      "structure_name": "Bridge B203",
+      "location": "429 Ramp A2",
+      "fct_mhrs": 2438,
+      "eqty": 19630,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.1242,
+      "notes": "FIB 78, 4 span"
+    },
+    {
+      "structure_name": "Bridge B221",
+      "location": "429 Ramp D2 to SR 538 SB",
+      "fct_mhrs": 2487,
+      "eqty": 22888,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.1087,
+      "notes": "FIB 72, 5 span"
+    },
+    {
+      "structure_name": "Bridge B222",
+      "location": "SR 538 NB to 429 Ramp C3",
+      "fct_mhrs": 3006,
+      "eqty": 57246,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.0525,
+      "notes": "FIB 84, 10 span"
+    },
+    {
+      "structure_name": "Bridge B207",
+      "location": "Old Lake Wilson SB",
+      "fct_mhrs": 2510,
+      "eqty": 24431,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.1028,
+      "notes": "FIB 78, 4 span"
+    },
+    {
+      "structure_name": "Bridge B209",
+      "location": "429 Ramp D2 to SR 538 SB",
+      "fct_mhrs": 2827,
+      "eqty": 45408,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.0623,
+      "notes": "FIB 78, 6 span"
+    },
+    {
+      "structure_name": "Bridge B210",
+      "location": "SR 538 NB to 429 Ramp C3",
+      "fct_mhrs": 2424,
+      "eqty": 18692,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.1297,
+      "notes": "FIB 54, 4 span"
+    },
+    {
+      "structure_name": "Bridge B212",
+      "location": "429 Ramp D3",
+      "fct_mhrs": 2465,
+      "eqty": 21451,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.1149,
+      "notes": "FIB 54, 5 span"
+    },
+    {
+      "structure_name": "Bridge B208",
+      "location": "Old Lake Wilson NB (Rehab)",
+      "fct_mhrs": 4692,
+      "eqty": 30000,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.1564,
+      "notes": "Existing bridge rehabilitation"
+    },
+    {
+      "structure_name": "Bridge B213",
+      "location": "I-4 ML WB",
+      "fct_mhrs": 2577,
+      "eqty": 28872,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.0893,
+      "notes": "FIB 36, 3 span"
+    },
+    {
+      "structure_name": "Bridge B214",
+      "location": "I-4 ML EB",
+      "fct_mhrs": 2580,
+      "eqty": 29063,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.0888,
+      "notes": "FIB 36, 3 span"
+    },
+    {
+      "structure_name": "Bridge B221 Steel",
+      "location": "429 Ramp D2 to SR 538 SB",
+      "fct_mhrs": 4064,
+      "eqty": 10820,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.3756,
+      "notes": "Steel Spans"
+    },
+    {
+      "structure_name": "Bridge B222 Steel",
+      "location": "SR 538 NB to 429 Ramp C3",
+      "fct_mhrs": 4141,
+      "eqty": 11025,
+      "uom": "SF",
+      "production_mhrs_per_ea": 0.3756,
+      "notes": "Steel Spans"
+    }
+  ]
+}
