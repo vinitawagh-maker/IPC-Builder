@@ -1,0 +1,86 @@
+{
+  "discipline": "Drainage Design",
+  "eqty_metric": {
+    "name": "Project Area",
+    "uom": "AC"
+  },
+  "projects": [
+    {
+      "project": "IH 820 Southeast Connector",
+      "fct_mhrs": 141161,
+      "eqty": 872,
+      "uom": "AC",
+      "production_mhrs_per_ea": 161.88
+    },
+    {
+      "project": "BC Highway 1",
+      "fct_mhrs": 2209,
+      "eqty": 3,
+      "uom": "AC",
+      "production_mhrs_per_ea": 669.39
+    },
+    {
+      "project": "BC Highway 5",
+      "fct_mhrs": 4948,
+      "eqty": 16,
+      "uom": "AC",
+      "production_mhrs_per_ea": 309.25
+    },
+    {
+      "project": "Federal Way Link Extension",
+      "fct_mhrs": 122527,
+      "eqty": 104,
+      "uom": "AC",
+      "production_mhrs_per_ea": 1178.14
+    },
+    {
+      "project": "Foothill Phase 2A LRT",
+      "fct_mhrs": 7420,
+      "eqty": 133,
+      "uom": "AC",
+      "production_mhrs_per_ea": 55.79
+    },
+    {
+      "project": "Foothill Phase 2B1 LRT",
+      "fct_mhrs": 72738,
+      "eqty": 119,
+      "uom": "AC",
+      "production_mhrs_per_ea": 611.24
+    },
+    {
+      "project": "I-15 Tropicana",
+      "fct_mhrs": 14493,
+      "eqty": 194,
+      "uom": "AC",
+      "production_mhrs_per_ea": 74.71
+    },
+    {
+      "project": "I-17 Anthem",
+      "fct_mhrs": 47947,
+      "eqty": 2171,
+      "uom": "AC",
+      "production_mhrs_per_ea": 22.09
+    },
+    {
+      "project": "Ottawa LRT",
+      "fct_mhrs": 11503,
+      "eqty": 560,
+      "uom": "AC",
+      "production_mhrs_per_ea": 20.54
+    },
+    {
+      "project": "US 97",
+      "fct_mhrs": 7787,
+      "eqty": 33,
+      "uom": "AC",
+      "production_mhrs_per_ea": 235.97
+    },
+    {
+      "project": "264th Street Interchange",
+      "fct_mhrs": 11783,
+      "eqty": 193,
+      "uom": "AC",
+      "production_mhrs_per_ea": 61.05
+    }
+  ]
+}
