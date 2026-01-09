@@ -270,7 +270,27 @@ Multiple export formats from Reports panel:
 
 ## Recent Changes
 
-### Latest: External Benchmarking Data & Statistical Estimation (January 2026)
+### Latest: Enhanced PDF Reports (January 2026)
+- **Comprehensive RFP Analysis Report** with all extracted data:
+  - Executive summary with project scope
+  - KPI grid showing disciplines, phases, packages, quantities
+  - Project information section with AI-estimated cost, duration, type, complexity
+  - Engineering quantities section with AI reasoning for each estimate
+  - Schedule information in formatted display
+  - AI analysis statistics (API calls, tokens, cost, processing time)
+  - Confidence scores for extraction accuracy
+  - Project structure with phases, packages, discipline table
+  - Detailed discipline scopes on dedicated pages
+  - Risks and considerations section
+- **Combined Comprehensive Project Report** (merged Project Summary + Full Report):
+  - Professional cover page with key metrics (total budget, disciplines, duration, WBS elements)
+  - Executive summary page with KPIs, project scope, cost estimate basis
+  - Discipline details page with budget, complexity, scope, and package breakdown tables
+  - Schedule & performance page with BCWS chart and Gantt visualization
+  - Complete WBS page with full element table
+- **Updated Reports menu** to single "Comprehensive Project Report" option
+
+### Previous: External Benchmarking Data & Statistical Estimation (January 2026)
 - **Refactored benchmarking data to external JSON files** in `benchmarking/` folder
 - 14 discipline-specific JSON files with historical project data
 - **Statistical estimation using avg ± std_dev formula**:
@@ -447,8 +467,8 @@ Terminal/console theme with gold accents:
 ### Export
 - `exportCSV()` - Export WBS table
 - `exportAllDataCSV()` - Export complete project data
-- `exportProjectSummary()` - Generate PDF report
-- `printReport()` - Print/PDF export
+- `generateComprehensiveReport()` - Generate comprehensive PDF report with cover page, executive summary, discipline details, charts, and full WBS
+- `exportRfpData()` - Export RFP analysis as professional PDF with all extracted data, quantities, and AI reasoning
 - `importData()` - Import CSV file
 - `shareProjectUrl()` - Generate shareable URL
 

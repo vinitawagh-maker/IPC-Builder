@@ -82,8 +82,9 @@ Estimates man-hours based on historical project data:
 
 ### Export & Sharing
 
+- **Comprehensive Project Report** - Professional PDF with cover page, executive summary, discipline details, schedule charts, and full WBS
+- **RFP Analysis Report** - PDF export of all extracted RFP data including quantities, AI reasoning, and confidence scores
 - CSV Export (WBS table or full project data)
-- PDF Report with charts
 - Import from CSV
 - Shareable URL generation
 
@@ -184,7 +185,7 @@ Each file includes production rates (MH per unit) from real infrastructure proje
 
 | File | Description |
 |------|-------------|
-| `CLAUDE.md` | Comprehensive developer guide (~630 lines) |
+| `CLAUDE.md` | Comprehensive developer guide (~730 lines) |
 | `CODE_REVIEW_ANALYSIS.md` | Code quality audit with improvement recommendations |
 | `REORGANIZATION_PLAN.md` | Modularization roadmap |
 
