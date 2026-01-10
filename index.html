@@ -36,6 +36,7 @@
                     <div class="progress-step" onclick="goToStep(4)">4:BUDGET</div>
                     <div class="progress-step" onclick="goToStep(5)">5:CLAIMING</div>
                     <div class="progress-step" onclick="goToStep(6)">6:SCHEDULE</div>
+                    <div class="progress-step" onclick="goToStep(7)">7:PROJECT</div>
                 </div>
 
                 <!-- Step 1: Phases -->
@@ -355,6 +356,126 @@
                 </div>
 
             </div>
+
+                <!-- Step 7: Project Info -->
+                <div id="step7" class="step-content hidden">
+                    <div class="section-title">> PROJECT INFORMATION</div>
+                    <div class="section-desc">Enter project details for the Design Fee Book</div>
+                    
+                    <!-- Project Information Section -->
+                    <div class="project-info-section">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="project-name">Project Name</label>
+                                <input type="text" id="project-name" placeholder="Enter project name" onchange="saveProjectInfo()">
+                            </div>
+                            <div class="form-group">
+                                <label for="project-location">Project Location</label>
+                                <input type="text" id="project-location" placeholder="City, State or corridor description" onchange="saveProjectInfo()">
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="lead-district">Lead District</label>
+                                <input type="text" id="lead-district" placeholder="e.g., Southeast" onchange="saveProjectInfo()">
+                            </div>
+                            <div class="form-group">
+                                <label for="partnering-districts">Partnering District(s)</label>
+                                <input type="text" id="partnering-districts" placeholder="e.g., Southwest, Central" onchange="saveProjectInfo()">
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="kie-nonsp-percentage">KIE Non-SP Percentage (%)</label>
+                                <input type="number" id="kie-nonsp-percentage" min="0" max="100" placeholder="0" onchange="saveProjectInfo()">
+                            </div>
+                            <div class="form-group">
+                                <label for="keg-entity">KEG Entity</label>
+                                <select id="keg-entity" onchange="saveProjectInfo()">
+                                    <option value="">Select Entity</option>
+                                    <option value="Kimley-Horn">Kimley-Horn</option>
+                                    <option value="KEG JV">KEG JV</option>
+                                    <option value="KEG Partnership">KEG Partnership</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="project-organization">Project Organization</label>
+                            <textarea id="project-organization" rows="4" placeholder="Describe the project team organization, roles, and responsibilities..." onchange="saveProjectInfo()"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Dates Section -->
+                    <div class="section-divider">KEY DATES</div>
+                    <div class="project-info-section">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="technical-proposal-due">Technical Proposal Due</label>
+                                <input type="date" id="technical-proposal-due" onchange="saveProjectInfo()">
+                            </div>
+                            <div class="form-group">
+                                <label for="price-proposal-due">Price Proposal Due</label>
+                                <input type="date" id="price-proposal-due" onchange="saveProjectInfo()">
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="interview-date">Interview Date</label>
+                                <input type="date" id="interview-date" onchange="saveProjectInfo()">
+                            </div>
+                            <div class="form-group">
+                                <label for="contract-award">Contract Award</label>
+                                <input type="date" id="contract-award" onchange="saveProjectInfo()">
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="notice-to-proceed">Notice to Proceed</label>
+                                <input type="date" id="notice-to-proceed" onchange="saveProjectInfo()">
+                            </div>
+                            <div class="form-group">
+                                <label for="stipend-amount">Stipend Amount ($)</label>
+                                <input type="text" id="stipend-amount" placeholder="e.g., 50,000" onchange="saveProjectInfo()">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="owner-contract-type">Owner Contract Type</label>
+                            <select id="owner-contract-type" onchange="saveProjectInfo()">
+                                <option value="">Select Contract Type</option>
+                                <option value="Design-Build">Design-Build</option>
+                                <option value="Design-Bid-Build">Design-Bid-Build</option>
+                                <option value="CMAR">CMAR</option>
+                                <option value="Progressive Design-Build">Progressive Design-Build</option>
+                                <option value="Best Value">Best Value</option>
+                                <option value="Low Bid">Low Bid</option>
+                                <option value="Qualifications Based">Qualifications Based</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- RFP Extracted Info (if available) -->
+                    <div id="rfp-extracted-info" class="rfp-info-section hidden">
+                        <div class="section-divider">RFP EXTRACTED DATA</div>
+                        <div class="rfp-info-note">The following was extracted from the RFP. Review and edit as needed.</div>
+                        <div class="form-group full-width">
+                            <label for="evaluation-criteria">Owner Evaluation Criteria</label>
+                            <textarea id="evaluation-criteria" rows="4" placeholder="Scoring criteria and weights..." onchange="saveProjectInfo()"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="dbe-goals">DBE / SBE Goals</label>
+                            <textarea id="dbe-goals" rows="2" placeholder="e.g., 15% DBE, 5% SBE" onchange="saveProjectInfo()"></textarea>
+                        </div>
+                    </div>
+                </div>
+
         </div>
 
         <!-- Results Section -->
@@ -939,7 +1060,7 @@
                             <div class="card-base-icon" style="font-size: 32px;">📄</div>
                             <div class="report-card-info">
                                 <div class="card-base-title" style="color: #c9a227; font-size: 14px;">Design Fee Book</div>
-                                <div class="card-base-desc">Complete professional report with executive summary, cost estimates, MH analysis, discipline details, schedule, risk register, AI insights, and full WBS</div>
+                                <div class="card-base-desc">KEG Design Fee Review Document: Ch1 Project Overview, Ch2 Commercial Status, Ch3 Team/Scope, Ch4 Schedule, Ch5 Design Fee Estimate, Ch6 Resources, Ch7 Risk Register + Appendices</div>
                             </div>
                         </div>
                     </div>
@@ -1028,6 +1149,28 @@
                         </div>
                         <div id="rfp-result-risks" class="rfp-result-section-body">
                             <div id="rfp-result-risks-list" class="rfp-result-risks-list"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Project Info Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('project-info')">
+                            <span>📋 Project Information & Key Dates</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-project-info" class="rfp-result-section-body">
+                            <div class="rfp-result-text empty">No project info extracted.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Commercial Terms Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('commercial-terms')">
+                            <span>⚖️ Commercial Terms</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-commercial-terms" class="rfp-result-section-body">
+                            <div class="rfp-result-text empty">No commercial terms extracted.</div>
                         </div>
                     </div>
                     

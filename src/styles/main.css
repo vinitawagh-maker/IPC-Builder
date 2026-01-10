@@ -33,6 +33,7 @@
 @import 'features/chat.css';
 @import 'features/insights.css';
 @import 'features/rfp.css';
+@import 'features/project-info.css';
 
 /* Responsive - must be last to override */
 @import 'layout/responsive.css';

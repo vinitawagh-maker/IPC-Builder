@@ -35,7 +35,45 @@ let projectData = {
             // RFP-extracted data for export
             projectScope: '',
             scheduleNotes: '',
-            disciplineScopes: {}
+            disciplineScopes: {},
+            
+            // Chapter 1 - Project Information
+            projectInfo: {
+                projectName: '',
+                projectLocation: '',
+                leadDistrict: '',
+                partneringDistricts: '',
+                kieNonSpPercentage: '',
+                technicalProposalDue: '',
+                priceProposalDue: '',
+                interviewDate: '',
+                contractAward: '',
+                noticeToProceed: '',
+                stipendAmount: '',
+                ownerContractType: '',
+                kegEntity: '',
+                evaluationCriteria: '',
+                dbeGoals: ''
+            },
+            
+            // Chapter 2 - Commercial Status
+            commercialTerms: {
+                client: '',
+                projectValue: '',
+                projectStatus: '',
+                waiverConsequentialDamages: '',
+                limitationOfLiability: '',
+                professionalLiability: '',
+                insuranceRequirements: '',
+                standardOfCare: '',
+                reliedUponInformation: '',
+                thirdPartyDelays: '',
+                thirdPartyContractorImpacts: '',
+                indemnification: ''
+            },
+            
+            // Chapter 3 - Project Organization
+            projectOrganization: ''
         };
 
         let currentStep = 1;
@@ -3011,18 +3049,23 @@ ${reasoning}`;
 
         /**
          * Shows the specified wizard step and updates navigation buttons
-         * @param {number} step - Step number (1-6)
+         * @param {number} step - Step number (1-7)
          */
         function showStep(step) {
             document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(`step${step}`).classList.remove('hidden');
             
             document.getElementById('prev-btn').classList.toggle('hidden', step === 1);
-            document.getElementById('next-btn').classList.toggle('hidden', step === 6);
-            document.getElementById('generate-btn').classList.toggle('hidden', step !== 6);
+            document.getElementById('next-btn').classList.toggle('hidden', step === 7);
+            document.getElementById('generate-btn').classList.toggle('hidden', step !== 7);
+            
+            // Load project info when showing step 7
+            if (step === 7) {
+                loadProjectInfo();
+            }
             
             updateProgress();
-            updateStatus(`STEP ${step}/6`);
+            updateStatus(`STEP ${step}/7`);
         }
 
         /**
@@ -3070,10 +3113,69 @@ ${reasoning}`;
                         projectData.dates[key] = { start: input.value, end: endInput.value };
                     });
                     break;
+                case 7:
+                    saveProjectInfo();
+                    break;
             }
             
             // Trigger autosave after any step save
             triggerAutosave();
+        }
+        
+        /**
+         * Saves project information from Step 7 to projectData
+         */
+        function saveProjectInfo() {
+            projectData.projectInfo.projectName = document.getElementById('project-name')?.value || '';
+            projectData.projectInfo.projectLocation = document.getElementById('project-location')?.value || '';
+            projectData.projectInfo.leadDistrict = document.getElementById('lead-district')?.value || '';
+            projectData.projectInfo.partneringDistricts = document.getElementById('partnering-districts')?.value || '';
+            projectData.projectInfo.kieNonSpPercentage = document.getElementById('kie-nonsp-percentage')?.value || '';
+            projectData.projectInfo.kegEntity = document.getElementById('keg-entity')?.value || '';
+            projectData.projectInfo.technicalProposalDue = document.getElementById('technical-proposal-due')?.value || '';
+            projectData.projectInfo.priceProposalDue = document.getElementById('price-proposal-due')?.value || '';
+            projectData.projectInfo.interviewDate = document.getElementById('interview-date')?.value || '';
+            projectData.projectInfo.contractAward = document.getElementById('contract-award')?.value || '';
+            projectData.projectInfo.noticeToProceed = document.getElementById('notice-to-proceed')?.value || '';
+            projectData.projectInfo.stipendAmount = document.getElementById('stipend-amount')?.value || '';
+            projectData.projectInfo.ownerContractType = document.getElementById('owner-contract-type')?.value || '';
+            projectData.projectInfo.evaluationCriteria = document.getElementById('evaluation-criteria')?.value || '';
+            projectData.projectInfo.dbeGoals = document.getElementById('dbe-goals')?.value || '';
+            projectData.projectOrganization = document.getElementById('project-organization')?.value || '';
+            
+            triggerAutosave();
+        }
+        
+        /**
+         * Loads project information into Step 7 form fields
+         */
+        function loadProjectInfo() {
+            const info = projectData.projectInfo || {};
+            
+            if (document.getElementById('project-name')) {
+                document.getElementById('project-name').value = info.projectName || '';
+                document.getElementById('project-location').value = info.projectLocation || '';
+                document.getElementById('lead-district').value = info.leadDistrict || '';
+                document.getElementById('partnering-districts').value = info.partneringDistricts || '';
+                document.getElementById('kie-nonsp-percentage').value = info.kieNonSpPercentage || '';
+                document.getElementById('keg-entity').value = info.kegEntity || '';
+                document.getElementById('technical-proposal-due').value = info.technicalProposalDue || '';
+                document.getElementById('price-proposal-due').value = info.priceProposalDue || '';
+                document.getElementById('interview-date').value = info.interviewDate || '';
+                document.getElementById('contract-award').value = info.contractAward || '';
+                document.getElementById('notice-to-proceed').value = info.noticeToProceed || '';
+                document.getElementById('stipend-amount').value = info.stipendAmount || '';
+                document.getElementById('owner-contract-type').value = info.ownerContractType || '';
+                document.getElementById('evaluation-criteria').value = info.evaluationCriteria || '';
+                document.getElementById('dbe-goals').value = info.dbeGoals || '';
+                document.getElementById('project-organization').value = projectData.projectOrganization || '';
+            }
+            
+            // Show RFP extracted section if we have RFP data
+            const rfpSection = document.getElementById('rfp-extracted-info');
+            if (rfpSection && (info.evaluationCriteria || info.dbeGoals)) {
+                rfpSection.classList.remove('hidden');
+            }
         }
 
         /**
@@ -3111,7 +3213,7 @@ ${reasoning}`;
             if (!validate()) return;
             saveCurrentStep();
             
-            if (currentStep < 6) {
+            if (currentStep < 7) {
                 currentStep++;
                 showStep(currentStep);
                 
@@ -3123,6 +3225,7 @@ ${reasoning}`;
                     }
                 }
                 if (currentStep === 5) buildClaimingTable();
+                if (currentStep === 7) loadProjectInfo();
                 if (currentStep === 6) buildDatesTable();
             }
         }
@@ -3135,10 +3238,10 @@ ${reasoning}`;
             const resultsVisible = !document.getElementById('results-section').classList.contains('hidden');
             
             if (resultsVisible) {
-                // Return from results to wizard (step 6)
+                // Return from results to wizard (step 7)
                 editWBS();
-                currentStep = 6;
-                showStep(6);
+                currentStep = 7;
+                showStep(7);
                 return;
             }
             
@@ -8223,13 +8326,40 @@ Return ONLY the JSON, no markdown formatting.`;
                 projectCostM: 0,
                 designDurationMonths: 20,
                 projectType: 'highway',
-                complexity: 'Medium'
+                complexity: 'Medium',
+                // New fields for Chapter 1
+                projectName: '',
+                projectLocation: '',
+                technicalProposalDue: '',
+                priceProposalDue: '',
+                interviewDate: '',
+                contractAward: '',
+                noticeToProceed: '',
+                stipendAmount: '',
+                ownerContractType: '',
+                evaluationCriteria: '',
+                dbeGoals: ''
             },
             // AI reasoning for project info (cost, schedule)
             projectInfoReasoning: {
                 projectCostReasoning: '',
                 scheduleReasoning: ''
             },
+            // Chapter 2 - Commercial Terms (AI extracted)
+            commercialTerms: {
+                client: '',
+                waiverConsequentialDamages: '',
+                limitationOfLiability: '',
+                professionalLiability: '',
+                insuranceRequirements: '',
+                standardOfCare: '',
+                reliedUponInformation: '',
+                thirdPartyDelays: '',
+                thirdPartyContractorImpacts: '',
+                indemnification: ''
+            },
+            // Confidence scores for commercial terms
+            commercialTermsConfidence: {},
             usageStats: {
                 totalPromptTokens: 0,
                 totalCompletionTokens: 0,
@@ -8537,46 +8667,60 @@ Return ONLY the JSON, no markdown formatting.`;
          * Analyzes a single text chunk with OpenAI
          */
         async function analyzeChunk(apiKey, chunkText, chunkIndex, totalChunks) {
-            const systemPrompt = `You are an expert transportation infrastructure cost estimator. Extract WBS info and ESTIMATE QUANTITIES from this engineering RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
-{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","risks":[],"quantities":{},"quantityReasoning":{},"projectInfo":{},"projectInfoReasoning":{},"scheduleReasoning":"","confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low","quantities":"high/medium/low"},"notes":""}
+            const systemPrompt = `You are an expert transportation infrastructure cost estimator and contract analyst. Extract WBS info, quantities, project details, and commercial terms from this RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
+{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","risks":[],"quantities":{},"quantityReasoning":{},"projectInfo":{},"projectInfoReasoning":{},"commercialTerms":{},"commercialTermsConfidence":{},"scheduleReasoning":"","confidence":{},"notes":""}
 
 **PHASES**: Project stages (e.g. Base Design, ESDC, TSCD, Preliminary, Final, As-Builts, Closeout, Phase 1/2/3)
 **DISCIPLINES**: Use EXACT names: Roadway, Drainage, MOT, Traffic, Utilities, Retaining Walls, Noise Walls, Bridge Structures, Misc Structures, Geotechnical, Systems, Track, Environmental, Digital Delivery, ESDC, TSCD
 **DISCIPLINE SCOPES**: {"Discipline":"scope description"} - Extract specific tasks/deliverables per discipline
 **PACKAGES**: Milestones (e.g. Preliminary, Interim, Final, RFC, As-Built, 30%, 60%, 90%)
 **SCOPE**: Project location, type, major work elements, requirements
-**SCHEDULE**: Timeline info, durations, milestones, deadlines. Extract design duration in months if mentioned.
-**RISKS**: Array of risk objects: [{"category":"Schedule|Budget|Technical|Scope|Coordination","severity":"High|Medium|Low","description":"specific risk","mitigation":"suggested mitigation"}]
+**SCHEDULE**: Timeline info, durations, milestones, deadlines
+**RISKS**: Array: [{"category":"Schedule|Budget|Technical|Scope|Coordination|Legal|Commercial","severity":"High|Medium|Low","description":"specific risk","mitigation":"suggested mitigation"}]
 
-**QUANTITIES - CRITICAL**: You MUST estimate quantities even if not explicitly stated. Use engineering judgment:
-- roadwayLengthLF: Convert miles to LF (1 mile=5280 LF). Estimate from project limits/corridor. Min 1000 LF for any roadway project.
-- projectAreaAC: Estimate as roadwayLengthLF × 150ft ROW ÷ 43560. Typical: 0.5-5 AC per 1000 LF.
-- wallAreaSF: If retaining walls/grade separations mentioned, estimate height(8-20ft) × length.
-- noiseWallAreaSF: If noise walls mentioned or residential areas, estimate 15ft height × length.
-- bridgeDeckAreaSF: Per bridge: width(40-80ft) × length(100-500ft). Typical bridge = 4,000-20,000 SF.
-- bridgeCount: Count bridges, overpasses, underpasses, grade separations.
-- structureCount: Sum of bridges + major culverts + walls + other structures.
-- utilityRelocations: Estimate 5-20 urban, 2-10 rural. More if utility conflicts mentioned.
-- permitCount: Estimate 3-10 based on environmental mentions, water crossings, wetlands.
-- trackLengthTF: For transit, convert miles to track feet. Double-track = 2× length.
+**QUANTITIES** (estimate if not explicit):
+- roadwayLengthLF, projectAreaAC, wallAreaSF, noiseWallAreaSF, bridgeDeckAreaSF
+- bridgeCount, structureCount, utilityRelocations, permitCount, trackLengthTF
+**QUANTITY REASONING**: {"key": "explanation"} for each quantity
 
-**QUANTITY REASONING - REQUIRED**: For EACH quantity you estimate, provide a brief explanation in quantityReasoning object with same keys:
-- Example: {"roadwayLengthLF": "RFP mentions 2.5 mile corridor from MP 12.5 to MP 15.0 = 13,200 LF", "bridgeDeckAreaSF": "3 bridges mentioned: 2 overpasses (60ft × 200ft each = 24,000 SF) + 1 underpass (50ft × 150ft = 7,500 SF) = 31,500 SF total"}
-
-**PROJECT INFO - REQUIRED**: You MUST provide estimates:
-- projectCostM: Estimate construction cost in $millions using these benchmarks:
-  * Resurfacing: $1-5M/mile | Urban arterial: $10-30M/mile | Highway widening: $20-50M/mile
-  * Interchange: $30-100M each | Bridge: $500-2000/SF deck | Light rail: $100-250M/mile
-- designDurationMonths: Based on size/complexity (12-48 months typical). Small=12-18, Medium=18-30, Large=30-48.
+**PROJECT INFO - REQUIRED**:
+- projectName: Official project name/title
+- projectLocation: City, county, state, or corridor description
+- projectCostM: Construction cost in $millions (estimate using: Resurfacing $1-5M/mile, Highway widening $20-50M/mile, Bridge $500-2000/SF)
+- designDurationMonths: 12-48 months based on complexity
 - projectType: "highway"|"transit"|"bridge"|"utility"
-- complexity: "Low"|"Medium"|"High" based on urban/rural, coordination, environmental constraints
+- complexity: "Low"|"Medium"|"High"
+- technicalProposalDue: Date string if found (e.g., "March 15, 2026")
+- priceProposalDue: Date string if found
+- interviewDate: Date string if found
+- contractAward: Expected award date if found
+- noticeToProceed: NTP date if found
+- stipendAmount: Stipend amount in dollars if mentioned (e.g., "$50,000")
+- ownerContractType: "Design-Build"|"Design-Bid-Build"|"CMAR"|"Progressive Design-Build"|"Best Value"|"Low Bid"|"Qualifications Based"
+- evaluationCriteria: Scoring criteria summary (e.g., "Technical 60%, Price 40%" or list of evaluation factors)
+- dbeGoals: DBE/SBE/MBE goals (e.g., "15% DBE goal")
 
-**PROJECT INFO REASONING - REQUIRED**: Provide reasoning in projectInfoReasoning object:
-- projectCostReasoning: Explain how you calculated the construction cost estimate (e.g., "2.5 miles highway widening @ $35M/mile = $87.5M + 3 bridges @ $15M each = $45M, total ~$130M")
-- scheduleReasoning: Explain design duration estimate (e.g., "Large complex project with multiple bridges and utility conflicts, estimated 36 months for full design")
+**PROJECT INFO REASONING**: {"projectCostReasoning": "...", "scheduleReasoning": "..."}
 
-IMPORTANT: NEVER return 0 for quantities if that discipline applies to the project. Always make your best engineering estimate.
-Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estimated from project type`;
+**COMMERCIAL TERMS - EXTRACT FROM CONTRACT/LEGAL SECTIONS**:
+- client: Owner/agency name
+- waiverConsequentialDamages: "Yes"|"No"|"Partial"|"Not specified" + brief explanation
+- limitationOfLiability: Cap amount or "Unlimited" or "Not specified" + explanation
+- professionalLiability: Required coverage amount (e.g., "$2M per occurrence") or "Not specified"
+- insuranceRequirements: Summary of key insurance requirements
+- standardOfCare: Any modifications to standard professional standard of care
+- reliedUponInformation: What information owner is providing that consultant can rely upon
+- thirdPartyDelays: How delays by third parties are handled
+- thirdPartyContractorImpacts: Coordination requirements with other contractors
+- indemnification: "Mutual"|"One-way to owner"|"Broad form"|"Limited" + key terms
+
+**COMMERCIAL TERMS CONFIDENCE**: {"fieldName": "high|medium|low"} for each commercial term extracted
+
+IMPORTANT: 
+- NEVER return 0 for quantities if that discipline applies
+- Extract ALL dates mentioned (proposal due, interview, award, NTP)
+- Look for contract terms in legal/terms sections
+- Confidence: "high"=explicit in RFP, "medium"=inferred, "low"=estimated`;
 
             // Retry logic with exponential backoff for network errors (HTTP/2 protocol errors)
             let response = null;
@@ -8593,12 +8737,12 @@ Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estima
                             'Authorization': `Bearer ${apiKey}`
                         },
                         body: JSON.stringify({
-                            model: 'gpt-5.2',
+                            model: 'gpt-5.2-thinking',
                             messages: [
                                 { role: 'system', content: systemPrompt },
                                 { role: 'user', content: `Analyze this RFP document (chunk ${chunkIndex + 1} of ${totalChunks}). Extract WBS information AND estimate all quantities and project costs based on the scope described. Even if quantities aren't explicitly stated, use your engineering expertise to provide reasonable estimates for man-hour estimation purposes:\n\n${chunkText}` }
                             ],
-                            max_completion_tokens: 32000,
+                            max_completion_tokens: 64000,
                             temperature: 0.3
                         })
                     });
@@ -8678,7 +8822,7 @@ Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estima
             return {
                 data: parsedData,
                 usage: usage,
-                model: data.model || 'gpt-5.2'
+                model: data.model || 'gpt-5.2-thinking'
             };
         }
 
@@ -8826,6 +8970,15 @@ Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estima
                     if (result.projectInfo.complexity && result.projectInfo.complexity !== 'Medium') {
                         merged.projectInfo.complexity = result.projectInfo.complexity;
                     }
+                    // Merge new project info fields - take first non-empty value
+                    const newFields = ['projectName', 'projectLocation', 'technicalProposalDue', 'priceProposalDue', 
+                                      'interviewDate', 'contractAward', 'noticeToProceed', 'stipendAmount', 
+                                      'ownerContractType', 'evaluationCriteria', 'dbeGoals'];
+                    newFields.forEach(field => {
+                        if (result.projectInfo[field] && !merged.projectInfo[field]) {
+                            merged.projectInfo[field] = result.projectInfo[field];
+                        }
+                    });
                 }
             });
             
@@ -8859,7 +9012,7 @@ Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estima
             const localMerged = localMergeSimpleFields(chunkResults);
             console.log('Local merge complete:', localMerged);
 
-            // Step 2: Use AI to merge only complex fields (disciplineScopes, scope, schedule, confidence, notes)
+            // Step 2: Use AI to merge complex fields (disciplineScopes, scope, schedule, confidence, notes, commercialTerms)
             // Extract ONLY the complex fields to reduce payload size significantly
             const complexFieldsOnly = chunkResults.map((r, idx) => {
                 const data = r.data || r;
@@ -8869,18 +9022,29 @@ Confidence: "high"=explicit in RFP, "medium"=inferred from context, "low"=estima
                     scope: data.scope || '',
                     schedule: data.schedule || '',
                     confidence: data.confidence || {},
-                    notes: data.notes || ''
+                    notes: data.notes || '',
+                    commercialTerms: data.commercialTerms || {},
+                    commercialTermsConfidence: data.commercialTermsConfidence || {},
+                    projectInfo: {
+                        projectName: data.projectInfo?.projectName || '',
+                        projectLocation: data.projectInfo?.projectLocation || '',
+                        evaluationCriteria: data.projectInfo?.evaluationCriteria || '',
+                        dbeGoals: data.projectInfo?.dbeGoals || ''
+                    }
                 };
             });
             
             const mergePrompt = `Merge ${chunkResults.length} WBS chunk analyses (complex fields only). Return raw JSON:
-{"disciplineScopes":{},"scope":"","schedule":"","confidence":{"phases":"high/medium/low","disciplines":"high/medium/low","packages":"high/medium/low","budgets":"low","scope":"high/medium/low","schedule":"high/medium/low","quantities":"high/medium/low"},"notes":""}
+{"disciplineScopes":{},"scope":"","schedule":"","commercialTerms":{},"commercialTermsConfidence":{},"projectInfo":{"projectName":"","projectLocation":"","evaluationCriteria":"","dbeGoals":""},"confidence":{},"notes":""}
 
 Merge rules:
 - disciplineScopes: Combine scope descriptions per discipline from all chunks
 - scope: Comprehensive project summary combining all chunks
 - schedule: Combined timeline info from all chunks
-- confidence: Use highest confidence level found across chunks (high > medium > low). Confidence for quantities should reflect how explicitly quantities were stated in the RFP.
+- commercialTerms: Merge all commercial/legal terms found across chunks. For each field, use the most specific/complete value found.
+- commercialTermsConfidence: Use highest confidence level found for each commercial term
+- projectInfo: Use first non-empty value found for projectName, projectLocation. Combine evaluationCriteria and dbeGoals if found in multiple chunks.
+- confidence: Use highest confidence level found across chunks (high > medium > low)
 - notes: Combine all notes
 
 Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
@@ -8900,11 +9064,11 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                             'Authorization': `Bearer ${apiKey}`
                         },
                         body: JSON.stringify({
-                            model: 'gpt-5.2',
+                            model: 'gpt-5.2-thinking',
                             messages: [
                                 { role: 'user', content: mergePrompt }
                             ],
-                            max_completion_tokens: 32000,
+                            max_completion_tokens: 64000,
                             temperature: 0.2
                         })
                     });
@@ -8976,6 +9140,15 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             }
 
             // Step 3: Combine local merge (simple arrays) with AI merge (complex fields)
+            // Merge projectInfo from both local and AI merge
+            const mergedProjectInfo = {
+                ...localMerged.projectInfo,
+                projectName: aiMerged.projectInfo?.projectName || localMerged.projectInfo?.projectName || '',
+                projectLocation: aiMerged.projectInfo?.projectLocation || localMerged.projectInfo?.projectLocation || '',
+                evaluationCriteria: aiMerged.projectInfo?.evaluationCriteria || localMerged.projectInfo?.evaluationCriteria || '',
+                dbeGoals: aiMerged.projectInfo?.dbeGoals || localMerged.projectInfo?.dbeGoals || ''
+            };
+            
             return {
                 data: {
                     phases: localMerged.phases,
@@ -8984,15 +9157,17 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     budgets: localMerged.budgets,
                     risks: localMerged.risks || [],
                     quantities: localMerged.quantities || {},
-                    projectInfo: localMerged.projectInfo || {},
+                    projectInfo: mergedProjectInfo,
                     disciplineScopes: aiMerged.disciplineScopes || {},
                     scope: aiMerged.scope || '',
                     schedule: aiMerged.schedule || '',
                     confidence: aiMerged.confidence || {},
-                    notes: aiMerged.notes || ''
+                    notes: aiMerged.notes || '',
+                    commercialTerms: aiMerged.commercialTerms || {},
+                    commercialTermsConfidence: aiMerged.commercialTermsConfidence || {}
                 },
                 usage: usage,
-                model: data.model || 'gpt-5.2'
+                model: data.model || 'gpt-5.2-thinking'
             };
         }
 
@@ -9147,7 +9322,7 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     totalTokens: 0,
                     apiCalls: 0,
                     estimatedCost: 0,
-                    model: 'gpt-5.2',
+                    model: 'gpt-5.2-thinking',
                     startTime: Date.now(),
                     endTime: null
                 };
@@ -9616,6 +9791,26 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             projectData.scheduleNotes = scheduleStr || '';
             projectData.disciplineScopes = disciplineScopes;
             
+            // Transfer extracted project info to projectData
+            if (rfpState.projectInfo) {
+                projectData.projectInfo.projectName = rfpState.projectInfo.projectName || projectData.projectInfo.projectName;
+                projectData.projectInfo.projectLocation = rfpState.projectInfo.projectLocation || projectData.projectInfo.projectLocation;
+                projectData.projectInfo.technicalProposalDue = rfpState.projectInfo.technicalProposalDue || '';
+                projectData.projectInfo.priceProposalDue = rfpState.projectInfo.priceProposalDue || '';
+                projectData.projectInfo.interviewDate = rfpState.projectInfo.interviewDate || '';
+                projectData.projectInfo.contractAward = rfpState.projectInfo.contractAward || '';
+                projectData.projectInfo.noticeToProceed = rfpState.projectInfo.noticeToProceed || '';
+                projectData.projectInfo.stipendAmount = rfpState.projectInfo.stipendAmount || '';
+                projectData.projectInfo.ownerContractType = rfpState.projectInfo.ownerContractType || '';
+                projectData.projectInfo.evaluationCriteria = rfpState.projectInfo.evaluationCriteria || '';
+                projectData.projectInfo.dbeGoals = rfpState.projectInfo.dbeGoals || '';
+            }
+            
+            // Transfer extracted commercial terms to projectData
+            if (rfpState.commercialTerms) {
+                projectData.commercialTerms = { ...projectData.commercialTerms, ...rfpState.commercialTerms };
+            }
+            
             // Set all budgets to 0 - user will set via Cost Estimator in Step 4
             projectData.budgets = {};
             disciplines.forEach(disc => {
@@ -9783,6 +9978,12 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             rfpState.projectInfo = projectInfo;
             rfpState.extractedData.quantities = quantities;
             rfpState.extractedData.projectInfo = projectInfo;
+            
+            // Also store commercial terms if available
+            if (rfpState.extractedData.commercialTerms) {
+                rfpState.commercialTerms = rfpState.extractedData.commercialTerms;
+                rfpState.commercialTermsConfidence = rfpState.extractedData.commercialTermsConfidence || {};
+            }
             
             // Apply project cost to BOTH MH Estimator and Budget Calculator
             if (projectInfo.projectCostM && projectInfo.projectCostM > 0) {
@@ -10193,8 +10394,8 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         // ============================================
 
         /**
-         * Generates the Design Fee Book - a comprehensive professional report
-         * Black and white theme optimized for printing
+         * Generates the Design Fee Book - a comprehensive 7-chapter professional report
+         * Chapter structure per KEG Design Fee Book standards
          */
         function generateDesignFeeBook() {
             const today = new Date().toLocaleDateString();
@@ -10211,6 +10412,19 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             const rfpData = getRfpAnalysisData();
             const wbsCount = projectData.phases.length * projectData.disciplines.length * projectData.packages.length;
             
+            // Get project info from both projectData and rfpState
+            const projectInfo = {
+                ...projectData.projectInfo,
+                ...(rfpState.projectInfo || {})
+            };
+            
+            // Get commercial terms
+            const commercialTerms = {
+                ...projectData.commercialTerms,
+                ...(rfpState.commercialTerms || {})
+            };
+            const commercialTermsConfidence = rfpState.commercialTermsConfidence || {};
+            
             // Get quantity reasoning for MH backup
             const quantityReasoning = rfpState?.quantityReasoning || {};
             
@@ -10224,6 +10438,23 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                     console.error('Could not capture chart:', e);
                 }
             }
+            
+            // Helper function for formatting dates
+            const formatDateStr = (dateStr) => {
+                if (!dateStr) return 'TBD';
+                try {
+                    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                } catch (e) {
+                    return dateStr;
+                }
+            };
+            
+            // Helper for commercial term confidence badge
+            const getConfidenceBadge = (field) => {
+                const level = commercialTermsConfidence[field] || 'low';
+                const colors = { high: '#228B22', medium: '#B8860B', low: '#666' };
+                return `<span style="font-size: 7pt; color: ${colors[level]}; margin-left: 5px;">[${level}]</span>`;
+            };
             
             // Build the report HTML
             let html = `
@@ -10561,7 +10792,8 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     <!-- Cover Page -->
     <div class="cover-page">
         <div class="cover-title">Design Fee Book</div>
-        <div class="cover-subtitle">Project Cost Estimate Documentation</div>
+        <div class="cover-subtitle">${projectInfo.projectName || 'Project Cost Estimate Documentation'}</div>
+        ${projectInfo.projectLocation ? `<div style="font-size: 11pt; margin-bottom: 30px;">${projectInfo.projectLocation}</div>` : ''}
         <div class="cover-metrics">
             <div class="cover-metric">
                 <div class="cover-metric-value">${formatCurrency(totalBudget)}</div>
@@ -10580,96 +10812,248 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 <div class="cover-metric-label">WBS Elements</div>
             </div>
         </div>
+        <div style="margin-top: 40px; font-size: 9pt;">
+            <strong>Purpose:</strong> This Review Document provides a comprehensive review of the design fee and risk evaluations
+            to inform the overall project estimate on the design components for inclusion within the final Estimate Review.
+        </div>
         <div class="cover-date">${todayFull}</div>
     </div>
 
-    <!-- Chapter 1: Executive Summary -->
+    <!-- Chapter 1.0: Project Overview -->
     <div class="page-break"></div>
     <div class="page">
         <div class="chapter-header">
-            <div class="chapter-number">Chapter 1</div>
-            <div class="chapter-title">Executive Summary</div>
+            <div class="chapter-number">Chapter 1.0</div>
+            <div class="chapter-title">Project Overview</div>
         </div>
         
-        <div class="kpi-grid no-break">
-            <div class="kpi-card">
-                <div class="kpi-value">${formatCurrency(totalBudget)}</div>
-                <div class="kpi-label">Total Design Fee</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-value">${projectData.disciplines.length}</div>
-                <div class="kpi-label">Disciplines</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-value">${projectData.phases.length}</div>
-                <div class="kpi-label">Phases</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-value">${projectData.packages.length}</div>
-                <div class="kpi-label">Packages</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-value">${wbsCount}</div>
-                <div class="kpi-label">WBS Elements</div>
-            </div>
-            ${rfpData.hasRfpData && rfpData.risks.length > 0 ? `
-            <div class="kpi-card">
-                <div class="kpi-value">${rfpData.risks.length}</div>
-                <div class="kpi-label">Identified Risks</div>
-            </div>` : ''}
-        </div>
-`;
-
-            // Project Scope
-            const scope = rfpData.hasRfpData ? rfpData.scope : projectData.projectScope;
-            if (scope) {
-                html += `
-        <div class="info-box no-break">
-            <h3>Project Scope</h3>
-            <p>${scope.replace(/\n/g, '<br>')}</p>
-        </div>
-`;
-            }
-
-            // Cost Estimate Basis
-            if (assumptions.isCalculated) {
-                html += `
-        <div class="info-box no-break">
-            <h3>Cost Estimate Basis</h3>
-            <table>
-                <tr><td><strong>Construction Cost:</strong></td><td class="text-right">${formatCurrency(assumptions.constructionCost)}</td></tr>
-                <tr><td><strong>Design Fee Percentage:</strong></td><td class="text-right">${assumptions.designFeePercent}%</td></tr>
-                <tr><td><strong>Total Design Fee:</strong></td><td class="text-right">${formatCurrency(assumptions.totalDesignFee)}</td></tr>
-                <tr><td><strong>Project Type:</strong></td><td class="text-right">${assumptions.projectType}</td></tr>
-            </table>
-        </div>
-`;
-            }
-
-            // Project Structure
-            html += `
-        <h2>Project Structure</h2>
+        <h2>1.1 Project Information</h2>
         <table>
-            <tr>
-                <th style="width: 50%">Project Phases</th>
-                <th style="width: 50%">Deliverable Packages</th>
-            </tr>
-            <tr>
-                <td>${projectData.phases.map((p, i) => `${i+1}. ${p}`).join('<br>')}</td>
-                <td>${projectData.packages.map((p, i) => `${i+1}. ${p}`).join('<br>')}</td>
-            </tr>
+            <tbody>
+                <tr><td style="width: 200px;"><strong>Project Name:</strong></td><td>${projectInfo.projectName || 'TBD'}</td></tr>
+                <tr><td><strong>Project Location:</strong></td><td>${projectInfo.projectLocation || 'TBD'}</td></tr>
+                <tr><td><strong>Lead District:</strong></td><td>${projectInfo.leadDistrict || 'TBD'}</td></tr>
+                <tr><td><strong>Partnering District(s):</strong></td><td>${projectInfo.partneringDistricts || 'N/A'}</td></tr>
+                <tr><td><strong>KIE Non-SP Percentage:</strong></td><td>${projectInfo.kieNonSpPercentage ? projectInfo.kieNonSpPercentage + '%' : 'TBD'}</td></tr>
+                <tr><td><strong>KEG Entity:</strong></td><td>${projectInfo.kegEntity || 'TBD'}</td></tr>
+                <tr><td><strong>Owner Contract Type:</strong></td><td>${projectInfo.ownerContractType || 'TBD'}</td></tr>
+            </tbody>
         </table>
+        
+        <h3>Key Dates</h3>
+        <table>
+            <tbody>
+                <tr><td style="width: 200px;"><strong>Technical Proposal Due:</strong></td><td>${formatDateStr(projectInfo.technicalProposalDue)}</td></tr>
+                <tr><td><strong>Price Proposal Due:</strong></td><td>${formatDateStr(projectInfo.priceProposalDue)}</td></tr>
+                <tr><td><strong>Interview:</strong></td><td>${formatDateStr(projectInfo.interviewDate)}</td></tr>
+                <tr><td><strong>Contract Award:</strong></td><td>${formatDateStr(projectInfo.contractAward)}</td></tr>
+                <tr><td><strong>Notice to Proceed:</strong></td><td>${formatDateStr(projectInfo.noticeToProceed)}</td></tr>
+                <tr><td><strong>Stipend Amount:</strong></td><td>${projectInfo.stipendAmount ? '$' + projectInfo.stipendAmount : 'N/A'}</td></tr>
+            </tbody>
+        </table>
+        
+        ${projectInfo.evaluationCriteria ? `
+        <h2>1.2 Owner Evaluation Criteria</h2>
+        <div class="info-box">
+            <p>${projectInfo.evaluationCriteria.replace(/\n/g, '<br>')}</p>
+        </div>
+        ` : ''}
+        
+        ${projectInfo.dbeGoals ? `
+        <h2>1.3 DBE / SBE Goals from Prime Contract</h2>
+        <div class="info-box">
+            <p>${projectInfo.dbeGoals.replace(/\n/g, '<br>')}</p>
+        </div>
+        ` : ''}
     </div>
 `;
 
-            // Chapter 2: RFP Analysis (if available)
+            // Chapter 2.0: Commercial Status
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="chapter-header">
+            <div class="chapter-number">Chapter 2.0</div>
+            <div class="chapter-title">Commercial Status</div>
+        </div>
+        
+        <h2>2.1 Owner Commercial Key Terms Comparison</h2>
+        <table>
+            <tbody>
+                <tr><td style="width: 220px;"><strong>Project Name:</strong></td><td>${projectInfo.projectName || 'TBD'}</td></tr>
+                <tr><td><strong>Client:</strong></td><td>${commercialTerms.client || 'TBD'}${getConfidenceBadge('client')}</td></tr>
+                <tr><td><strong>Project Value:</strong></td><td>${commercialTerms.projectValue || (rfpData.projectInfo?.projectCostM ? '$' + rfpData.projectInfo.projectCostM + 'M' : 'TBD')}</td></tr>
+                <tr><td><strong>Project Status:</strong></td><td>${commercialTerms.projectStatus || 'Pursuit'}</td></tr>
+            </tbody>
+        </table>
+        
+        <h3>Contract Terms</h3>
+        <table>
+            <tbody>
+                <tr><td style="width: 220px;"><strong>Waiver of Consequential Damages:</strong></td><td>${commercialTerms.waiverConsequentialDamages || 'Not specified'}${getConfidenceBadge('waiverConsequentialDamages')}</td></tr>
+                <tr><td><strong>Limitation of Liability:</strong></td><td>${commercialTerms.limitationOfLiability || 'Not specified'}${getConfidenceBadge('limitationOfLiability')}</td></tr>
+                <tr><td><strong>Professional Liability:</strong></td><td>${commercialTerms.professionalLiability || 'Not specified'}${getConfidenceBadge('professionalLiability')}</td></tr>
+                <tr><td><strong>Insurance Requirements:</strong></td><td>${commercialTerms.insuranceRequirements || 'Not specified'}${getConfidenceBadge('insuranceRequirements')}</td></tr>
+                <tr><td><strong>Standard of Care:</strong></td><td>${commercialTerms.standardOfCare || 'Not specified'}${getConfidenceBadge('standardOfCare')}</td></tr>
+                <tr><td><strong>Relied Upon Information:</strong></td><td>${commercialTerms.reliedUponInformation || 'Not specified'}${getConfidenceBadge('reliedUponInformation')}</td></tr>
+                <tr><td><strong>3rd Party Delays & Impacts:</strong></td><td>${commercialTerms.thirdPartyDelays || 'Not specified'}${getConfidenceBadge('thirdPartyDelays')}</td></tr>
+                <tr><td><strong>Impacts by 3rd Party Contractors:</strong></td><td>${commercialTerms.thirdPartyContractorImpacts || 'Not specified'}${getConfidenceBadge('thirdPartyContractorImpacts')}</td></tr>
+                <tr><td><strong>Indemnification:</strong></td><td>${commercialTerms.indemnification || 'Not specified'}${getConfidenceBadge('indemnification')}</td></tr>
+            </tbody>
+        </table>
+        
+        <h2>2.2 Design Subcontract Tracking</h2>
+        <div class="info-box">
+            <p><em>To be developed during contract negotiation phase.</em></p>
+        </div>
+    </div>
+`;
+
+            // Chapter 3.0: Team Organization and Scope
+            const scope = rfpData.hasRfpData ? rfpData.scope : projectData.projectScope;
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="chapter-header">
+            <div class="chapter-number">Chapter 3.0</div>
+            <div class="chapter-title">Team Organization and Scope</div>
+        </div>
+        
+        <h2>3.1 Design Scope of Work</h2>
+        ${scope ? `
+        <div class="info-box">
+            <p>${scope.replace(/\n/g, '<br>')}</p>
+        </div>
+        ` : `
+        <div class="info-box">
+            <p><em>Design scope to be extracted from RFP or entered manually.</em></p>
+        </div>
+        `}
+        
+        <h3>Project Phases</h3>
+        <table>
+            <tbody>
+                ${projectData.phases.map((p, i) => `<tr><td style="width: 40px;">${i+1}.</td><td>${p}</td></tr>`).join('')}
+            </tbody>
+        </table>
+        
+        <h3>Deliverable Packages</h3>
+        <table>
+            <tbody>
+                ${projectData.packages.map((p, i) => `<tr><td style="width: 40px;">${i+1}.</td><td>${p}</td></tr>`).join('')}
+            </tbody>
+        </table>
+        
+        <h2>3.2 Project Organization</h2>
+        ${projectData.projectOrganization ? `
+        <div class="info-box">
+            <p>${projectData.projectOrganization.replace(/\n/g, '<br>')}</p>
+        </div>
+        ` : `
+        <div class="info-box">
+            <p><em>Project organization to be defined in Step 7 of the wizard.</em></p>
+        </div>
+        `}
+    </div>
+`;
+
+            // Chapter 4.0: Schedule
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="chapter-header">
+            <div class="chapter-number">Chapter 4.0</div>
+            <div class="chapter-title">Schedule</div>
+        </div>
+        
+        <h2>4.1 Summary Level Design Package Schedule</h2>
+        <div class="kpi-grid no-break">
+            <div class="kpi-card">
+                <div class="kpi-value">${scheduleData.totalMonths || (rfpData.projectInfo?.designDurationMonths || 'TBD')}</div>
+                <div class="kpi-label">Total Months</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${scheduleData.startDate || 'TBD'}</div>
+                <div class="kpi-label">Start Date</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${scheduleData.endDate || 'TBD'}</div>
+                <div class="kpi-label">End Date</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${scheduleData.totalDays || 'TBD'}</div>
+                <div class="kpi-label">Total Days</div>
+            </div>
+        </div>
+`;
+
+            // Schedule notes/rationale
+            const scheduleNotes = projectData.scheduleNotes || rfpData.schedule;
+            if (scheduleNotes) {
+                html += `
+        <div class="info-box">
+            <h3>AI Schedule Rationale</h3>
+            <p>${scheduleNotes.replace(/\n/g, '<br>')}</p>
+        </div>
+`;
+            }
+
+            // Schedule by package table
+            html += `
+        <h2>4.2 Typical Fragnet by Package</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Discipline</th>
+                    <th>Package</th>
+                    <th class="text-center">Claim %</th>
+                    <th>Start</th>
+                    <th>End</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+            projectData.disciplines.forEach(disc => {
+                projectData.packages.forEach((pkg, idx) => {
+                    const key = `${disc}-${pkg}`;
+                    const claimPct = projectData.claiming[key] || 0;
+                    const dates = projectData.dates[key] || { start: '—', end: '—' };
+                    html += `
+                <tr>
+                    ${idx === 0 ? `<td rowspan="${projectData.packages.length}"><strong>${disc}</strong></td>` : ''}
+                    <td>${pkg}</td>
+                    <td class="text-center">${claimPct}%</td>
+                    <td>${dates.start || '—'}</td>
+                    <td>${dates.end || '—'}</td>
+                </tr>`;
+                });
+            });
+            html += `
+            </tbody>
+        </table>
+`;
+
+            // Performance chart if available
+            if (performanceChartImg) {
+                html += `
+        <div class="chart-container no-break">
+            <h3>Cost Performance Chart</h3>
+            <img src="${performanceChartImg}" alt="Performance Chart" style="max-width: 100%;">
+        </div>
+`;
+            }
+            html += `
+    </div>
+`;
+
+            // Chapter 5.0: Design Fee Estimate - if RFP data available, show RFP analysis first
             if (rfpData.hasRfpData) {
                 html += `
     <div class="page-break"></div>
     <div class="page">
         <div class="chapter-header">
-            <div class="chapter-number">Chapter 2</div>
-            <div class="chapter-title">RFP Analysis Summary</div>
+            <div class="chapter-number">Chapter 5.0</div>
+            <div class="chapter-title">Design Fee Estimate</div>
         </div>
         
         <div class="kpi-grid no-break">
@@ -10678,11 +11062,10 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 <div class="kpi-value">$${rfpData.projectInfo.projectCostM}M</div>
                 <div class="kpi-label">Est. Construction Cost</div>
             </div>` : ''}
-            ${rfpData.projectInfo.designDurationMonths ? `
             <div class="kpi-card">
-                <div class="kpi-value">${rfpData.projectInfo.designDurationMonths}</div>
-                <div class="kpi-label">Design Months</div>
-            </div>` : ''}
+                <div class="kpi-value">${formatCurrency(totalBudget)}</div>
+                <div class="kpi-label">Total Design Fee</div>
+            </div>
             ${rfpData.projectInfo.projectType ? `
             <div class="kpi-card">
                 <div class="kpi-value" style="font-size: 12pt;">${rfpData.projectInfo.projectType}</div>
@@ -10760,17 +11143,11 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 }
             }
 
-            // Chapter 3: Cost Estimate Details
-            const chapterNum3 = rfpData.hasRfpData ? '3' : '2';
+            // Continue Chapter 5: Cost Estimate Details (section 5.2)
             html += `
-    <div class="page-break"></div>
-    <div class="page">
-        <div class="chapter-header">
-            <div class="chapter-number">Chapter ${chapterNum3}</div>
-            <div class="chapter-title">Cost Estimate Details</div>
-        </div>
+        <h2>5.2 WBS Breakdown with Cost and Hours</h2>
         
-        <h2>Discipline Budget Allocation</h2>
+        <h3>Discipline Budget Allocation</h3>
         <table>
             <thead>
                 <tr>
@@ -10805,15 +11182,14 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 `;
 
-            // Chapter 4: MH Benchmark Analysis (if available)
+            // Section 5.1: MH Benchmark Analysis (if available)
             if (mhData.hasMHData) {
-                const chapterNum4 = rfpData.hasRfpData ? '4' : '3';
                 html += `
     <div class="page-break"></div>
     <div class="page">
         <div class="chapter-header">
-            <div class="chapter-number">Chapter ${chapterNum4}</div>
-            <div class="chapter-title">Man-Hour Benchmark Analysis</div>
+            <div class="chapter-number">Section 5.1</div>
+            <div class="chapter-title">MH Benchmarking</div>
         </div>
         
         <div class="kpi-grid no-break">
@@ -10880,14 +11256,13 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
 `;
             }
 
-            // Chapter 5: Discipline Details
-            let chapterNum5 = rfpData.hasRfpData ? (mhData.hasMHData ? '5' : '4') : (mhData.hasMHData ? '4' : '3');
+            // Section 5.3: Discipline Cost Details (Cost Curves)
             html += `
     <div class="page-break"></div>
     <div class="page">
         <div class="chapter-header">
-            <div class="chapter-number">Chapter ${chapterNum5}</div>
-            <div class="chapter-title">Discipline Details</div>
+            <div class="chapter-number">Section 5.3</div>
+            <div class="chapter-title">Cost Curves - Discipline Details</div>
         </div>
 `;
             projectData.disciplines.forEach(disc => {
@@ -10944,14 +11319,29 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
     </div>
 `;
 
-            // Chapter 6: Schedule Analysis (if available)
-            if (scheduleData.hasSchedule) {
-                let chapterNum6 = parseInt(chapterNum5) + 1;
+            // Chapter 6.0: Resource Evaluation (placeholder for future)
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="chapter-header">
+            <div class="chapter-number">Chapter 6.0</div>
+            <div class="chapter-title">Resource Evaluation</div>
+        </div>
+        
+        <h2>6.1 Design FTE's by Discipline</h2>
+        <div class="info-box">
+            <p><em>Resource evaluation and FTE planning to be developed in future versions.</em></p>
+        </div>
+    </div>
+`;
+
+            // Chapter 6 (legacy Schedule Analysis - keep if schedule data available)
+            if (scheduleData.hasSchedule && false) { // Disabled - schedule is now in Chapter 4
                 html += `
     <div class="page-break"></div>
     <div class="page">
         <div class="chapter-header">
-            <div class="chapter-number">Chapter ${chapterNum6}</div>
+            <div class="chapter-number">Appendix A</div>
             <div class="chapter-title">Schedule Analysis</div>
         </div>
         
@@ -11003,20 +11393,21 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
 `;
             }
 
-            // Chapter 7: Risk Register (if risks exist)
-            if (rfpData.hasRfpData && rfpData.risks.length > 0) {
-                let chapterNum7 = parseInt(chapterNum5) + (scheduleData.hasSchedule ? 2 : 1);
-                const highRisks = rfpData.risks.filter(r => (r.severity || '').toLowerCase() === 'high').length;
-                const mediumRisks = rfpData.risks.filter(r => (r.severity || '').toLowerCase() === 'medium').length;
-                const lowRisks = rfpData.risks.filter(r => !r.severity || (r.severity || '').toLowerCase() === 'low').length;
-                
-                html += `
+            // Chapter 7.0: Risk Review
+            const highRisks = (rfpData.hasRfpData && rfpData.risks) ? rfpData.risks.filter(r => (r.severity || '').toLowerCase() === 'high').length : 0;
+            const mediumRisks = (rfpData.hasRfpData && rfpData.risks) ? rfpData.risks.filter(r => (r.severity || '').toLowerCase() === 'medium').length : 0;
+            const lowRisks = (rfpData.hasRfpData && rfpData.risks) ? rfpData.risks.filter(r => !r.severity || (r.severity || '').toLowerCase() === 'low').length : 0;
+            const totalRisks = highRisks + mediumRisks + lowRisks;
+            
+            html += `
     <div class="page-break"></div>
     <div class="page">
         <div class="chapter-header">
-            <div class="chapter-number">Chapter ${chapterNum7}</div>
-            <div class="chapter-title">Risk Register</div>
+            <div class="chapter-number">Chapter 7.0</div>
+            <div class="chapter-title">Risk Review</div>
         </div>
+        
+        <h2>7.1 Design Risk Register</h2>
         
         <div class="kpi-grid no-break">
             <div class="kpi-card">
@@ -11033,6 +11424,8 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             </div>
         </div>
 `;
+            
+            if (rfpData.hasRfpData && rfpData.risks && rfpData.risks.length > 0) {
                 const severityOrder = { high: 0, medium: 1, low: 2 };
                 const sortedRisks = [...rfpData.risks].sort((a, b) => {
                     return (severityOrder[(a.severity || 'low').toLowerCase()] || 2) - 
@@ -11056,22 +11449,25 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         </div>
 `;
                 });
+            } else {
                 html += `
-    </div>
+        <div class="info-box">
+            <p><em>No risks have been identified yet. Run the RFP Wizard to extract risk information from the RFP document.</em></p>
+        </div>
 `;
             }
+            
+            html += `
+    </div>
+`;
 
-            // Chapter 8: AI Insights (if available)
+            // Appendix A: AI Insights (if available)
             if (aiInsights.hasInsights) {
-                let chapterNum8 = parseInt(chapterNum5) + 1;
-                if (scheduleData.hasSchedule) chapterNum8++;
-                if (rfpData.hasRfpData && rfpData.risks.length > 0) chapterNum8++;
-                
                 html += `
     <div class="page-break"></div>
     <div class="page">
         <div class="chapter-header">
-            <div class="chapter-number">Chapter ${chapterNum8}</div>
+            <div class="chapter-number">Appendix A</div>
             <div class="chapter-title">AI Insights & Recommendations</div>
         </div>
         
@@ -11093,17 +11489,12 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
 `;
             }
 
-            // Chapter 9: Complete WBS Table
-            let chapterNum9 = parseInt(chapterNum5) + 1;
-            if (scheduleData.hasSchedule) chapterNum9++;
-            if (rfpData.hasRfpData && rfpData.risks.length > 0) chapterNum9++;
-            if (aiInsights.hasInsights) chapterNum9++;
-            
+            // Appendix B: Complete WBS Table
             html += `
     <div class="page-break"></div>
     <div class="page">
         <div class="chapter-header">
-            <div class="chapter-number">Chapter ${chapterNum9}</div>
+            <div class="chapter-number">Appendix B</div>
             <div class="chapter-title">Complete Work Breakdown Structure</div>
         </div>
         
@@ -11422,6 +11813,62 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 }
             }
             
+            // Populate Project Info / Key Dates
+            const projectInfoContainer = document.getElementById('rfp-result-project-info');
+            if (projectInfoContainer) {
+                const pInfo = rfpState.projectInfo || data.projectInfo || {};
+                const hasProjectInfo = pInfo.projectName || pInfo.projectLocation || pInfo.technicalProposalDue || 
+                                       pInfo.priceProposalDue || pInfo.ownerContractType;
+                
+                if (hasProjectInfo) {
+                    projectInfoContainer.innerHTML = `
+                        <div class="rfp-result-info-grid">
+                            ${pInfo.projectName ? `<div class="rfp-result-info-item"><span class="label">Project Name:</span> ${pInfo.projectName}</div>` : ''}
+                            ${pInfo.projectLocation ? `<div class="rfp-result-info-item"><span class="label">Location:</span> ${pInfo.projectLocation}</div>` : ''}
+                            ${pInfo.ownerContractType ? `<div class="rfp-result-info-item"><span class="label">Contract Type:</span> ${pInfo.ownerContractType}</div>` : ''}
+                            ${pInfo.technicalProposalDue ? `<div class="rfp-result-info-item"><span class="label">Tech Proposal Due:</span> ${pInfo.technicalProposalDue}</div>` : ''}
+                            ${pInfo.priceProposalDue ? `<div class="rfp-result-info-item"><span class="label">Price Proposal Due:</span> ${pInfo.priceProposalDue}</div>` : ''}
+                            ${pInfo.interviewDate ? `<div class="rfp-result-info-item"><span class="label">Interview:</span> ${pInfo.interviewDate}</div>` : ''}
+                            ${pInfo.contractAward ? `<div class="rfp-result-info-item"><span class="label">Contract Award:</span> ${pInfo.contractAward}</div>` : ''}
+                            ${pInfo.noticeToProceed ? `<div class="rfp-result-info-item"><span class="label">NTP:</span> ${pInfo.noticeToProceed}</div>` : ''}
+                            ${pInfo.stipendAmount ? `<div class="rfp-result-info-item"><span class="label">Stipend:</span> ${pInfo.stipendAmount}</div>` : ''}
+                        </div>
+                        ${pInfo.evaluationCriteria ? `<div class="rfp-result-info-section"><strong>Evaluation Criteria:</strong><br>${pInfo.evaluationCriteria}</div>` : ''}
+                        ${pInfo.dbeGoals ? `<div class="rfp-result-info-section"><strong>DBE/SBE Goals:</strong> ${pInfo.dbeGoals}</div>` : ''}
+                    `;
+                } else {
+                    projectInfoContainer.innerHTML = '<div class="rfp-result-text empty">No project info extracted.</div>';
+                }
+            }
+            
+            // Populate Commercial Terms
+            const commercialContainer = document.getElementById('rfp-result-commercial-terms');
+            if (commercialContainer) {
+                const terms = rfpState.commercialTerms || data.commercialTerms || {};
+                const confidence = rfpState.commercialTermsConfidence || data.commercialTermsConfidence || {};
+                const hasTerms = Object.values(terms).some(v => v && v !== 'Not specified');
+                
+                const getConfBadge = (field) => {
+                    const level = confidence[field] || 'low';
+                    return `<span class="rfp-confidence-badge ${level}">${level}</span>`;
+                };
+                
+                if (hasTerms) {
+                    commercialContainer.innerHTML = `
+                        <div class="rfp-result-commercial-grid">
+                            ${terms.client ? `<div class="rfp-result-commercial-item"><span class="label">Client:</span> ${terms.client} ${getConfBadge('client')}</div>` : ''}
+                            ${terms.waiverConsequentialDamages ? `<div class="rfp-result-commercial-item"><span class="label">Waiver of Consequential Damages:</span> ${terms.waiverConsequentialDamages} ${getConfBadge('waiverConsequentialDamages')}</div>` : ''}
+                            ${terms.limitationOfLiability ? `<div class="rfp-result-commercial-item"><span class="label">Limitation of Liability:</span> ${terms.limitationOfLiability} ${getConfBadge('limitationOfLiability')}</div>` : ''}
+                            ${terms.professionalLiability ? `<div class="rfp-result-commercial-item"><span class="label">Professional Liability:</span> ${terms.professionalLiability} ${getConfBadge('professionalLiability')}</div>` : ''}
+                            ${terms.insuranceRequirements ? `<div class="rfp-result-commercial-item"><span class="label">Insurance:</span> ${terms.insuranceRequirements} ${getConfBadge('insuranceRequirements')}</div>` : ''}
+                            ${terms.indemnification ? `<div class="rfp-result-commercial-item"><span class="label">Indemnification:</span> ${terms.indemnification} ${getConfBadge('indemnification')}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    commercialContainer.innerHTML = '<div class="rfp-result-text empty">No commercial terms extracted. Consider re-analyzing with more pages.</div>';
+                }
+            }
+            
             // Populate Confidence Scores
             const confidenceContainer = document.getElementById('rfp-result-confidence-grid');
             if (confidenceContainer) {
@@ -11669,6 +12116,8 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         // Step navigation helpers
         window.showStep = showStep;
         window.saveCurrentStep = saveCurrentStep;
+        window.saveProjectInfo = saveProjectInfo;
+        window.loadProjectInfo = loadProjectInfo;
         window.updateProgress = updateProgress;
         window.validate = validate;
         window.updateStatus = updateStatus;
