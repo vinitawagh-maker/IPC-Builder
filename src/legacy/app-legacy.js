@@ -12284,6 +12284,1281 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         }
 
         // ============================================
+        // MASTER REPORT DATA HELPERS
+        // ============================================
+
+        /**
+         * Collects MH Estimator data for reporting
+         * @returns {Object} MH estimate data including disciplines, totals, and rates
+         */
+        function getMHEstimatorData() {
+            const activeDisciplines = [];
+            let totalMH = 0;
+            const hourlyRate = 150; // Default hourly rate
+            
+            for (const [discId, state] of Object.entries(mhEstimateState.disciplines || {})) {
+                if (state.active && state.mh > 0) {
+                    const discName = mapMHDisciplineToWBS(discId);
+                    activeDisciplines.push({
+                        id: discId,
+                        name: discName,
+                        quantity: state.quantity || 0,
+                        rate: state.rate || 0,
+                        mh: state.mh || 0,
+                        budget: (state.mh || 0) * hourlyRate
+                    });
+                    totalMH += state.mh || 0;
+                }
+            }
+            
+            return {
+                hasMHData: activeDisciplines.length > 0,
+                projectCost: mhEstimateState.projectCost || 0,
+                designDuration: mhEstimateState.designDuration || 20,
+                complexity: mhEstimateState.complexity || 'Med',
+                hourlyRate: hourlyRate,
+                disciplines: activeDisciplines,
+                totalMH: totalMH,
+                totalBudget: totalMH * hourlyRate
+            };
+        }
+
+        /**
+         * Collects AI Insights data from the DOM
+         * @returns {Object} AI insights including suggestions list
+         */
+        function getAIInsightsData() {
+            const suggestionsList = document.getElementById('ai-suggestions-list');
+            const insights = [];
+            
+            if (suggestionsList) {
+                const items = suggestionsList.querySelectorAll('.suggestion-item');
+                items.forEach(item => {
+                    const icon = item.querySelector('.suggestion-icon')?.textContent || '💡';
+                    const title = item.querySelector('.suggestion-title')?.textContent || '';
+                    const desc = item.querySelector('.suggestion-desc')?.textContent || '';
+                    if (title || desc) {
+                        insights.push({ icon, title, description: desc });
+                    }
+                });
+            }
+            
+            return {
+                hasInsights: insights.length > 0,
+                suggestions: insights
+            };
+        }
+
+        /**
+         * Collects schedule analysis data including AI rationale
+         * @returns {Object} Schedule data with dates, duration, and AI rationale
+         */
+        function getScheduleAnalysisData() {
+            let minDate = null, maxDate = null;
+            const disciplineSchedules = [];
+            
+            // Collect all dates and build discipline schedules
+            for (const disc of projectData.disciplines) {
+                let discMinDate = null, discMaxDate = null;
+                const packages = [];
+                
+                for (const pkg of projectData.packages) {
+                    const key = `${disc}-${pkg}`;
+                    const dates = projectData.dates[key];
+                    if (dates && dates.start && dates.end) {
+                        const start = new Date(dates.start);
+                        const end = new Date(dates.end);
+                        
+                        if (!discMinDate || start < discMinDate) discMinDate = start;
+                        if (!discMaxDate || end > discMaxDate) discMaxDate = end;
+                        if (!minDate || start < minDate) minDate = start;
+                        if (!maxDate || end > maxDate) maxDate = end;
+                        
+                        packages.push({
+                            name: pkg,
+                            start: dates.start,
+                            end: dates.end,
+                            duration: Math.ceil((end - start) / (1000 * 60 * 60 * 24))
+                        });
+                    }
+                }
+                
+                if (packages.length > 0) {
+                    disciplineSchedules.push({
+                        discipline: disc,
+                        startDate: discMinDate ? discMinDate.toISOString().split('T')[0] : null,
+                        endDate: discMaxDate ? discMaxDate.toISOString().split('T')[0] : null,
+                        duration: discMinDate && discMaxDate ? Math.ceil((discMaxDate - discMinDate) / (1000 * 60 * 60 * 24)) : 0,
+                        packages: packages
+                    });
+                }
+            }
+            
+            const totalDays = minDate && maxDate ? Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) : 0;
+            const totalMonths = Math.ceil(totalDays / 30);
+            
+            return {
+                hasSchedule: disciplineSchedules.length > 0,
+                startDate: minDate ? minDate.toISOString().split('T')[0] : null,
+                endDate: maxDate ? maxDate.toISOString().split('T')[0] : null,
+                totalDays: totalDays,
+                totalMonths: totalMonths,
+                disciplines: disciplineSchedules,
+                scheduleNotes: projectData.scheduleNotes || '',
+                aiScheduleRationale: rfpState?.projectInfoReasoning?.scheduleReasoning || ''
+            };
+        }
+
+        /**
+         * Gets RFP analysis data for reporting
+         * @returns {Object} RFP extracted data
+         */
+        function getRfpAnalysisData() {
+            const hasRfpData = rfpState && rfpState.extractedData && 
+                (rfpState.extractedData.scope || rfpState.extractedData.disciplines?.length > 0);
+            
+            if (!hasRfpData) {
+                return { hasRfpData: false };
+            }
+            
+            const data = rfpState.extractedData || {};
+            const quantities = rfpState.quantities || {};
+            const projectInfo = rfpState.projectInfo || {};
+            const quantityReasoning = rfpState.quantityReasoning || {};
+            
+            const quantityLabels = {
+                roadwayLengthLF: { label: 'Roadway Length', unit: 'LF' },
+                projectAreaAC: { label: 'Project Area', unit: 'AC' },
+                wallAreaSF: { label: 'Retaining Wall Area', unit: 'SF' },
+                noiseWallAreaSF: { label: 'Noise Wall Area', unit: 'SF' },
+                bridgeDeckAreaSF: { label: 'Bridge Deck Area', unit: 'SF' },
+                bridgeCount: { label: 'Number of Bridges', unit: '' },
+                structureCount: { label: 'Number of Structures', unit: '' },
+                utilityRelocations: { label: 'Utility Relocations', unit: '' },
+                permitCount: { label: 'Permits Required', unit: '' },
+                trackLengthTF: { label: 'Track Length', unit: 'TF' }
+            };
+            
+            const activeQuantities = Object.entries(quantities)
+                .filter(([k, v]) => v > 0)
+                .map(([key, value]) => ({
+                    key,
+                    label: quantityLabels[key]?.label || key,
+                    unit: quantityLabels[key]?.unit || '',
+                    value,
+                    reasoning: quantityReasoning[key] || ''
+                }));
+            
+            return {
+                hasRfpData: true,
+                scope: data.scope || projectData.projectScope || '',
+                schedule: data.schedule || projectData.scheduleNotes || '',
+                disciplines: data.disciplines || [],
+                disciplineScopes: data.disciplineScopes || projectData.disciplineScopes || {},
+                phases: data.phases || [],
+                packages: data.packages || [],
+                risks: data.risks || [],
+                quantities: activeQuantities,
+                projectInfo: {
+                    projectCostM: projectInfo.projectCostM || 0,
+                    designDurationMonths: projectInfo.designDurationMonths || 0,
+                    projectType: projectInfo.projectType || '',
+                    complexity: projectInfo.complexity || ''
+                },
+                projectInfoReasoning: rfpState.projectInfoReasoning || {},
+                confidence: data.confidence || {}
+            };
+        }
+
+        // ============================================
+        // MASTER PROJECT REPORT
+        // ============================================
+
+        /**
+         * Generates a comprehensive Master Project Report PDF
+         * Combines all project data, RFP analysis, AI insights, MH estimates, and more
+         */
+        function generateMasterReport() {
+            const today = new Date().toLocaleDateString();
+            const todayFull = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // Collect all data
+            const assumptions = getCostEstimateAssumptions();
+            const totalBudget = calculateTotalBudget();
+            const mhData = getMHEstimatorData();
+            const aiInsights = getAIInsightsData();
+            const scheduleData = getScheduleAnalysisData();
+            const rfpData = getRfpAnalysisData();
+            const wbsCount = projectData.phases.length * projectData.disciplines.length * projectData.packages.length;
+            
+            // Capture performance chart
+            let performanceChartImg = '';
+            const chartCanvas = document.getElementById('performance-chart');
+            if (chartCanvas && chart) {
+                try {
+                    performanceChartImg = chartCanvas.toDataURL('image/png');
+                } catch (e) {
+                    console.error('Could not capture chart:', e);
+                }
+            }
+            
+            // Build the report HTML
+            let html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Master Project Report</title>
+    <style>
+        @media print {
+            @page { margin: 0.5in; size: letter; }
+            .page-break { page-break-before: always; }
+            .no-break { page-break-inside: avoid; }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            color: #2d3748;
+            background: #ffffff;
+            font-size: 10pt;
+            line-height: 1.6;
+        }
+        
+        /* Cover Page */
+        .cover-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: #fff;
+            text-align: center;
+            position: relative;
+        }
+        .cover-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #c9a227, #d4af37, #c9a227);
+        }
+        .cover-accent-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #c9a227, #d4af37, #c9a227);
+        }
+        .cover-logo { font-size: 64px; margin-bottom: 24px; }
+        .cover-title {
+            font-size: 36pt;
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+        .cover-subtitle {
+            font-size: 14pt;
+            color: #c9a227;
+            margin-bottom: 48px;
+            font-weight: 500;
+        }
+        .cover-kpi-grid {
+            display: flex;
+            gap: 40px;
+            margin-top: 24px;
+        }
+        .cover-kpi {
+            text-align: center;
+            padding: 16px 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        .cover-kpi-value {
+            font-size: 28pt;
+            font-weight: 700;
+            color: #c9a227;
+        }
+        .cover-kpi-label {
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        .cover-date {
+            position: absolute;
+            bottom: 40px;
+            font-size: 12pt;
+            opacity: 0.8;
+        }
+        
+        /* Page Layout */
+        .page {
+            padding: 40px;
+            max-width: 8.5in;
+            min-height: 100vh;
+        }
+        
+        /* Section Headers */
+        .section-header {
+            background: #1a365d;
+            color: #ffffff;
+            padding: 16px 24px;
+            margin: -40px -40px 24px -40px;
+            border-bottom: 4px solid #c9a227;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-number {
+            background: #c9a227;
+            color: #1a365d;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14pt;
+        }
+        .section-title {
+            font-size: 18pt;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+        
+        /* Typography */
+        h2 {
+            color: #1a365d;
+            font-size: 14pt;
+            font-weight: 600;
+            margin: 24px 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #c9a227;
+        }
+        h3 {
+            color: #2d3748;
+            font-size: 11pt;
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+        }
+        h4 {
+            color: #4a5568;
+            font-size: 10pt;
+            font-weight: 600;
+            margin: 12px 0 6px 0;
+        }
+        p { margin: 8px 0; line-height: 1.7; }
+        
+        /* Cards and Boxes */
+        .summary-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #c9a227;
+            border-radius: 0 8px 8px 0;
+            padding: 16px 20px;
+            margin: 16px 0;
+        }
+        .summary-box h3 { margin-top: 0; color: #1a365d; }
+        
+        .info-box {
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 6px;
+            padding: 14px 18px;
+            margin: 12px 0;
+        }
+        .info-box.warning {
+            background: #fffaf0;
+            border-color: #fbd38d;
+        }
+        .info-box.success {
+            background: #f0fff4;
+            border-color: #9ae6b4;
+        }
+        
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .kpi-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .kpi-card.highlight {
+            background: linear-gradient(135deg, #fffff0 0%, #fefcbf 100%);
+            border-color: #d69e2e;
+        }
+        .kpi-value {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #1a365d;
+        }
+        .kpi-card.highlight .kpi-value { color: #744210; }
+        .kpi-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #718096;
+            margin-top: 4px;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 9pt;
+        }
+        thead th {
+            background: #1a365d;
+            color: #ffffff;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tbody td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        tbody tr:nth-child(even) { background: #f7fafc; }
+        tbody tr:nth-child(odd) { background: #ffffff; }
+        tfoot th {
+            background: #edf2f7;
+            padding: 10px 8px;
+            font-weight: 600;
+            border-top: 2px solid #c9a227;
+        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: 600;
+        }
+        .badge-high { background: #fed7d7; color: #c53030; }
+        .badge-medium { background: #fefcbf; color: #744210; }
+        .badge-low { background: #c6f6d5; color: #276749; }
+        .badge-info { background: #bee3f8; color: #2b6cb0; }
+        
+        /* Risk Cards */
+        .risk-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin: 8px 0;
+            border-left: 4px solid #e2e8f0;
+        }
+        .risk-card.severity-high { border-left-color: #c53030; background: #fff5f5; }
+        .risk-card.severity-medium { border-left-color: #d69e2e; background: #fffff0; }
+        .risk-card.severity-low { border-left-color: #38a169; background: #f0fff4; }
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .risk-category { font-weight: 600; color: #2d3748; font-size: 10pt; }
+        .risk-description { font-size: 9pt; color: #4a5568; line-height: 1.5; margin-bottom: 6px; }
+        .risk-mitigation {
+            font-size: 8pt;
+            color: #718096;
+            font-style: italic;
+            padding: 8px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 4px;
+        }
+        .risk-mitigation::before { content: "Mitigation: "; font-weight: 600; font-style: normal; }
+        
+        /* Insight Cards */
+        .insight-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 14px 16px;
+            margin: 10px 0;
+            display: flex;
+            gap: 12px;
+        }
+        .insight-icon { font-size: 24px; }
+        .insight-content { flex: 1; }
+        .insight-title { font-weight: 600; color: #1a365d; font-size: 10pt; margin-bottom: 4px; }
+        .insight-desc { font-size: 9pt; color: #4a5568; line-height: 1.5; }
+        
+        /* Discipline Cards */
+        .discipline-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 14px;
+            margin: 10px 0;
+            page-break-inside: avoid;
+        }
+        .discipline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .discipline-name { font-weight: 600; color: #1a365d; font-size: 11pt; }
+        .discipline-budget { font-weight: 700; color: #2d3748; font-size: 12pt; }
+        .discipline-scope {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 9pt;
+            color: #4a5568;
+            line-height: 1.5;
+            margin-top: 8px;
+        }
+        
+        /* Quantity Grid */
+        .quantity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .quantity-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+        }
+        .quantity-label { font-size: 9pt; color: #718096; margin-bottom: 4px; }
+        .quantity-value { font-size: 16pt; font-weight: 700; color: #2b6cb0; }
+        .quantity-unit { font-size: 10pt; color: #718096; margin-left: 4px; }
+        .quantity-reasoning {
+            font-size: 8pt;
+            color: #718096;
+            font-style: italic;
+            margin-top: 6px;
+            padding: 6px;
+            background: #ebf8ff;
+            border-radius: 4px;
+        }
+        
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        /* Lists */
+        .list-section ul { margin: 0; padding-left: 20px; }
+        .list-section li { margin: 4px 0; font-size: 9pt; }
+        
+        /* Chart Section */
+        .chart-section {
+            margin: 20px 0;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .chart-section h3 { margin-top: 0; }
+        .chart-section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        
+        /* Footer */
+        .page-footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 8pt;
+            color: #a0aec0;
+            text-align: center;
+        }
+        
+        .page-break { page-break-before: always; }
+        .no-break { page-break-inside: avoid; }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <div class="cover-accent"></div>
+        <div class="cover-logo">📊</div>
+        <div class="cover-title">Master Project Report</div>
+        <div class="cover-subtitle">Comprehensive Work Breakdown Structure Analysis</div>
+        <div class="cover-kpi-grid">
+            <div class="cover-kpi">
+                <div class="cover-kpi-value">${formatCurrency(totalBudget)}</div>
+                <div class="cover-kpi-label">Total Design Fee</div>
+            </div>
+            <div class="cover-kpi">
+                <div class="cover-kpi-value">${projectData.disciplines.length}</div>
+                <div class="cover-kpi-label">Disciplines</div>
+            </div>
+            <div class="cover-kpi">
+                <div class="cover-kpi-value">${scheduleData.totalMonths > 0 ? scheduleData.totalMonths + ' mo' : 'TBD'}</div>
+                <div class="cover-kpi-label">Duration</div>
+            </div>
+            <div class="cover-kpi">
+                <div class="cover-kpi-value">${wbsCount}</div>
+                <div class="cover-kpi-label">WBS Elements</div>
+            </div>
+        </div>
+        <div class="cover-date">${todayFull}</div>
+        <div class="cover-accent-bottom"></div>
+    </div>
+
+    <!-- Section 1: Executive Summary -->
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">1</div>
+            <div class="section-title">Executive Summary</div>
+        </div>
+        
+        <div class="kpi-grid no-break">
+            <div class="kpi-card highlight">
+                <div class="kpi-value">${formatCurrency(totalBudget)}</div>
+                <div class="kpi-label">Total Design Fee</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${projectData.disciplines.length}</div>
+                <div class="kpi-label">Disciplines</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${projectData.phases.length}</div>
+                <div class="kpi-label">Phases</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${projectData.packages.length}</div>
+                <div class="kpi-label">Packages</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${wbsCount}</div>
+                <div class="kpi-label">WBS Elements</div>
+            </div>
+            ${rfpData.hasRfpData && rfpData.risks.length > 0 ? `
+            <div class="kpi-card">
+                <div class="kpi-value">${rfpData.risks.length}</div>
+                <div class="kpi-label">Identified Risks</div>
+            </div>` : ''}
+        </div>
+`;
+
+            // Project Scope
+            const scope = rfpData.hasRfpData ? rfpData.scope : projectData.projectScope;
+            if (scope) {
+                html += `
+        <div class="summary-box no-break">
+            <h3>Project Scope</h3>
+            <p>${scope.replace(/\n/g, '<br>')}</p>
+        </div>
+`;
+            }
+
+            // Cost Basis
+            if (assumptions.isCalculated) {
+                html += `
+        <div class="summary-box no-break">
+            <h3>Cost Estimate Basis</h3>
+            <div class="two-column" style="margin-top: 12px;">
+                <div>
+                    <p><strong>Construction Cost:</strong> ${formatCurrency(assumptions.constructionCost)}</p>
+                    <p><strong>Design Fee %:</strong> ${assumptions.designFeePercent}%</p>
+                </div>
+                <div>
+                    <p><strong>Total Design Fee:</strong> ${formatCurrency(assumptions.totalDesignFee)}</p>
+                    <p><strong>Project Type:</strong> ${assumptions.projectType}</p>
+                </div>
+            </div>
+        </div>
+`;
+            }
+
+            // Project Structure
+            html += `
+        <h2>Project Structure</h2>
+        <div class="two-column no-break">
+            <div class="list-section">
+                <h3>Project Phases</h3>
+                <ul>${projectData.phases.map(p => `<li>${p}</li>`).join('')}</ul>
+            </div>
+            <div class="list-section">
+                <h3>Deliverable Packages</h3>
+                <ul>${projectData.packages.map(p => `<li>${p}</li>`).join('')}</ul>
+            </div>
+        </div>
+    </div>
+`;
+
+            // Section 2: RFP Analysis (if available)
+            if (rfpData.hasRfpData) {
+                html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">2</div>
+            <div class="section-title">RFP Analysis Summary</div>
+        </div>
+        
+        <div class="kpi-grid no-break">
+            ${rfpData.projectInfo.projectCostM ? `
+            <div class="kpi-card highlight">
+                <div class="kpi-value">$${rfpData.projectInfo.projectCostM}M</div>
+                <div class="kpi-label">Est. Construction Cost</div>
+            </div>` : ''}
+            ${rfpData.projectInfo.designDurationMonths ? `
+            <div class="kpi-card">
+                <div class="kpi-value">${rfpData.projectInfo.designDurationMonths}</div>
+                <div class="kpi-label">Design Months</div>
+            </div>` : ''}
+            ${rfpData.projectInfo.projectType ? `
+            <div class="kpi-card">
+                <div class="kpi-value" style="font-size: 14pt;">${rfpData.projectInfo.projectType}</div>
+                <div class="kpi-label">Project Type</div>
+            </div>` : ''}
+            ${rfpData.projectInfo.complexity ? `
+            <div class="kpi-card">
+                <div class="kpi-value" style="font-size: 14pt;">${rfpData.projectInfo.complexity}</div>
+                <div class="kpi-label">Complexity</div>
+            </div>` : ''}
+        </div>
+`;
+                // AI Reasoning for cost/schedule
+                if (rfpData.projectInfoReasoning.projectCostReasoning) {
+                    html += `
+        <div class="info-box no-break">
+            <h4>AI Cost Estimate Reasoning</h4>
+            <p style="font-size: 9pt;">${rfpData.projectInfoReasoning.projectCostReasoning}</p>
+        </div>
+`;
+                }
+
+                // Quantities
+                if (rfpData.quantities.length > 0) {
+                    html += `
+        <h2>Key Engineering Quantities</h2>
+        <div class="quantity-grid">
+`;
+                    rfpData.quantities.forEach(qty => {
+                        html += `
+            <div class="quantity-card no-break">
+                <div class="quantity-label">${qty.label}</div>
+                <div class="quantity-value">${formatNumber(qty.value)}<span class="quantity-unit">${qty.unit}</span></div>
+                ${qty.reasoning ? `<div class="quantity-reasoning">${qty.reasoning}</div>` : ''}
+            </div>
+`;
+                    });
+                    html += `
+        </div>
+`;
+                }
+
+                // Confidence Scores
+                if (Object.keys(rfpData.confidence).length > 0) {
+                    html += `
+        <h2>AI Extraction Confidence</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th class="text-center">Confidence Level</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+                    Object.entries(rfpData.confidence).forEach(([key, value]) => {
+                        const level = (value || 'medium').toLowerCase();
+                        const badgeClass = level === 'high' ? 'badge-low' : level === 'low' ? 'badge-high' : 'badge-medium';
+                        html += `
+                <tr>
+                    <td>${key.charAt(0).toUpperCase() + key.slice(1)}</td>
+                    <td class="text-center"><span class="badge ${badgeClass}">${value}</span></td>
+                </tr>
+`;
+                    });
+                    html += `
+            </tbody>
+        </table>
+    </div>
+`;
+                }
+            }
+
+            // Section 3: Cost Estimate Details
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">${rfpData.hasRfpData ? '3' : '2'}</div>
+            <div class="section-title">Cost Estimate Details</div>
+        </div>
+        
+        <h2>Discipline Budget Allocation</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Discipline</th>
+                    <th class="text-center">Complexity</th>
+                    <th class="text-right">Industry %</th>
+                    <th class="text-right">Actual %</th>
+                    <th class="text-right">Budget</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+            assumptions.disciplines.forEach(disc => {
+                const complexityClass = disc.complexity.toLowerCase() === 'high' ? 'badge-high' : 
+                                        disc.complexity.toLowerCase() === 'low' ? 'badge-low' : 'badge-medium';
+                html += `
+                <tr>
+                    <td><strong>${disc.name}</strong></td>
+                    <td class="text-center"><span class="badge ${complexityClass}">${disc.complexity}</span></td>
+                    <td class="text-right">${disc.industryBasePct}%</td>
+                    <td class="text-right">${disc.percentOfTotal}%</td>
+                    <td class="text-right"><strong>${formatCurrency(disc.budget)}</strong></td>
+                </tr>`;
+            });
+            html += `
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3">Total Design Fee</th>
+                    <th class="text-right">100%</th>
+                    <th class="text-right">${formatCurrency(totalBudget)}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+`;
+
+            // Section 4: MH Benchmark Analysis (if available)
+            if (mhData.hasMHData) {
+                const sectionNum = rfpData.hasRfpData ? '4' : '3';
+                html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">${sectionNum}</div>
+            <div class="section-title">Man-Hour Benchmark Analysis</div>
+        </div>
+        
+        <div class="kpi-grid no-break">
+            <div class="kpi-card highlight">
+                <div class="kpi-value">${formatMH(mhData.totalMH)}</div>
+                <div class="kpi-label">Total Man-Hours</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${formatCurrency(mhData.totalBudget)}</div>
+                <div class="kpi-label">Est. Budget @ $${mhData.hourlyRate}/hr</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${mhData.disciplines.length}</div>
+                <div class="kpi-label">Disciplines Estimated</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${mhData.complexity}</div>
+                <div class="kpi-label">Complexity</div>
+            </div>
+        </div>
+        
+        <h2>Discipline Breakdown</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Discipline</th>
+                    <th class="text-right">Quantity</th>
+                    <th class="text-right">Rate (MH/unit)</th>
+                    <th class="text-right">Man-Hours</th>
+                    <th class="text-right">Budget</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+                mhData.disciplines.forEach(disc => {
+                    html += `
+                <tr>
+                    <td><strong>${disc.name}</strong></td>
+                    <td class="text-right">${formatNumber(disc.quantity)}</td>
+                    <td class="text-right">${disc.rate.toFixed(2)}</td>
+                    <td class="text-right">${formatMH(disc.mh)}</td>
+                    <td class="text-right">${formatCurrency(disc.budget)}</td>
+                </tr>`;
+                });
+                html += `
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3">Total</th>
+                    <th class="text-right">${formatMH(mhData.totalMH)}</th>
+                    <th class="text-right">${formatCurrency(mhData.totalBudget)}</th>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="info-box">
+            <p><strong>Note:</strong> Man-hour estimates are based on historical benchmark data from similar infrastructure projects. Budget calculated using $${mhData.hourlyRate}/hour blended rate.</p>
+        </div>
+    </div>
+`;
+            }
+
+            // Section 5: Discipline Details
+            const disciplineSectionNum = rfpData.hasRfpData ? (mhData.hasMHData ? '5' : '4') : (mhData.hasMHData ? '4' : '3');
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">${disciplineSectionNum}</div>
+            <div class="section-title">Discipline Details</div>
+        </div>
+`;
+            projectData.disciplines.forEach(disc => {
+                const budget = projectData.budgets[disc] || 0;
+                const pct = totalBudget > 0 ? ((budget / totalBudget) * 100).toFixed(1) : 0;
+                const scope = projectData.disciplineScopes && projectData.disciplineScopes[disc] ? projectData.disciplineScopes[disc] : null;
+                
+                html += `
+        <div class="discipline-card no-break">
+            <div class="discipline-header">
+                <span class="discipline-name">${disc}</span>
+                <span class="discipline-budget">${formatCurrency(budget)} (${pct}%)</span>
+            </div>
+`;
+                if (scope) {
+                    html += `
+            <div class="discipline-scope">${scope.replace(/\n/g, '<br>')}</div>
+`;
+                }
+                
+                // Package breakdown
+                html += `
+            <table style="font-size: 8pt; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th class="text-center">Claim %</th>
+                        <th class="text-right">Budget</th>
+                        <th>Start</th>
+                        <th>End</th>
+                    </tr>
+                </thead>
+                <tbody>
+`;
+                projectData.packages.forEach(pkg => {
+                    const key = `${disc}-${pkg}`;
+                    const claimPct = projectData.claiming[key] || 0;
+                    const pkgBudget = budget * (claimPct / 100);
+                    const dates = projectData.dates[key] || {};
+                    
+                    html += `
+                    <tr>
+                        <td>${pkg}</td>
+                        <td class="text-center">${claimPct}%</td>
+                        <td class="text-right">${formatCurrency(pkgBudget)}</td>
+                        <td>${dates.start || '—'}</td>
+                        <td>${dates.end || '—'}</td>
+                    </tr>`;
+                });
+                html += `
+                </tbody>
+            </table>
+        </div>
+`;
+            });
+            html += `
+    </div>
+`;
+
+            // Section 6: Schedule Analysis
+            if (scheduleData.hasSchedule) {
+                const scheduleSectionNum = parseInt(disciplineSectionNum) + 1;
+                html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">${scheduleSectionNum}</div>
+            <div class="section-title">Schedule Analysis</div>
+        </div>
+        
+        <div class="kpi-grid no-break">
+            <div class="kpi-card highlight">
+                <div class="kpi-value">${scheduleData.totalMonths}</div>
+                <div class="kpi-label">Total Months</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${scheduleData.startDate || 'TBD'}</div>
+                <div class="kpi-label">Start Date</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${scheduleData.endDate || 'TBD'}</div>
+                <div class="kpi-label">End Date</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">${scheduleData.totalDays}</div>
+                <div class="kpi-label">Total Days</div>
+            </div>
+        </div>
+`;
+                // AI Schedule Rationale
+                if (scheduleData.aiScheduleRationale) {
+                    html += `
+        <div class="info-box no-break">
+            <h4>AI Schedule Rationale</h4>
+            <p style="font-size: 9pt;">${scheduleData.aiScheduleRationale}</p>
+        </div>
+`;
+                }
+
+                // Schedule notes
+                if (scheduleData.scheduleNotes) {
+                    html += `
+        <div class="summary-box no-break">
+            <h3>Schedule Notes</h3>
+            <p>${scheduleData.scheduleNotes.replace(/\n/g, '<br>')}</p>
+        </div>
+`;
+                }
+
+                // Performance Chart
+                if (performanceChartImg) {
+                    html += `
+        <div class="chart-section no-break">
+            <h3>Budget Distribution Over Time</h3>
+            <img src="${performanceChartImg}" alt="Performance Chart" />
+        </div>
+`;
+                }
+
+                html += `
+    </div>
+`;
+            }
+
+            // Section 7: Risk Register
+            if (rfpData.hasRfpData && rfpData.risks.length > 0) {
+                const riskSectionNum = scheduleData.hasSchedule ? parseInt(disciplineSectionNum) + 2 : parseInt(disciplineSectionNum) + 1;
+                const highRisks = rfpData.risks.filter(r => (r.severity || '').toLowerCase() === 'high').length;
+                const mediumRisks = rfpData.risks.filter(r => (r.severity || '').toLowerCase() === 'medium').length;
+                const lowRisks = rfpData.risks.filter(r => (r.severity || '').toLowerCase() === 'low' || !r.severity).length;
+                
+                html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">${riskSectionNum}</div>
+            <div class="section-title">Risk Register</div>
+        </div>
+        
+        <div class="kpi-grid no-break">
+            <div class="kpi-card" style="background: #fff5f5; border-color: #fc8181;">
+                <div class="kpi-value" style="color: #c53030;">${highRisks}</div>
+                <div class="kpi-label">High Severity</div>
+            </div>
+            <div class="kpi-card" style="background: #fffff0; border-color: #f6e05e;">
+                <div class="kpi-value" style="color: #744210;">${mediumRisks}</div>
+                <div class="kpi-label">Medium Severity</div>
+            </div>
+            <div class="kpi-card" style="background: #f0fff4; border-color: #9ae6b4;">
+                <div class="kpi-value" style="color: #276749;">${lowRisks}</div>
+                <div class="kpi-label">Low Severity</div>
+            </div>
+        </div>
+`;
+                // Sort risks by severity
+                const severityOrder = { high: 0, medium: 1, low: 2 };
+                const sortedRisks = [...rfpData.risks].sort((a, b) => {
+                    const aSev = (a.severity || 'low').toLowerCase();
+                    const bSev = (b.severity || 'low').toLowerCase();
+                    return (severityOrder[aSev] || 2) - (severityOrder[bSev] || 2);
+                });
+                
+                sortedRisks.forEach((risk, idx) => {
+                    const severity = (risk.severity || 'Medium').toLowerCase();
+                    const category = risk.category || 'General';
+                    const description = typeof risk === 'string' ? risk : (risk.description || '');
+                    const mitigation = risk.mitigation || '';
+                    const badgeClass = severity === 'high' ? 'badge-high' : severity === 'low' ? 'badge-low' : 'badge-medium';
+                    
+                    html += `
+        <div class="risk-card severity-${severity} no-break">
+            <div class="risk-header">
+                <span class="risk-category">${idx + 1}. ${category}</span>
+                <span class="badge ${badgeClass}">${severity.toUpperCase()}</span>
+            </div>
+            <div class="risk-description">${description}</div>
+            ${mitigation ? `<div class="risk-mitigation">${mitigation}</div>` : ''}
+        </div>
+`;
+                });
+                
+                html += `
+    </div>
+`;
+            }
+
+            // Section 8: AI Insights
+            if (aiInsights.hasInsights) {
+                let insightSectionNum = parseInt(disciplineSectionNum) + 1;
+                if (scheduleData.hasSchedule) insightSectionNum++;
+                if (rfpData.hasRfpData && rfpData.risks.length > 0) insightSectionNum++;
+                
+                html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">${insightSectionNum}</div>
+            <div class="section-title">AI Insights & Recommendations</div>
+        </div>
+        
+        <p style="margin-bottom: 16px;">The following optimization suggestions were generated by AI analysis of the project data:</p>
+`;
+                aiInsights.suggestions.forEach(insight => {
+                    html += `
+        <div class="insight-card no-break">
+            <div class="insight-icon">${insight.icon}</div>
+            <div class="insight-content">
+                <div class="insight-title">${insight.title}</div>
+                <div class="insight-desc">${insight.description}</div>
+            </div>
+        </div>
+`;
+                });
+                
+                html += `
+    </div>
+`;
+            }
+
+            // Final Section: Complete WBS Table
+            let wbsSectionNum = parseInt(disciplineSectionNum) + 1;
+            if (scheduleData.hasSchedule) wbsSectionNum++;
+            if (rfpData.hasRfpData && rfpData.risks.length > 0) wbsSectionNum++;
+            if (aiInsights.hasInsights) wbsSectionNum++;
+            
+            html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">${wbsSectionNum}</div>
+            <div class="section-title">Complete Work Breakdown Structure</div>
+        </div>
+        
+        <p style="margin-bottom: 12px;">${wbsCount} WBS Elements: ${projectData.phases.length} Phases × ${projectData.disciplines.length} Disciplines × ${projectData.packages.length} Packages</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 55px;">WBS #</th>
+                    <th>Phase</th>
+                    <th>Discipline</th>
+                    <th>Package</th>
+                    <th class="text-right" style="width: 90px;">Budget</th>
+                    <th class="text-center" style="width: 50px;">Claim %</th>
+                    <th style="width: 80px;">Start</th>
+                    <th style="width: 80px;">End</th>
+                </tr>
+            </thead>
+            <tbody>
+`;
+            let grandTotal = 0;
+            projectData.phases.forEach((phase, pi) => {
+                projectData.disciplines.forEach((discipline, di) => {
+                    const discBudget = projectData.budgets[discipline] || 0;
+                    projectData.packages.forEach((packageName, ki) => {
+                        const key = `${discipline}-${packageName}`;
+                        const claimPct = projectData.claiming[key] || 0;
+                        const pkgBudget = discBudget * (claimPct / 100);
+                        const dates = projectData.dates[key] || { start: '—', end: '—' };
+                        const wbs = `${pi+1}.${di+1}.${ki+1}`;
+                        grandTotal += pkgBudget;
+                        
+                        html += `
+                <tr>
+                    <td><strong>${wbs}</strong></td>
+                    <td>${phase}</td>
+                    <td>${discipline}</td>
+                    <td>${packageName}</td>
+                    <td class="text-right">${formatCurrency(pkgBudget)}</td>
+                    <td class="text-center">${claimPct}%</td>
+                    <td>${dates.start || '—'}</td>
+                    <td>${dates.end || '—'}</td>
+                </tr>`;
+                    });
+                });
+            });
+            
+            html += `
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="4">Grand Total</th>
+                    <th class="text-right">${formatCurrency(grandTotal)}</th>
+                    <th colspan="3"></th>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="page-footer">
+            <strong>Master Project Report</strong> | Generated by WBS Terminal<br>
+            ${todayFull}
+        </div>
+    </div>
+</body>
+</html>`;
+
+            // Generate PDF
+            const container = document.createElement('div');
+            container.innerHTML = html;
+            document.body.appendChild(container);
+            
+            const opt = {
+                margin: [0.25, 0.25, 0.25, 0.25],
+                filename: `master_project_report_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    letterRendering: true,
+                    willReadFrequently: true
+                },
+                jsPDF: { 
+                    unit: 'in', 
+                    format: 'letter', 
+                    orientation: 'portrait' 
+                },
+                pagebreak: { mode: ['css', 'legacy'] }
+            };
+            
+            html2pdf().set(opt).from(container).save().then(() => {
+                document.body.removeChild(container);
+            }).catch(err => {
+                console.error('PDF generation failed:', err);
+                document.body.removeChild(container);
+                alert('PDF generation failed. Please try again.');
+            });
+        }
+
+        // ============================================
         // RFP RESULTS PANEL
         // ============================================
 
@@ -12656,6 +13931,7 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         window.openReportsPanel = openReportsPanel;
         window.closeReportsPanel = closeReportsPanel;
         window.generateComprehensiveReport = generateComprehensiveReport;
+        window.generateMasterReport = generateMasterReport;
         window.exportCSV = exportCSV;
         window.exportAllDataCSV = exportAllDataCSV;
         window.shareProjectUrl = shareProjectUrl;
