@@ -16,6 +16,7 @@
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <button class="rfp-header-btn" onclick="openProjectManager()">📁 PROJECTS</button>
                     <button class="rfp-header-btn" onclick="openRfpWizard()">📄 RFP WIZARD</button>
+                    <button id="rfp-results-btn" class="rfp-header-btn hidden" onclick="openRfpResultsPanel()">📋 RFP DATA</button>
                     <button id="reports-btn" class="rfp-header-btn hidden" onclick="openReportsPanel()">📊 REPORTS</button>
                     <span id="status-text">READY</span>
                     <button id="next-btn" class="btn btn-sm btn-primary" onclick="nextStep()">NEXT →</button>
@@ -985,6 +986,110 @@
                     <div class="reports-quick-actions">
                         <button class="btn btn-sm" onclick="shareProjectUrl()">🔗 Copy Share Link</button>
                         <button class="btn btn-sm" onclick="importData(); closeReportsPanel();">📥 Import Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RFP Results Panel Modal -->
+    <div id="rfp-results-modal" class="modal-base rfp-results-modal" onclick="if(event.target===this)closeRfpResultsPanel()">
+        <div class="modal-base-content rfp-results-content">
+            <div class="modal-base-header">
+                <h3>📋 RFP Extracted Data</h3>
+                <button class="modal-base-close" onclick="closeRfpResultsPanel()">✕</button>
+            </div>
+            
+            <div class="modal-base-body rfp-results-body">
+                <div id="rfp-results-empty" class="rfp-results-empty">
+                    <div class="rfp-results-empty-icon">📄</div>
+                    <div class="rfp-results-empty-text">No RFP data available</div>
+                    <div class="rfp-results-empty-hint">Use the RFP Wizard to analyze an RFP document</div>
+                    <button class="btn btn-sm btn-primary" onclick="closeRfpResultsPanel(); openRfpWizard();">Open RFP Wizard</button>
+                </div>
+                
+                <div id="rfp-results-content" class="rfp-results-sections hidden">
+                    <!-- Project Overview Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('overview')">
+                            <span>📊 Project Overview</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-overview" class="rfp-result-section-body">
+                            <div class="rfp-result-kpi-grid" id="rfp-result-kpis"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Scope Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('scope')">
+                            <span>📋 Project Scope</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-scope" class="rfp-result-section-body">
+                            <div id="rfp-result-scope-text" class="rfp-result-text"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quantities Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('quantities')">
+                            <span>📐 Key Quantities</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-quantities" class="rfp-result-section-body">
+                            <div id="rfp-result-quantities-grid" class="rfp-result-quantities-grid"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Schedule Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('schedule')">
+                            <span>📅 Schedule Information</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-schedule" class="rfp-result-section-body">
+                            <div id="rfp-result-schedule-text" class="rfp-result-text"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Disciplines Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('disciplines')">
+                            <span>🔧 Discipline Scopes</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-disciplines" class="rfp-result-section-body">
+                            <div id="rfp-result-disciplines-list" class="rfp-result-disciplines-list"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Risks Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('risks')">
+                            <span>⚠️ Identified Risks</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-risks" class="rfp-result-section-body">
+                            <div id="rfp-result-risks-list" class="rfp-result-risks-list"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Confidence Scores Section -->
+                    <div class="rfp-result-section">
+                        <div class="rfp-result-section-header" onclick="toggleRfpResultSection('confidence')">
+                            <span>📈 AI Confidence Scores</span>
+                            <span class="rfp-section-toggle">▼</span>
+                        </div>
+                        <div id="rfp-result-confidence" class="rfp-result-section-body">
+                            <div id="rfp-result-confidence-grid" class="rfp-result-confidence-grid"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="rfp-result-actions">
+                        <button class="btn btn-sm" onclick="closeRfpResultsPanel(); openRfpWizard();">Re-analyze RFP</button>
+                        <button class="btn btn-sm btn-primary" onclick="closeRfpResultsPanel(); openRfpWizard(); setTimeout(exportRfpData, 100);">Export PDF Report</button>
                     </div>
                 </div>
             </div>

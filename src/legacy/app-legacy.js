@@ -11173,6 +11173,9 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             
             // Show success message
             alert(`RFP data imported successfully!\n\n• ${projectData.phases.length} phases\n• ${projectData.disciplines.length} disciplines\n• ${projectData.packages.length} packages${quantityInfo}\n\n${confidenceMsg}\n\nCheck the MH Benchmark Estimator in Step 4 to review quantities.`);
+            
+            // Show RFP Results button in header for easy reference
+            showRfpResultsButton();
         }
 
         /**
@@ -12281,6 +12284,270 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         }
 
         // ============================================
+        // RFP RESULTS PANEL
+        // ============================================
+
+        /**
+         * Opens the RFP Results panel and populates it with extracted data
+         */
+        function openRfpResultsPanel() {
+            const modal = document.getElementById('rfp-results-modal');
+            if (!modal) return;
+            
+            modal.classList.add('active');
+            populateRfpResultsPanel();
+        }
+
+        /**
+         * Closes the RFP Results panel
+         */
+        function closeRfpResultsPanel() {
+            const modal = document.getElementById('rfp-results-modal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        /**
+         * Toggles a section in the RFP Results panel
+         */
+        function toggleRfpResultSection(sectionId) {
+            const section = document.getElementById(`rfp-result-${sectionId}`)?.closest('.rfp-result-section');
+            if (section) {
+                section.classList.toggle('collapsed');
+            }
+        }
+
+        /**
+         * Populates the RFP Results panel with extracted data
+         */
+        function populateRfpResultsPanel() {
+            const emptyState = document.getElementById('rfp-results-empty');
+            const contentState = document.getElementById('rfp-results-content');
+            
+            // Check if we have RFP data
+            const hasData = rfpState && rfpState.extractedData && 
+                (rfpState.extractedData.scope || 
+                 rfpState.extractedData.disciplines?.length > 0 ||
+                 Object.values(rfpState.quantities || {}).some(v => v > 0));
+            
+            if (!hasData) {
+                emptyState?.classList.remove('hidden');
+                contentState?.classList.add('hidden');
+                return;
+            }
+            
+            emptyState?.classList.add('hidden');
+            contentState?.classList.remove('hidden');
+            
+            const data = rfpState.extractedData || {};
+            const quantities = rfpState.quantities || {};
+            const projectInfo = rfpState.projectInfo || {};
+            const quantityReasoning = rfpState.quantityReasoning || {};
+            
+            // Populate KPIs
+            const kpisContainer = document.getElementById('rfp-result-kpis');
+            if (kpisContainer) {
+                const disciplines = data.disciplines || [];
+                const phases = data.phases || [];
+                const packages = data.packages || [];
+                const risks = data.risks || [];
+                const activeQuantities = Object.entries(quantities).filter(([k, v]) => v > 0).length;
+                
+                kpisContainer.innerHTML = `
+                    ${projectInfo.projectCostM ? `
+                    <div class="rfp-result-kpi highlight">
+                        <div class="rfp-result-kpi-value">$${projectInfo.projectCostM}M</div>
+                        <div class="rfp-result-kpi-label">Est. Project Cost</div>
+                    </div>` : ''}
+                    ${projectInfo.designDurationMonths ? `
+                    <div class="rfp-result-kpi">
+                        <div class="rfp-result-kpi-value">${projectInfo.designDurationMonths}</div>
+                        <div class="rfp-result-kpi-label">Design Months</div>
+                    </div>` : ''}
+                    <div class="rfp-result-kpi">
+                        <div class="rfp-result-kpi-value">${disciplines.length}</div>
+                        <div class="rfp-result-kpi-label">Disciplines</div>
+                    </div>
+                    <div class="rfp-result-kpi">
+                        <div class="rfp-result-kpi-value">${phases.length}</div>
+                        <div class="rfp-result-kpi-label">Phases</div>
+                    </div>
+                    <div class="rfp-result-kpi">
+                        <div class="rfp-result-kpi-value">${packages.length}</div>
+                        <div class="rfp-result-kpi-label">Packages</div>
+                    </div>
+                    <div class="rfp-result-kpi">
+                        <div class="rfp-result-kpi-value">${activeQuantities}</div>
+                        <div class="rfp-result-kpi-label">Quantities</div>
+                    </div>
+                    <div class="rfp-result-kpi">
+                        <div class="rfp-result-kpi-value">${risks.length}</div>
+                        <div class="rfp-result-kpi-label">Risks</div>
+                    </div>
+                `;
+            }
+            
+            // Populate Scope
+            const scopeContainer = document.getElementById('rfp-result-scope-text');
+            if (scopeContainer) {
+                const scope = data.scope || projectData.projectScope || '';
+                scopeContainer.textContent = scope || 'No scope information extracted.';
+                scopeContainer.classList.toggle('empty', !scope);
+            }
+            
+            // Populate Quantities
+            const quantitiesContainer = document.getElementById('rfp-result-quantities-grid');
+            if (quantitiesContainer) {
+                const quantityLabels = {
+                    roadwayLengthLF: { label: 'Roadway Length', unit: 'LF' },
+                    projectAreaAC: { label: 'Project Area', unit: 'AC' },
+                    wallAreaSF: { label: 'Retaining Wall Area', unit: 'SF' },
+                    noiseWallAreaSF: { label: 'Noise Wall Area', unit: 'SF' },
+                    bridgeDeckAreaSF: { label: 'Bridge Deck Area', unit: 'SF' },
+                    bridgeCount: { label: 'Number of Bridges', unit: '' },
+                    structureCount: { label: 'Number of Structures', unit: '' },
+                    utilityRelocations: { label: 'Utility Relocations', unit: '' },
+                    permitCount: { label: 'Permits Required', unit: '' },
+                    trackLengthTF: { label: 'Track Length', unit: 'TF' }
+                };
+                
+                const activeQuantities = Object.entries(quantities).filter(([k, v]) => v > 0);
+                
+                if (activeQuantities.length > 0) {
+                    quantitiesContainer.innerHTML = activeQuantities.map(([key, value]) => {
+                        const info = quantityLabels[key] || { label: key, unit: '' };
+                        const reasoning = quantityReasoning[key] || '';
+                        return `
+                            <div class="rfp-result-quantity has-value">
+                                <div class="rfp-result-quantity-label">${info.label}</div>
+                                <div class="rfp-result-quantity-value">${formatNumber(value)}<span class="rfp-result-quantity-unit">${info.unit}</span></div>
+                                ${reasoning ? `<div class="rfp-result-quantity-reasoning">${reasoning}</div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    quantitiesContainer.innerHTML = '<div class="rfp-result-text empty">No quantities extracted.</div>';
+                }
+            }
+            
+            // Populate Schedule
+            const scheduleContainer = document.getElementById('rfp-result-schedule-text');
+            if (scheduleContainer) {
+                const schedule = data.schedule || projectData.scheduleNotes || '';
+                scheduleContainer.textContent = schedule || 'No schedule information extracted.';
+                scheduleContainer.classList.toggle('empty', !schedule);
+            }
+            
+            // Populate Disciplines
+            const disciplinesContainer = document.getElementById('rfp-result-disciplines-list');
+            if (disciplinesContainer) {
+                const disciplines = data.disciplines || [];
+                const scopes = data.disciplineScopes || projectData.disciplineScopes || {};
+                
+                if (disciplines.length > 0) {
+                    disciplinesContainer.innerHTML = disciplines.map(disc => {
+                        const scope = scopes[disc] || '';
+                        return `
+                            <div class="rfp-result-discipline">
+                                <div class="rfp-result-discipline-name">📌 ${disc}</div>
+                                <div class="rfp-result-discipline-scope ${!scope ? 'empty' : ''}">${scope || 'No specific scope extracted.'}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    disciplinesContainer.innerHTML = '<div class="rfp-result-text empty">No disciplines extracted.</div>';
+                }
+            }
+            
+            // Populate Risks
+            const risksContainer = document.getElementById('rfp-result-risks-list');
+            if (risksContainer) {
+                const risks = data.risks || [];
+                
+                if (risks.length > 0) {
+                    // Sort by severity
+                    const severityOrder = { high: 0, medium: 1, low: 2 };
+                    const sortedRisks = [...risks].sort((a, b) => {
+                        const aSev = (a.severity || 'low').toLowerCase();
+                        const bSev = (b.severity || 'low').toLowerCase();
+                        return (severityOrder[aSev] || 2) - (severityOrder[bSev] || 2);
+                    });
+                    
+                    risksContainer.innerHTML = sortedRisks.map(risk => {
+                        const severity = (risk.severity || 'medium').toLowerCase();
+                        const category = risk.category || 'General';
+                        const description = typeof risk === 'string' ? risk : (risk.description || '');
+                        const mitigation = risk.mitigation || '';
+                        return `
+                            <div class="rfp-result-risk severity-${severity}">
+                                <div class="rfp-result-risk-header">
+                                    <span class="rfp-result-risk-category">${category}</span>
+                                    <span class="rfp-result-risk-severity ${severity}">${severity}</span>
+                                </div>
+                                <div class="rfp-result-risk-description">${description}</div>
+                                ${mitigation ? `<div class="rfp-result-risk-mitigation">${mitigation}</div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    risksContainer.innerHTML = '<div class="rfp-result-text empty">No risks identified.</div>';
+                }
+            }
+            
+            // Populate Confidence Scores
+            const confidenceContainer = document.getElementById('rfp-result-confidence-grid');
+            if (confidenceContainer) {
+                const confidence = data.confidence || {};
+                const confidenceLabels = {
+                    scope: 'Scope',
+                    phases: 'Phases',
+                    disciplines: 'Disciplines',
+                    packages: 'Packages',
+                    schedule: 'Schedule',
+                    quantities: 'Quantities',
+                    budgets: 'Budgets'
+                };
+                
+                const entries = Object.entries(confidence);
+                if (entries.length > 0) {
+                    confidenceContainer.innerHTML = entries.map(([key, value]) => {
+                        const label = confidenceLabels[key] || key;
+                        const level = (value || 'medium').toLowerCase();
+                        return `
+                            <div class="rfp-result-confidence">
+                                <div class="rfp-result-confidence-label">${label}</div>
+                                <div class="rfp-result-confidence-value ${level}">${value}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    confidenceContainer.innerHTML = '<div class="rfp-result-text empty">No confidence scores available.</div>';
+                }
+            }
+        }
+
+        /**
+         * Shows the RFP Results button in the header
+         */
+        function showRfpResultsButton() {
+            const btn = document.getElementById('rfp-results-btn');
+            if (btn) {
+                btn.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Hides the RFP Results button in the header
+         */
+        function hideRfpResultsButton() {
+            const btn = document.getElementById('rfp-results-btn');
+            if (btn) {
+                btn.classList.add('hidden');
+            }
+        }
+
+        // ============================================
         // GLOBAL EXPORTS FOR HTML ONCLICK HANDLERS
         // ============================================
         // These functions need to be accessible from HTML onclick attributes
@@ -12379,6 +12646,11 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         window.exportRfpData = exportRfpData;
         window.updateRfpQuantity = updateRfpQuantity;
         window.showQuantityReasoning = showQuantityReasoning;
+        
+        // RFP Results Panel
+        window.openRfpResultsPanel = openRfpResultsPanel;
+        window.closeRfpResultsPanel = closeRfpResultsPanel;
+        window.toggleRfpResultSection = toggleRfpResultSection;
         
         // Reports
         window.openReportsPanel = openReportsPanel;
