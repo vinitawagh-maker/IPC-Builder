@@ -5826,7 +5826,7 @@ ${reasoning}`;
                 margin: [0.25, 0.25, 0.25, 0.25],
                 filename: `project_summary_${new Date().toISOString().split('T')[0]}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { scale: 2, useCORS: true, willReadFrequently: true },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
                 pagebreak: { mode: ['css', 'legacy'] }
             };
@@ -6722,7 +6722,8 @@ ${reasoning}`;
                 html2canvas: { 
                     scale: 2, 
                     useCORS: true,
-                    letterRendering: true
+                    letterRendering: true,
+                    willReadFrequently: true
                 },
                 jsPDF: { 
                     unit: 'in', 
@@ -7488,7 +7489,8 @@ ${reasoning}`;
                 html2canvas: { 
                     scale: 2, 
                     useCORS: true,
-                    letterRendering: true
+                    letterRendering: true,
+                    willReadFrequently: true
                 },
                 jsPDF: { 
                     unit: 'in', 
@@ -12264,7 +12266,7 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
                 margin: [0.25, 0.25, 0.25, 0.25],
                 filename: `rfp_analysis_${new Date().toISOString().split('T')[0]}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { scale: 2, useCORS: true, willReadFrequently: true },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
                 pagebreak: { mode: ['css', 'legacy'] }
             };
