@@ -4267,7 +4267,7 @@ ${reasoning}`;
          * Handles both line charts and stacked bar charts with percentage labels
          */
         function createChart() {
-            const ctx = document.getElementById('performance-chart').getContext('2d');
+            const ctx = document.getElementById('performance-chart').getContext('2d', { willReadFrequently: true });
             if (chart) chart.destroy();
             
             const data = getChartData();
