@@ -6230,6 +6230,81 @@ ${reasoning}`;
         
         .page-break { page-break-before: always; }
         .no-break { page-break-inside: avoid; }
+        
+        /* Risk Register Styles */
+        .risk-register-section {
+            margin: 20px 0;
+        }
+        .risk-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 14px;
+            margin: 10px 0;
+            page-break-inside: avoid;
+            border-left: 4px solid #ffd700;
+        }
+        .risk-card.severity-high { border-left-color: #dc3545; }
+        .risk-card.severity-medium { border-left-color: #ffc107; }
+        .risk-card.severity-low { border-left-color: #28a745; }
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .risk-category {
+            font-weight: 600;
+            font-size: 10pt;
+            color: #333;
+        }
+        .risk-severity {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .risk-severity.high { background: #f8d7da; color: #721c24; }
+        .risk-severity.medium { background: #fff3cd; color: #856404; }
+        .risk-severity.low { background: #d4edda; color: #155724; }
+        .risk-description {
+            font-size: 9pt;
+            color: #444;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        .risk-mitigation {
+            font-size: 8pt;
+            color: #666;
+            font-style: italic;
+            padding: 8px 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .risk-mitigation::before {
+            content: "Mitigation: ";
+            font-weight: 600;
+            font-style: normal;
+        }
+        .risk-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .risk-summary-card {
+            text-align: center;
+            padding: 12px;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+        .risk-summary-card.high { background: #f8d7da; }
+        .risk-summary-card.medium { background: #fff3cd; }
+        .risk-summary-card.low { background: #d4edda; }
+        .risk-summary-count { font-size: 20pt; font-weight: 700; }
+        .risk-summary-label { font-size: 8pt; text-transform: uppercase; color: #666; }
     </style>
 </head>
 <body>
@@ -6454,6 +6529,70 @@ ${reasoning}`;
             html += `
     </div>
 `;
+
+            // Risk Register Page (if risks exist from RFP analysis)
+            const risks = rfpState && rfpState.extractedData && rfpState.extractedData.risks ? rfpState.extractedData.risks : [];
+            if (risks.length > 0) {
+                const highRisks = risks.filter(r => (r.severity || '').toLowerCase() === 'high').length;
+                const mediumRisks = risks.filter(r => (r.severity || '').toLowerCase() === 'medium').length;
+                const lowRisks = risks.filter(r => (r.severity || '').toLowerCase() === 'low' || !r.severity).length;
+                
+                html += `
+    <div class="page-break"></div>
+    <div class="page">
+        <div class="header">
+            <h1>Risk Register</h1>
+            <div class="subtitle">Identified Project Risks & Mitigation Strategies</div>
+        </div>
+        
+        <div class="risk-summary-grid no-break">
+            <div class="risk-summary-card high">
+                <div class="risk-summary-count">${highRisks}</div>
+                <div class="risk-summary-label">High Severity</div>
+            </div>
+            <div class="risk-summary-card medium">
+                <div class="risk-summary-count">${mediumRisks}</div>
+                <div class="risk-summary-label">Medium Severity</div>
+            </div>
+            <div class="risk-summary-card low">
+                <div class="risk-summary-count">${lowRisks}</div>
+                <div class="risk-summary-label">Low Severity</div>
+            </div>
+        </div>
+        
+        <div class="risk-register-section">
+`;
+                // Sort risks by severity (high first, then medium, then low)
+                const severityOrder = { high: 0, medium: 1, low: 2 };
+                const sortedRisks = [...risks].sort((a, b) => {
+                    const aSev = (a.severity || 'low').toLowerCase();
+                    const bSev = (b.severity || 'low').toLowerCase();
+                    return (severityOrder[aSev] || 2) - (severityOrder[bSev] || 2);
+                });
+                
+                sortedRisks.forEach((risk, idx) => {
+                    const severity = (risk.severity || 'Medium').toLowerCase();
+                    const category = risk.category || 'General';
+                    const description = risk.description || (typeof risk === 'string' ? risk : '');
+                    const mitigation = risk.mitigation || '';
+                    
+                    html += `
+            <div class="risk-card severity-${severity} no-break">
+                <div class="risk-header">
+                    <span class="risk-category">${idx + 1}. ${category}</span>
+                    <span class="risk-severity ${severity}">${severity}</span>
+                </div>
+                <div class="risk-description">${description}</div>
+                ${mitigation ? `<div class="risk-mitigation">${mitigation}</div>` : ''}
+            </div>
+`;
+                });
+                
+                html += `
+        </div>
+    </div>
+`;
+            }
 
             // Schedule & Charts Page
             if (performanceChartImg || (ganttHtml && !ganttHtml.includes('No schedule data'))) {
@@ -11686,6 +11825,86 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         
         .page-break { page-break-before: always; }
         .no-break { page-break-inside: avoid; }
+        
+        /* Risk Register Styles */
+        .risk-register-box {
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+            border: 1px solid #f48fb1;
+            border-radius: 6px;
+            padding: 18px;
+            margin: 18px 0;
+        }
+        .risk-register-box h3 { color: #c2185b; margin-top: 0; }
+        .risk-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .risk-summary-card {
+            text-align: center;
+            padding: 12px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.8);
+        }
+        .risk-summary-card.high { background: #f8d7da; }
+        .risk-summary-card.medium { background: #fff3cd; }
+        .risk-summary-card.low { background: #d4edda; }
+        .risk-summary-count { font-size: 18pt; font-weight: 700; }
+        .risk-summary-label { font-size: 8pt; text-transform: uppercase; color: #666; }
+        .risk-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 14px;
+            margin: 10px 0;
+            page-break-inside: avoid;
+            border-left: 4px solid #ffd700;
+        }
+        .risk-card.severity-high { border-left-color: #dc3545; }
+        .risk-card.severity-medium { border-left-color: #ffc107; }
+        .risk-card.severity-low { border-left-color: #28a745; }
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .risk-category {
+            font-weight: 600;
+            font-size: 10pt;
+            color: #333;
+        }
+        .risk-severity {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .risk-severity.high { background: #f8d7da; color: #721c24; }
+        .risk-severity.medium { background: #fff3cd; color: #856404; }
+        .risk-severity.low { background: #d4edda; color: #155724; }
+        .risk-description {
+            font-size: 9pt;
+            color: #444;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        .risk-mitigation {
+            font-size: 8pt;
+            color: #666;
+            font-style: italic;
+            padding: 8px 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .risk-mitigation::before {
+            content: "Mitigation: ";
+            font-weight: 600;
+            font-style: normal;
+        }
     </style>
 </head>
 <body>
@@ -11973,30 +12192,58 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
 `;
             }
 
-            // Risks (if available)
+            // Risk Register (if available)
             if (extractedData.risks && extractedData.risks.length > 0) {
+                const highRisks = extractedData.risks.filter(r => (r.severity || '').toLowerCase() === 'high').length;
+                const mediumRisks = extractedData.risks.filter(r => (r.severity || '').toLowerCase() === 'medium').length;
+                const lowRisks = extractedData.risks.filter(r => (r.severity || '').toLowerCase() === 'low' || !r.severity).length;
+                
                 html += `
-        <h2>Identified Risks & Considerations</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 30px;">#</th>
-                    <th>Risk / Consideration</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="page-break"></div>
+        <h2>⚠️ Risk Register</h2>
+        <div class="risk-register-box">
+            <h3>Risk Summary</h3>
+            <div class="risk-summary-grid">
+                <div class="risk-summary-card high">
+                    <div class="risk-summary-count">${highRisks}</div>
+                    <div class="risk-summary-label">High Severity</div>
+                </div>
+                <div class="risk-summary-card medium">
+                    <div class="risk-summary-count">${mediumRisks}</div>
+                    <div class="risk-summary-label">Medium Severity</div>
+                </div>
+                <div class="risk-summary-card low">
+                    <div class="risk-summary-count">${lowRisks}</div>
+                    <div class="risk-summary-label">Low Severity</div>
+                </div>
+            </div>
+        </div>
 `;
-                extractedData.risks.forEach((risk, idx) => {
-                    html += `
-                <tr>
-                    <td class="text-center">${idx + 1}</td>
-                    <td>${typeof risk === 'string' ? risk : (risk.description || risk.name || JSON.stringify(risk))}</td>
-                </tr>`;
+                // Sort risks by severity (high first, then medium, then low)
+                const severityOrder = { high: 0, medium: 1, low: 2 };
+                const sortedRisks = [...extractedData.risks].sort((a, b) => {
+                    const aSev = (a.severity || 'low').toLowerCase();
+                    const bSev = (b.severity || 'low').toLowerCase();
+                    return (severityOrder[aSev] || 2) - (severityOrder[bSev] || 2);
                 });
-                html += `
-            </tbody>
-        </table>
+                
+                sortedRisks.forEach((risk, idx) => {
+                    const severity = (risk.severity || 'Medium').toLowerCase();
+                    const category = risk.category || 'General';
+                    const description = typeof risk === 'string' ? risk : (risk.description || '');
+                    const mitigation = risk.mitigation || '';
+                    
+                    html += `
+        <div class="risk-card severity-${severity} no-break">
+            <div class="risk-header">
+                <span class="risk-category">${idx + 1}. ${category}</span>
+                <span class="risk-severity ${severity}">${severity}</span>
+            </div>
+            <div class="risk-description">${description}</div>
+            ${mitigation ? `<div class="risk-mitigation">${mitigation}</div>` : ''}
+        </div>
 `;
+                });
             }
 
             html += `
