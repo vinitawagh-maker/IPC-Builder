@@ -2,7 +2,7 @@
 
 **A modern Vite-powered web application for generating Work Breakdown Structures (WBS) for engineering infrastructure projects.**
 
-🌐 **Live App:** https://mjamiv.github.io/IPC-Builder/
+
 
 ---
 
