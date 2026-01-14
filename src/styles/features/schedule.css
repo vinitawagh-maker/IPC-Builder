@@ -57,3 +57,76 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+/* ===========================================
+   Activity & Review Steps Styles
+   =========================================== */
+
+.activity-header-row {
+    background: var(--color-bg-highlight);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.activity-header-row:hover {
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.activity-header-row td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.expand-icon {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    color: var(--color-primary);
+    font-size: 10px;
+    margin-right: 6px;
+}
+
+.review-step-row {
+    background: var(--color-bg-card);
+    border-left: 3px solid var(--color-border-light);
+}
+
+.review-step-row td {
+    padding: 6px 8px;
+    font-size: 11px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.review-step-row:last-child td {
+    border-bottom: 2px solid var(--color-border);
+}
+
+.review-step-row.hidden {
+    display: none;
+}
+
+.review-step-row input[type="date"] {
+    font-size: 11px;
+    padding: 4px 6px;
+    background: var(--color-bg-terminal);
+    border: 1px solid var(--color-border-light);
+    color: #aaa;
+}
+
+.review-step-row input[type="date"]:focus {
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+.review-step-duration {
+    color: var(--color-text-muted);
+}
+
+/* Activity ID styling */
+#dates-table th:first-child,
+#dates-table td:first-child {
+    white-space: nowrap;
+}
+
+#dates-table .table-input {
+    min-width: 120px;
+}

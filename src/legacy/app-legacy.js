@@ -23,6 +23,13 @@ let projectData = {
             budgets: {},
             claiming: {},
             dates: {},
+            // Unique identifiers for disciplines and packages
+            disciplineIds: {},     // { "Roadway": "DISC-001", ... }
+            packageIds: {},        // { "Preliminary": "PKG-001", ... }
+            // Activities generated from discipline + package combinations
+            activities: {},        // { "Roadway-Preliminary": { id: "DISC-001-PKG-001", description: "Roadway - Preliminary" }, ... }
+            // Design review steps for schedule
+            reviewSteps: {},       // { "Roadway-Preliminary": [{ step: "Design Development", start: "", end: "" }, ...] }
             calculator: {
                 totalConstructionCost: 0,
                 designFeePercent: 15,
@@ -36,6 +43,7 @@ let projectData = {
             projectScope: '',
             scheduleNotes: '',
             disciplineScopes: {},
+            rfpReviewSteps: [],  // Review steps extracted from RFP
             
             // Chapter 1 - Project Information
             projectInfo: {
@@ -87,6 +95,350 @@ let projectData = {
         const STORAGE_VERSION = 1;
         let autosaveTimeout = null;
         let lastSaveTime = null;
+
+        // ============================================
+        // DESIGN REVIEW STEPS CONFIGURATION
+        // ============================================
+        
+        /**
+         * Industry-standard review step durations by project type
+         * Durations are in calendar days for a typical package
+         * Based on DOT and infrastructure industry standards
+         */
+        const INDUSTRY_REVIEW_DURATIONS = {
+            // Highway/Roadway projects - moderate review cycles
+            'Highway/Roadway': {
+                default: {
+                    'Design Development': 21,
+                    'IDR/CR (Internal Design Review)': 5,
+                    "Owner's Review": 14,
+                    'Address Comments': 10,
+                    'Final Approval': 5
+                },
+                // Discipline-specific adjustments (multiplier)
+                disciplines: {
+                    'Roadway': 1.0,
+                    'Drainage': 0.9,
+                    'Traffic': 0.8,
+                    'Signing': 0.6,
+                    'Pavement Marking': 0.5,
+                    'Utilities': 0.9,
+                    'Survey': 0.7,
+                    'Environmental': 1.1,
+                    'Geotechnical': 0.8
+                }
+            },
+            // Bridge projects - longer structural reviews
+            'Bridge': {
+                default: {
+                    'Design Development': 28,
+                    'IDR/CR (Internal Design Review)': 7,
+                    "Owner's Review": 21,
+                    'Address Comments': 14,
+                    'Final Approval': 7
+                },
+                disciplines: {
+                    'Structures': 1.2,
+                    'Roadway': 0.8,
+                    'Drainage': 0.7,
+                    'Geotechnical': 1.1,
+                    'Traffic': 0.6,
+                    'Utilities': 0.7
+                }
+            },
+            // Transit/Rail - complex multi-discipline coordination
+            'Transit': {
+                default: {
+                    'Design Development': 35,
+                    'IDR/CR (Internal Design Review)': 10,
+                    "Owner's Review": 28,
+                    'Address Comments': 21,
+                    'Final Approval': 10
+                },
+                disciplines: {
+                    'Structures': 1.1,
+                    'Track': 1.2,
+                    'Systems': 1.3,
+                    'Traffic': 0.8,
+                    'Drainage': 0.7,
+                    'Utilities': 0.9,
+                    'Landscaping': 0.6
+                }
+            },
+            // Drainage/Utilities - shorter cycles
+            'Drainage/Utilities': {
+                default: {
+                    'Design Development': 18,
+                    'IDR/CR (Internal Design Review)': 4,
+                    "Owner's Review": 10,
+                    'Address Comments': 7,
+                    'Final Approval': 4
+                },
+                disciplines: {
+                    'Drainage': 1.0,
+                    'Utilities': 1.0,
+                    'Roadway': 0.8,
+                    'Environmental': 1.1,
+                    'Survey': 0.7
+                }
+            },
+            // Intersection - moderate cycles
+            'Intersection': {
+                default: {
+                    'Design Development': 18,
+                    'IDR/CR (Internal Design Review)': 5,
+                    "Owner's Review": 12,
+                    'Address Comments': 8,
+                    'Final Approval': 5
+                },
+                disciplines: {
+                    'Roadway': 1.0,
+                    'Traffic': 1.1,
+                    'Signals': 1.2,
+                    'Signing': 0.7,
+                    'Pavement Marking': 0.5,
+                    'Drainage': 0.8
+                }
+            }
+        };
+
+        /**
+         * Package/deliverable multipliers - some packages need longer reviews
+         */
+        const PACKAGE_DURATION_MULTIPLIERS = {
+            'Preliminary': 0.7,      // Shorter reviews for early concepts
+            'Interim': 0.9,          // Moderate reviews
+            'Final': 1.2,            // Thorough final reviews
+            'RFC': 1.0,              // Ready for construction - standard
+            'As-Built': 0.5,         // Quick verification only
+            '30%': 0.6,
+            '60%': 0.85,
+            '90%': 1.1,
+            '100%': 1.0,
+            'Basis of Design': 0.8,  // BOD is typically shorter overall
+            'BOD': 0.8
+        };
+
+        /**
+         * Special review steps for specific package types
+         * These override the default industry steps when the package matches
+         */
+        const PACKAGE_SPECIFIC_REVIEW_STEPS = {
+            'Basis of Design': [
+                { name: 'BOD Development', durationPercent: 38 },
+                { name: 'Internal Technical Review', durationPercent: 12 },
+                { name: 'Owner Workshop/Review', durationPercent: 22 },
+                { name: 'Incorporate Feedback', durationPercent: 18 },
+                { name: 'BOD Approval/Sign-off', durationPercent: 10 }
+            ],
+            'BOD': [
+                { name: 'BOD Development', durationPercent: 38 },
+                { name: 'Internal Technical Review', durationPercent: 12 },
+                { name: 'Owner Workshop/Review', durationPercent: 22 },
+                { name: 'Incorporate Feedback', durationPercent: 18 },
+                { name: 'BOD Approval/Sign-off', durationPercent: 10 }
+            ],
+            'Concept': [
+                { name: 'Concept Development', durationPercent: 40 },
+                { name: 'Internal Review', durationPercent: 15 },
+                { name: 'Client Presentation', durationPercent: 20 },
+                { name: 'Refine Concept', durationPercent: 15 },
+                { name: 'Concept Approval', durationPercent: 10 }
+            ],
+            'Schematic': [
+                { name: 'Schematic Development', durationPercent: 40 },
+                { name: 'Internal Review', durationPercent: 12 },
+                { name: 'Owner Review', durationPercent: 20 },
+                { name: 'Address Comments', durationPercent: 18 },
+                { name: 'Schematic Approval', durationPercent: 10 }
+            ]
+        };
+
+        /**
+         * Returns null to always use industry-standard generic steps
+         * RFP-based steps are disabled - using generic steps only
+         * @returns {null} Always returns null to use default industry steps
+         */
+        function parseRfpScheduleSteps() {
+            // Always use generic industry-standard steps
+            return null;
+        }
+        
+        /**
+         * Gets review step durations - checks for package-specific steps first, then uses industry standards
+         * @param {string} discipline - The discipline name
+         * @param {string} packageName - The package/deliverable name
+         * @returns {Array} Array of review steps with calculated durations
+         */
+        function getIndustryReviewSteps(discipline, packageName) {
+            // Determine project type from calculator settings or default
+            const projectType = projectData.calculator?.projectType || 'Highway/Roadway';
+            
+            // Get base durations for project type (fallback to Highway/Roadway)
+            const typeConfig = INDUSTRY_REVIEW_DURATIONS[projectType] || 
+                              INDUSTRY_REVIEW_DURATIONS['Highway/Roadway'];
+            
+            // Get discipline multiplier
+            const discMultiplier = typeConfig.disciplines?.[discipline] || 1.0;
+            
+            // Get package multiplier
+            const pkgMultiplier = PACKAGE_DURATION_MULTIPLIERS[packageName] || 1.0;
+            
+            // Check for package-specific review steps (e.g., Basis of Design, Concept, Schematic)
+            const packageSpecificSteps = PACKAGE_SPECIFIC_REVIEW_STEPS[packageName];
+            
+            if (packageSpecificSteps) {
+                // Use package-specific steps with adjusted durations
+                const baseTotalDays = 55; // Base total days for calculation
+                return packageSpecificSteps.map(step => {
+                    const adjustedDays = Math.max(1, Math.round(baseTotalDays * (step.durationPercent / 100) * discMultiplier * pkgMultiplier));
+                    return {
+                        name: step.name,
+                        durationPercent: step.durationPercent,
+                        industryDays: adjustedDays
+                    };
+                });
+            }
+            
+            // Use default industry standard steps
+            const steps = Object.entries(typeConfig.default).map(([stepName, baseDays]) => {
+                const adjustedDays = Math.max(1, Math.round(baseDays * discMultiplier * pkgMultiplier));
+                return {
+                    name: stepName,
+                    baseDays: adjustedDays
+                };
+            });
+            
+            // Calculate total and percentages
+            const totalDays = steps.reduce((sum, s) => sum + s.baseDays, 0);
+            
+            return steps.map(step => ({
+                name: step.name,
+                durationPercent: Math.round((step.baseDays / totalDays) * 100),
+                industryDays: step.baseDays
+            }));
+        }
+        
+        /**
+         * Default review steps (fallback when no project type is set)
+         */
+        const DEFAULT_REVIEW_STEPS = [
+            { name: 'Design Development', durationPercent: 40 },
+            { name: 'IDR/CR (Internal Design Review)', durationPercent: 10 },
+            { name: "Owner's Review", durationPercent: 20 },
+            { name: 'Address Comments', durationPercent: 20 },
+            { name: 'Final Approval', durationPercent: 10 }
+        ];
+
+        /**
+         * Generates a unique discipline ID
+         * @param {string} disciplineName - The discipline name
+         * @param {number} index - Index for generating sequential ID
+         * @returns {string} Unique discipline ID like "DISC-001"
+         */
+        function generateDisciplineId(disciplineName, index) {
+            const paddedIndex = String(index + 1).padStart(3, '0');
+            return `DISC-${paddedIndex}`;
+        }
+
+        /**
+         * Generates a unique package/scope item ID
+         * @param {string} packageName - The package name
+         * @param {number} index - Index for generating sequential ID
+         * @returns {string} Unique package ID like "PKG-001"
+         */
+        function generatePackageId(packageName, index) {
+            const paddedIndex = String(index + 1).padStart(3, '0');
+            return `PKG-${paddedIndex}`;
+        }
+
+        /**
+         * Generates activity ID and description for a discipline-package combination
+         * Activity ID format: PackageClaiming (e.g., "Preliminary20" for 20% claiming)
+         * @param {string} discipline - Discipline name
+         * @param {string} packageName - Package/scope item name
+         * @returns {object} { id: "Preliminary20", description: "Preliminary - Roadway (20%)" }
+         */
+        function generateActivityInfo(discipline, packageName) {
+            // Remove spaces and special characters for clean ID
+            const cleanPkg = packageName.replace(/[^a-zA-Z0-9]/g, '');
+            
+            // Get claiming percentage for this discipline-package combination
+            const key = `${discipline}-${packageName}`;
+            const claimingPct = projectData.claiming[key] || 0;
+            
+            return {
+                id: `${cleanPkg}${claimingPct}`,
+                description: `${packageName} - ${discipline} (${claimingPct}%)`
+            };
+        }
+
+        /**
+         * Initializes unique IDs for all disciplines and packages
+         * Called when disciplines or packages are added/modified
+         */
+        function initializeUniqueIds() {
+            // Generate discipline IDs
+            projectData.disciplines.forEach((disc, index) => {
+                if (!projectData.disciplineIds[disc]) {
+                    projectData.disciplineIds[disc] = generateDisciplineId(disc, index);
+                }
+            });
+            
+            // Generate package IDs
+            projectData.packages.forEach((pkg, index) => {
+                if (!projectData.packageIds[pkg]) {
+                    projectData.packageIds[pkg] = generatePackageId(pkg, index);
+                }
+            });
+            
+            // Generate activity info for all combinations (always regenerate to ensure correct format)
+            projectData.disciplines.forEach(disc => {
+                projectData.packages.forEach(pkg => {
+                    const key = `${disc}-${pkg}`;
+                    projectData.activities[key] = generateActivityInfo(disc, pkg);
+                });
+            });
+        }
+
+        /**
+         * Initializes design review steps for an activity using industry-standard durations
+         * Generic steps: Design Development, IDR/CR, Owner's Review, Address Comments, Final Approval
+         * @param {string} discipline - Discipline name
+         * @param {string} packageName - Package name
+         */
+        function initializeReviewSteps(discipline, packageName) {
+            const key = `${discipline}-${packageName}`;
+            const dates = projectData.dates[key] || {};
+            
+            if (!projectData.reviewSteps[key] && dates.start && dates.end) {
+                const startDate = new Date(dates.start);
+                const endDate = new Date(dates.end);
+                const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+                
+                // Get industry-standard review steps
+                const reviewSteps = getIndustryReviewSteps(discipline, packageName);
+                
+                let currentStart = new Date(startDate);
+                projectData.reviewSteps[key] = reviewSteps.map(step => {
+                    // Calculate actual days based on percentages scaled to activity duration
+                    const stepDays = Math.max(1, Math.ceil(totalDays * (step.durationPercent / 100)));
+                    const stepEnd = new Date(currentStart);
+                    stepEnd.setDate(stepEnd.getDate() + stepDays);
+                    
+                    const result = {
+                        step: step.name,
+                        start: currentStart.toISOString().split('T')[0],
+                        end: stepEnd.toISOString().split('T')[0],
+                        days: stepDays,
+                        industryDays: step.industryDays // Store industry baseline for reference
+                    };
+                    
+                    currentStart = new Date(stepEnd);
+                    return result;
+                });
+            }
+        }
 
         /**
          * Debounce utility for autosave
@@ -4038,45 +4390,93 @@ ${reasoning}`;
         /**
          * Builds the schedule dates table for Step 6
          * Generates date inputs for each discipline-package combination with duration calculation
+         * Now includes Activity IDs and design review steps
          */
         function buildDatesTable() {
             const table = document.getElementById('dates-table');
             const today = new Date();
             const fmt = d => d.toISOString().split('T')[0];
             
+            // Initialize unique IDs if not already done
+            initializeUniqueIds();
+            
             let html = `
                 <thead>
                     <tr>
-                        <th>DISCIPLINE</th>
-                        <th>PACKAGE</th>
+                        <th style="width: 120px;">ACTIVITY ID</th>
+                        <th>ACTIVITY DESCRIPTION</th>
+                        <th>REVIEW STEP</th>
                         <th>START</th>
                         <th>END</th>
-                        <th style="text-align: center;">DAYS</th>
+                        <th style="text-align: center; width: 60px;">DAYS</th>
                     </tr>
                 </thead>
                 <tbody>
             `;
             
-            projectData.disciplines.forEach(disc => {
-                projectData.packages.forEach((pkg, i) => {
+            projectData.disciplines.forEach((disc, discIndex) => {
+                projectData.packages.forEach((pkg, pkgIndex) => {
                     const key = `${disc}-${pkg}`;
+                    const activity = projectData.activities[key] || generateActivityInfo(disc, pkg);
                     
-                    const startDate = new Date(today);
-                    startDate.setDate(startDate.getDate() + (i * 45));
-                    const endDate = new Date(startDate);
-                    endDate.setDate(endDate.getDate() + 42);
+                    // Calculate default dates if not saved
+                    const defaultStartDate = new Date(today);
+                    defaultStartDate.setDate(defaultStartDate.getDate() + (discIndex * projectData.packages.length + pkgIndex) * 45);
+                    const defaultEndDate = new Date(defaultStartDate);
+                    defaultEndDate.setDate(defaultEndDate.getDate() + 42);
                     
                     const saved = projectData.dates[key] || {};
+                    const activityStart = saved.start || fmt(defaultStartDate);
+                    const activityEnd = saved.end || fmt(defaultEndDate);
+                    
+                    // Save dates if not already saved (for review step calculation)
+                    if (!saved.start || !saved.end) {
+                        projectData.dates[key] = { start: activityStart, end: activityEnd };
+                    }
+                    
+                    // Initialize review steps for this activity
+                    initializeReviewSteps(disc, pkg);
+                    const reviewSteps = projectData.reviewSteps[key] || [];
+                    
+                    // First row: Activity header row (collapsible)
+                    const isFirstPkg = pkgIndex === 0;
+                    const discIdDisplay = isFirstPkg ? `<span style="color: #4da6ff; font-size: 10px;">${projectData.disciplineIds[disc] || ''}</span><br>` : '';
                     
                     html += `
-                        <tr>
-                            <td>${i === 0 ? disc : ''}</td>
-                            <td style="color: #ffd700;">${pkg}</td>
-                            <td><input type="date" class="table-input date-start" data-key="${key}" value="${saved.start || fmt(startDate)}"></td>
-                            <td><input type="date" class="table-input date-end" data-key="${key}" value="${saved.end || fmt(endDate)}"></td>
+                        <tr class="activity-header-row" data-key="${key}" onclick="toggleReviewSteps('${key}')">
+                            <td style="cursor: pointer;">
+                                ${discIdDisplay}
+                                <span style="color: #ffd700; font-weight: 600;">${activity.id}</span>
+                            </td>
+                            <td style="cursor: pointer;">
+                                ${isFirstPkg ? `<span style="color: #888; font-size: 11px;">${disc}</span><br>` : ''}
+                                <span style="color: #fff;">${activity.description}</span>
+                            </td>
+                            <td style="color: #888; cursor: pointer;">
+                                <span class="expand-icon" id="expand-${key}">▶</span> 
+                                ${reviewSteps.length} review steps
+                            </td>
+                            <td><input type="date" class="table-input date-start" data-key="${key}" value="${activityStart}" onclick="event.stopPropagation()"></td>
+                            <td><input type="date" class="table-input date-end" data-key="${key}" value="${activityEnd}" onclick="event.stopPropagation()"></td>
                             <td class="duration-cell" data-key="${key}" style="text-align: center;">--</td>
                         </tr>
                     `;
+                    
+                    // Review step rows (hidden by default) - using industry-standard generic steps
+                    reviewSteps.forEach((step, stepIndex) => {
+                        const stepKey = `${key}-step-${stepIndex}`;
+                        const industryRef = step.industryDays ? `<span title="Industry standard: ${step.industryDays} days" style="color: #4da6ff; font-size: 9px; margin-left: 4px;">(${step.industryDays}d)</span>` : '';
+                        html += `
+                            <tr class="review-step-row hidden" data-parent="${key}">
+                                <td style="padding-left: 20px; color: #666; font-size: 11px;">${stepIndex + 1}</td>
+                                <td style="padding-left: 20px; color: #aaa; font-size: 12px;">${step.step}${industryRef}</td>
+                                <td></td>
+                                <td><input type="date" class="table-input review-step-start" data-step-key="${stepKey}" value="${step.start}" onchange="updateReviewStepDates('${key}', ${stepIndex}, 'start', this.value)"></td>
+                                <td><input type="date" class="table-input review-step-end" data-step-key="${stepKey}" value="${step.end}" onchange="updateReviewStepDates('${key}', ${stepIndex}, 'end', this.value)"></td>
+                                <td class="review-step-duration" data-step-key="${stepKey}" style="text-align: center; color: #888; font-size: 11px;">${step.days || '--'}</td>
+                            </tr>
+                        `;
+                    });
                 });
             });
             
@@ -4084,9 +4484,104 @@ ${reasoning}`;
             table.innerHTML = html;
             
             document.querySelectorAll('.date-start, .date-end').forEach(input => {
-                input.addEventListener('change', updateDurations);
+                input.addEventListener('change', function() {
+                    updateDurations();
+                    recalculateReviewSteps(this.dataset.key);
+                });
             });
             updateDurations();
+        }
+        
+        /**
+         * Toggles visibility of review steps for an activity
+         */
+        function toggleReviewSteps(key) {
+            const rows = document.querySelectorAll(`.review-step-row[data-parent="${key}"]`);
+            const expandIcon = document.getElementById(`expand-${key}`);
+            
+            rows.forEach(row => {
+                row.classList.toggle('hidden');
+            });
+            
+            if (expandIcon) {
+                expandIcon.textContent = expandIcon.textContent === '▶' ? '▼' : '▶';
+            }
+        }
+        
+        /**
+         * Updates review step dates when manually edited
+         */
+        function updateReviewStepDates(activityKey, stepIndex, field, value) {
+            if (!projectData.reviewSteps[activityKey]) return;
+            
+            const step = projectData.reviewSteps[activityKey][stepIndex];
+            if (step) {
+                step[field] = value;
+                
+                // Recalculate days
+                if (step.start && step.end) {
+                    step.days = Math.ceil((new Date(step.end) - new Date(step.start)) / (1000 * 60 * 60 * 24));
+                }
+                
+                // Update the duration display
+                const stepKey = `${activityKey}-step-${stepIndex}`;
+                const durationCell = document.querySelector(`.review-step-duration[data-step-key="${stepKey}"]`);
+                if (durationCell) {
+                    durationCell.textContent = step.days || '--';
+                }
+                
+                triggerAutosave();
+            }
+        }
+        
+        /**
+         * Recalculates review steps when activity dates change
+         * Uses industry-standard durations based on project type, discipline, and package
+         */
+        function recalculateReviewSteps(activityKey) {
+            if (!activityKey) return;
+            
+            const startInput = document.querySelector(`.date-start[data-key="${activityKey}"]`);
+            const endInput = document.querySelector(`.date-end[data-key="${activityKey}"]`);
+            
+            if (!startInput || !endInput) return;
+            
+            const startDate = new Date(startInput.value);
+            const endDate = new Date(endInput.value);
+            
+            if (isNaN(startDate) || isNaN(endDate)) return;
+            
+            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+            if (totalDays <= 0) return;
+            
+            // Parse discipline and package from activity key
+            const [discipline, packageName] = activityKey.split('-');
+            
+            // Get industry-standard review steps for this discipline/package
+            const industrySteps = getIndustryReviewSteps(discipline, packageName);
+            
+            // Recalculate review steps using industry percentages
+            let currentStart = new Date(startDate);
+            projectData.reviewSteps[activityKey] = industrySteps.map((step) => {
+                const stepDays = Math.max(1, Math.ceil(totalDays * (step.durationPercent / 100)));
+                const stepEnd = new Date(currentStart);
+                stepEnd.setDate(stepEnd.getDate() + stepDays);
+                
+                const result = {
+                    step: step.name,
+                    start: currentStart.toISOString().split('T')[0],
+                    end: stepEnd.toISOString().split('T')[0],
+                    days: stepDays,
+                    industryDays: step.industryDays
+                };
+                
+                currentStart = new Date(stepEnd);
+                return result;
+            });
+            
+            // Refresh the table to show updated values
+            buildDatesTable();
+            triggerAutosave();
         }
 
         /**
@@ -4170,6 +4665,7 @@ ${reasoning}`;
                 <thead>
                     <tr>
                         <th>WBS#</th>
+                        <th>ACTIVITY ID</th>
                         <th>PHASE</th>
                         <th>DISCIPLINE</th>
                         <th>PACKAGE</th>
@@ -4190,9 +4686,11 @@ ${reasoning}`;
         function generateWBSDisciplineRow(wbsPrefix, phase, discipline, totalBudget, startDate, endDate, phaseIndex, disciplineIndex) {
             const rowId = `wbs-disc-${phaseIndex}-${disciplineIndex}`;
             const isExpanded = wbsTableState.expandedDisciplines.has(rowId);
+            const discId = projectData.disciplineIds[discipline] || '';
             return `
                 <tr class="wbs-discipline-row" data-row-id="${rowId}" onclick="toggleWBSDiscipline('${rowId}')">
                     <td><span class="wbs-expand-icon ${isExpanded ? 'expanded' : ''}">▶</span> ${wbsPrefix}</td>
+                    <td style="color: #4da6ff;">${discId}</td>
                     <td>${phase}</td>
                     <td>${discipline}</td>
                     <td style="color: #888; font-weight: 400;">${projectData.packages.length} packages</td>
@@ -4211,9 +4709,12 @@ ${reasoning}`;
          */
         function generateWBSPackageRow(wbsNumber, phase, discipline, packageName, packageBudget, claimPercent, dates, rowId) {
             const isExpanded = wbsTableState.expandedDisciplines.has(rowId);
+            const key = `${discipline}-${packageName}`;
+            const activity = projectData.activities[key] || { id: '', description: '' };
             return `
                 <tr class="wbs-package-row ${isExpanded ? '' : 'hidden'}" data-parent="${rowId}">
                     <td style="color: #888;">${wbsNumber}</td>
+                    <td style="color: #ffd700; font-size: 11px;">${activity.id}</td>
                     <td style="color: #666;">${phase}</td>
                     <td style="color: #666;">${discipline}</td>
                     <td style="color: #ffd700;">${packageName}</td>
@@ -4236,7 +4737,7 @@ ${reasoning}`;
             return `
                 <tfoot>
                     <tr>
-                        <td colspan="4">GRAND TOTAL</td>
+                        <td colspan="5">GRAND TOTAL</td>
                         <td style="text-align: right;">$${Math.round(grandTotal).toLocaleString()}</td>
                         <td></td>
                         <td colspan="2"></td>
@@ -4298,6 +4799,10 @@ ${reasoning}`;
         function buildWBSTable() {
             const table = document.getElementById('wbs-table');
             let grandTotal = 0;
+            
+            // Initialize unique IDs for disciplines and packages
+            initializeUniqueIds();
+            
             let html = generateWBSTableHeader() + '<tbody>';
             
             projectData.phases.forEach((phase, phaseIndex) => {
@@ -4850,11 +5355,16 @@ ${reasoning}`;
         function buildWBSTableEditable() {
             const table = document.getElementById('wbs-table');
             let grandTotal = 0;
+            
+            // Initialize unique IDs for disciplines and packages
+            initializeUniqueIds();
+            
             let html = `
                 <thead>
                     <tr>
                         <th style="width: 30px;"></th>
                         <th>WBS#</th>
+                        <th>ACTIVITY ID</th>
                         <th>PHASE</th>
                         <th>DISCIPLINE</th>
                         <th>PACKAGE</th>
@@ -4872,6 +5382,7 @@ ${reasoning}`;
                     const disciplineBudget = projectData.budgets[discipline] || 0;
                     const wbsPrefix = `${phaseIndex + 1}.${disciplineIndex + 1}`;
                     const rowId = `wbs-disc-${phaseIndex}-${disciplineIndex}`;
+                    const discId = projectData.disciplineIds[discipline] || '';
                     
                     // Calculate discipline date range
                     let minStart = null, maxEnd = null;
@@ -4893,6 +5404,7 @@ ${reasoning}`;
                             <td onclick="toggleWBSDiscipline('${rowId}')">
                                 <span class="wbs-expand-icon ${wbsTableState.expandedDisciplines.has(rowId) ? 'expanded' : ''}">▶</span> ${wbsPrefix}
                             </td>
+                            <td style="color: #4da6ff;">${discId}</td>
                             <td>${phase}</td>
                             <td style="font-weight: 600; color: #ffd700;">${discipline}</td>
                             <td style="color: #888;">${projectData.packages.length} packages</td>
@@ -4917,6 +5429,7 @@ ${reasoning}`;
                         const dates = projectData.dates[key] || { start: '', end: '' };
                         const wbsNumber = `${wbsPrefix}.${packageIndex + 1}`;
                         const isExpanded = wbsTableState.expandedDisciplines.has(rowId);
+                        const activity = projectData.activities[key] || { id: '', description: '' };
                         
                         html += `
                             <tr class="wbs-package-row ${isExpanded ? '' : 'hidden'}" data-parent="${rowId}">
@@ -4924,6 +5437,7 @@ ${reasoning}`;
                                     <button class="wbs-delete-btn" onclick="confirmDeletePackage('${packageName}')" title="Delete package">✕</button>
                                 </td>
                                 <td style="color: #888;">${wbsNumber}</td>
+                                <td style="color: #ffd700; font-size: 11px;">${activity.id}</td>
                                 <td style="color: #666;">${phase}</td>
                                 <td style="color: #666;">${discipline}</td>
                                 <td style="color: #ffd700;">${packageName}</td>
@@ -4950,7 +5464,7 @@ ${reasoning}`;
                 <tfoot>
                     <tr>
                         <td></td>
-                        <td colspan="4">GRAND TOTAL</td>
+                        <td colspan="5">GRAND TOTAL</td>
                         <td style="text-align: right;">$${Math.round(grandTotal).toLocaleString()}</td>
                         <td colspan="3"></td>
                     </tr>
@@ -7291,6 +7805,69 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
                         }
                     }
                 }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "modify_claiming",
+                    description: "Modify the claiming percentage for a discipline-package combination",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            discipline: {
+                                type: "string",
+                                description: "The discipline to modify (or 'all' for all disciplines)"
+                            },
+                            package: {
+                                type: "string",
+                                description: "The package to modify"
+                            },
+                            percentage: {
+                                type: "number",
+                                description: "The new claiming percentage (0-100)"
+                            }
+                        },
+                        required: ["discipline", "package", "percentage"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "add_package",
+                    description: "Add a new package/deliverable to the project",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            name: {
+                                type: "string",
+                                description: "Name of the new package (e.g., '60%', 'Quality Assurance')"
+                            },
+                            default_claim: {
+                                type: "number",
+                                description: "Default claiming percentage for this package (will be balanced across existing packages)"
+                            }
+                        },
+                        required: ["name"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "add_phase",
+                    description: "Add a new phase to the project",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            name: {
+                                type: "string",
+                                description: "Name of the new phase (e.g., 'Construction Support', 'QA/QC')"
+                            }
+                        },
+                        required: ["name"]
+                    }
+                }
             }
         ];
 
@@ -7302,24 +7879,194 @@ Be helpful, friendly, and context-aware. When users are on the Results page, you
          */
         function executeToolCall(name, args) {
             try {
+                let result;
                 switch (name) {
                     case 'adjust_budget':
-                        return executeAdjustBudget(args);
+                        result = executeAdjustBudget(args);
+                        break;
                     case 'add_discipline':
-                        return executeAddDiscipline(args);
+                        result = executeAddDiscipline(args);
+                        break;
                     case 'remove_discipline':
-                        return executeRemoveDiscipline(args);
+                        result = executeRemoveDiscipline(args);
+                        break;
                     case 'modify_schedule':
-                        return executeModifySchedule(args);
+                        result = executeModifySchedule(args);
+                        break;
                     case 'run_what_if':
-                        return executeWhatIf(args);
+                        result = executeWhatIf(args);
+                        break;
                     case 'get_project_summary':
-                        return executeGetProjectSummary(args);
+                        result = executeGetProjectSummary(args);
+                        break;
+                    case 'modify_claiming':
+                        result = executeModifyClaiming(args);
+                        break;
+                    case 'add_package':
+                        result = executeAddPackage(args);
+                        break;
+                    case 'add_phase':
+                        result = executeAddPhase(args);
+                        break;
                     default:
                         return { success: false, error: `Unknown tool: ${name}` };
                 }
+                
+                // Refresh UI after successful data-modifying operations
+                if (result.success && name !== 'get_project_summary' && name !== 'run_what_if') {
+                    refreshUIAfterToolExecution();
+                }
+                
+                return result;
             } catch (error) {
                 return { success: false, error: error.message };
+            }
+        }
+        
+        /**
+         * Modifies claiming percentage for a discipline-package combination
+         */
+        function executeModifyClaiming(args) {
+            const { discipline, package: pkg, percentage } = args;
+            
+            if (percentage < 0 || percentage > 100) {
+                return { success: false, error: 'Percentage must be between 0 and 100' };
+            }
+            
+            const changes = [];
+            
+            if (discipline.toLowerCase() === 'all') {
+                // Apply to all disciplines for this package
+                projectData.disciplines.forEach(disc => {
+                    const key = `${disc}-${pkg}`;
+                    if (projectData.claiming[key] !== undefined) {
+                        const oldValue = projectData.claiming[key];
+                        projectData.claiming[key] = percentage;
+                        changes.push({ discipline: disc, package: pkg, oldValue, newValue: percentage });
+                    }
+                });
+            } else {
+                const discName = projectData.disciplines.find(
+                    d => d.toLowerCase() === discipline.toLowerCase()
+                );
+                if (!discName) {
+                    return { success: false, error: `Discipline "${discipline}" not found` };
+                }
+                
+                const key = `${discName}-${pkg}`;
+                const oldValue = projectData.claiming[key] || 0;
+                projectData.claiming[key] = percentage;
+                changes.push({ discipline: discName, package: pkg, oldValue, newValue: percentage });
+            }
+            
+            // Regenerate activity IDs (since they now include claiming)
+            initializeUniqueIds();
+            
+            triggerAutosave();
+            
+            return {
+                success: true,
+                message: `Updated claiming: ${changes.map(c => `${c.discipline}/${c.package}: ${c.oldValue}% → ${c.newValue}%`).join(', ')}`,
+                changes
+            };
+        }
+        
+        /**
+         * Adds a new package to the project
+         */
+        function executeAddPackage(args) {
+            const { name, default_claim = 0 } = args;
+            
+            if (projectData.packages.includes(name)) {
+                return { success: false, error: `Package "${name}" already exists` };
+            }
+            
+            // Add package
+            projectData.packages.push(name);
+            
+            // Initialize claiming and dates for all disciplines
+            const today = new Date();
+            const pkgIndex = projectData.packages.length - 1;
+            
+            projectData.disciplines.forEach(disc => {
+                const key = `${disc}-${name}`;
+                projectData.claiming[key] = default_claim;
+                
+                // Initialize dates
+                const startDate = new Date(today);
+                startDate.setDate(startDate.getDate() + pkgIndex * 30);
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 28);
+                projectData.dates[key] = {
+                    start: startDate.toISOString().split('T')[0],
+                    end: endDate.toISOString().split('T')[0]
+                };
+            });
+            
+            // Regenerate IDs
+            initializeUniqueIds();
+            
+            triggerAutosave();
+            
+            return {
+                success: true,
+                message: `Added package "${name}" with ${default_claim}% default claiming`,
+                package: name,
+                totalPackages: projectData.packages.length
+            };
+        }
+        
+        /**
+         * Adds a new phase to the project
+         */
+        function executeAddPhase(args) {
+            const { name } = args;
+            
+            if (projectData.phases.includes(name)) {
+                return { success: false, error: `Phase "${name}" already exists` };
+            }
+            
+            projectData.phases.push(name);
+            triggerAutosave();
+            
+            return {
+                success: true,
+                message: `Added phase "${name}"`,
+                phase: name,
+                totalPhases: projectData.phases.length
+            };
+        }
+        
+        /**
+         * Refreshes all UI components after a tool modifies project data
+         */
+        function refreshUIAfterToolExecution() {
+            try {
+                // Check if we're on the results page
+                const resultsVisible = !document.getElementById('results-section').classList.contains('hidden');
+                
+                if (resultsVisible) {
+                    // Check if in edit mode
+                    const editToolbar = document.getElementById('wbs-edit-toolbar');
+                    const isEditMode = editToolbar && !editToolbar.classList.contains('hidden');
+                    
+                    // Rebuild WBS table
+                    if (isEditMode) {
+                        buildWBSTableEditable();
+                    } else {
+                        buildWBSTable();
+                    }
+                    
+                    // Update other UI components
+                    updateKPIs();
+                    createChart();
+                    buildGanttChart();
+                    populateFilters();
+                    
+                    console.log('UI refreshed after tool execution');
+                }
+            } catch (error) {
+                console.error('Error refreshing UI after tool execution:', error);
             }
         }
 
@@ -8668,14 +9415,15 @@ Return ONLY the JSON, no markdown formatting.`;
          */
         async function analyzeChunk(apiKey, chunkText, chunkIndex, totalChunks) {
             const systemPrompt = `You are an expert transportation infrastructure cost estimator and contract analyst. Extract WBS info, quantities, project details, and commercial terms from this RFP chunk ${chunkIndex + 1}/${totalChunks}. Return raw JSON only:
-{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","risks":[],"quantities":{},"quantityReasoning":{},"projectInfo":{},"projectInfoReasoning":{},"commercialTerms":{},"commercialTermsConfidence":{},"scheduleReasoning":"","confidence":{},"notes":""}
+{"phases":[],"disciplines":[],"disciplineScopes":{},"packages":[],"budgets":{},"scope":"","schedule":"","reviewSteps":[],"risks":[],"quantities":{},"quantityReasoning":{},"projectInfo":{},"projectInfoReasoning":{},"commercialTerms":{},"commercialTermsConfidence":{},"scheduleReasoning":"","confidence":{},"notes":""}
 
 **PHASES**: Project stages (e.g. Base Design, ESDC, TSCD, Preliminary, Final, As-Builts, Closeout, Phase 1/2/3)
 **DISCIPLINES**: Use EXACT names: Roadway, Drainage, MOT, Traffic, Utilities, Retaining Walls, Noise Walls, Bridge Structures, Misc Structures, Geotechnical, Systems, Track, Environmental, Digital Delivery, ESDC, TSCD
 **DISCIPLINE SCOPES**: {"Discipline":"scope description"} - Extract specific tasks/deliverables per discipline
 **PACKAGES**: Milestones (e.g. Preliminary, Interim, Final, RFC, As-Built, 30%, 60%, 90%)
 **SCOPE**: Project location, type, major work elements, requirements
-**SCHEDULE**: Timeline info, durations, milestones, deadlines
+**SCHEDULE**: Timeline info, durations, milestones, deadlines (general description)
+**REVIEW STEPS**: Array of design review milestones mentioned in RFP: ["Design Development", "Internal Design Review", "Owner's Review", "Comment Resolution", "Final Approval", "Constructability Review", "Value Engineering", "Safety Review", "QA/QC Review", "Permit Review", "Stakeholder Review", etc.] - Extract ALL review/approval steps mentioned
 **RISKS**: Array: [{"category":"Schedule|Budget|Technical|Scope|Coordination|Legal|Commercial","severity":"High|Medium|Low","description":"specific risk","mitigation":"suggested mitigation"}]
 
 **QUANTITIES** (estimate if not explicit):
@@ -8916,6 +9664,23 @@ IMPORTANT:
                         if (descKey && !riskDescriptions.has(descKey)) {
                             riskDescriptions.add(descKey);
                             merged.risks.push(risk);
+                        }
+                    });
+                }
+            });
+
+            // Merge reviewSteps - collect all unique review steps from RFP
+            if (!merged.reviewSteps) merged.reviewSteps = [];
+            const reviewStepsSet = new Set();
+            chunkResults.forEach(resultObj => {
+                const result = resultObj.data || resultObj;
+                if (result.reviewSteps && Array.isArray(result.reviewSteps)) {
+                    result.reviewSteps.forEach(step => {
+                        const stepName = typeof step === 'string' ? step : step.name || step;
+                        const normalizedName = stepName.toLowerCase().trim();
+                        if (stepName && !reviewStepsSet.has(normalizedName)) {
+                            reviewStepsSet.add(normalizedName);
+                            merged.reviewSteps.push(stepName);
                         }
                     });
                 }
@@ -9790,6 +10555,14 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
             projectData.projectScope = scopeStr || '';
             projectData.scheduleNotes = scheduleStr || '';
             projectData.disciplineScopes = disciplineScopes;
+            
+            // Store RFP-extracted review steps
+            if (rfpState.extractedData && rfpState.extractedData.reviewSteps) {
+                projectData.rfpReviewSteps = rfpState.extractedData.reviewSteps;
+            }
+            
+            // Clear existing review steps so they get regenerated with RFP data
+            projectData.reviewSteps = {};
             
             // Transfer extracted project info to projectData
             if (rfpState.projectInfo) {
@@ -12091,6 +12864,10 @@ Chunks: ${JSON.stringify(complexFieldsOnly, null, 2)}`;
         // Schedule functions (Step 6)
         window.buildDatesTable = buildDatesTable;
         window.updateDurations = updateDurations;
+        window.toggleReviewSteps = toggleReviewSteps;
+        window.updateReviewStepDates = updateReviewStepDates;
+        window.recalculateReviewSteps = recalculateReviewSteps;
+        window.initializeUniqueIds = initializeUniqueIds;
         
         // WBS Table functions
         window.buildWBSTable = buildWBSTable;
